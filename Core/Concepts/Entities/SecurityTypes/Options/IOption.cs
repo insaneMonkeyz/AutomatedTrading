@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Core.Concepts.Entities.SecurityTypes.Options
 {
-    public interface IOption : ISecurity, IExpiringContract
+    public interface IOption : ISecurity, IExpiring
     {
         Decimal5 Strike { get; }
         ISecurity Underlying { get; }

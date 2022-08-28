@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Core.Concepts.Entities.SecurityTypes
 {
-    internal interface IFutures : ISecurity, IExpiringContract
+    internal interface IFutures : ISecurity, IExpiring
     {
         ISecurity Underlying { get; }
     }

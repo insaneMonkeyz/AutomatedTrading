@@ -1,6 +1,6 @@
 ﻿namespace Core.Concepts.Entities.SecurityTypes
 {
-    public interface ICalendarSpread : ISecurity, IExpiringContract
+    public interface ICalendarSpread : ISecurity, IExpiring
     {
         ISecurity NearTermSecurity { get; }
         ISecurity LongTermSecurity { get; }

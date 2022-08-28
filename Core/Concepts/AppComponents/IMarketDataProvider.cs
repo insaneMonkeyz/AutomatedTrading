@@ -5,7 +5,7 @@ namespace Core.Concepts.AppComponents
     /// <summary>
     /// Used to retrieve all market specific data, such as securities, trade statistics, quotes etc
     /// </summary>
-    public interface IDataFeedProvider
+    public interface IMarketDataProvider
     {
         /// <summary>
         /// Subscribes to updates of certain kind for a security

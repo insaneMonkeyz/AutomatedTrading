@@ -1,6 +1,6 @@
 ﻿namespace Core.Concepts.Entities
 {
-    public interface IExpiringContract
+    public interface IExpiring
     {
         DateTimeOffset Expiry { get; }
     }
