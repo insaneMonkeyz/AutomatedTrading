@@ -1,4 +1,4 @@
-﻿namespace Core.AppComponents.BusinessLogic
+﻿namespace Core.AppComponents.BusinessLogicConcepts
 {
     public interface IStrategyActionEventArgs
     {

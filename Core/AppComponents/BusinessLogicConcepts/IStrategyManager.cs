@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using BasicConcepts;
 
-namespace Core.AppComponents.BusinessLogic
+namespace Core.AppComponents.BusinessLogicConcepts
 {
     public interface IStrategyManager
     {
