@@ -5,7 +5,7 @@
         DateTimeOffset TimeStamp { get; }
         ISecurity Security { get; }
         Decimal5 Price { get; }
-        Side Side { get; }
+        Operations Operation { get; }
         long Size { get; }
     }
 }

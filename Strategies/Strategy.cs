@@ -31,7 +31,7 @@ namespace Strategies
     {
         public virtual PriceProvider QuotesProvider { get; set; }
         public virtual PriceDifferenceTracker PriceDifferenceTracker { get; }
-        public virtual Security Security { get; }
+        public virtual ISecurity Security { get; }
         public virtual Operations Operation { get; }
         public virtual int OrderSize { get; set; }
         public virtual bool IsEnabled { get; set; }

@@ -1,6 +1,6 @@
 ﻿namespace Core
 {
-    public enum Side
+    public enum Operations
     {
         Undefined,
         Buy,
