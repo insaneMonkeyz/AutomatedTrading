@@ -1,6 +1,6 @@
-﻿using Core.Concepts.Entities;
+﻿using BasicConcepts;
 
-namespace Core.Concepts.AppComponents
+namespace Core.AppComponents
 {
     public delegate void OrderExecutionEventHandler(IOrderExecution orderExecution);
     public delegate void OrderChangedEventHandler(IOrder order);

@@ -1,4 +1,4 @@
-﻿namespace Core.Concepts.Entities.SecurityTypes.Options
+﻿namespace BasicConcepts.SecuritySpecifics.Options
 {
     public enum OptionTypes
     {

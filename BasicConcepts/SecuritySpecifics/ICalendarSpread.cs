@@ -1,4 +1,4 @@
-﻿namespace Core.Concepts.Entities.SecurityTypes
+﻿namespace BasicConcepts.SecuritySpecifics
 {
     public interface ICalendarSpread : ISecurity, IExpiring
     {

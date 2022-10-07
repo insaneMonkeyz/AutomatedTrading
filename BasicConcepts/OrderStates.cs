@@ -1,4 +1,4 @@
-﻿namespace Core.Concepts.Entities
+﻿namespace BasicConcepts
 {
     [Flags]
     public enum OrderStates : long
