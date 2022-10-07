@@ -1,7 +1,7 @@
 ﻿using System;
 using BasicConcepts;
 
-namespace Core.AppComponents
+namespace Core.AppComponents.BusinessLogic
 {
     /// <summary>
     /// Used to retrieve all market specific data, such as securities, trade statistics, quotes etc

@@ -1,6 +1,6 @@
 ﻿using BasicConcepts;
 
-namespace Core.AppComponents
+namespace Core.AppComponents.BusinessLogic
 {
     public delegate void OrderExecutionEventHandler(IOrderExecution orderExecution);
     public delegate void OrderChangedEventHandler(IOrder order);

@@ -1,4 +1,4 @@
-﻿namespace BasicConcepts
+﻿namespace Core.AppComponents.BusinessLogic
 {
     public delegate void StrategyActionEventHandler(IStrategy sender, IStrategyActionEventArgs e);
     public interface IStrategy
