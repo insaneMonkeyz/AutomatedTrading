@@ -31,7 +31,7 @@ namespace Core.AppComponents.BusinessLogic
         public abstract string Description { get; set; }
         public virtual bool IsEnabled { get; private set; }
 
-        public abstract event StrategyActionEventHandler StrategyAction;
+        public abstract event StrategyAction StrategyAction;
 
         protected IAccountProvider _accountProvider;
         protected IExecutionProvider _executionProvider;

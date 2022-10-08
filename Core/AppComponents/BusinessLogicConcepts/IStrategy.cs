@@ -2,7 +2,6 @@
 
 namespace Core.AppComponents.BusinessLogicConcepts
 {
-    public delegate void StrategyActionEventHandler(IStrategy sender, IStrategyActionEventArgs e);
     public interface IStrategy
     {
         Guid Id { get; }
@@ -11,6 +10,6 @@ namespace Core.AppComponents.BusinessLogicConcepts
         bool IsEnabled { get; }
         void Enable();
         void Disable();
-        event StrategyActionEventHandler StrategyAction;
+        event StrategyAction StrategyAction;
     }
 }
