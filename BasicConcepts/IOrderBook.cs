@@ -2,9 +2,15 @@
 {
     public interface IOrderBook
     {
-        long MarketDepth { get; }
+        long MarketDepth { get; set; }
         ISecurity Security { get; }
-        IQuote[] Bids { get; }
-        IQuote[] Asks { get; }
+        /// <summary>
+        /// Get a copy of bids array 
+        /// </summary>
+        Quote[] Bids { get; }
+        /// <summary>
+        /// Get a copy of asks array 
+        /// </summary>
+        Quote[] Asks { get; }
     }
 }

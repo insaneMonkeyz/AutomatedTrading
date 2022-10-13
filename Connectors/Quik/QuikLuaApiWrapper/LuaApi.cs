@@ -11,7 +11,7 @@ using LuaKContext = System.IntPtr;
 using LuaKFunction = System.IntPtr;
 using LuaWFunction = System.IntPtr;
 
-namespace LuaGate
+namespace QuikLuaApi
 {
     /// <summary>
     /// LuaRegister stores the name and the delegate to register a native function

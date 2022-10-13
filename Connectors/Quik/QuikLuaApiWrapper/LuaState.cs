@@ -1,60 +1,406 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+using BasicConcepts;
 using KeraLua;
 
-namespace LuaGate
+namespace QuikLuaApi
 {
     internal struct LuaState
     {
-        private static readonly LuaKFunction emptyKFunction = delegate { return 0; };
-        private readonly IntPtr state;
+        private const int LAST_ITEM = -1;
+        private const int SECOND_ITEM = -2;
+        private readonly IntPtr _state;
 
-        public unsafe LuaState(void* state)
+        #region Initialization
+        private unsafe LuaState(void* ptr)
         {
-            this.state = new IntPtr(state);
+            _state = new IntPtr(ptr);
         }
-        public LuaState(IntPtr state)
+        private LuaState(IntPtr ptr)
         {
-            this.state = state;
+            _state = ptr;
         }
 
-        public void TieProxyLibrary(string dllname)
+        public static implicit operator IntPtr(LuaState state) => state._state;
+        public static implicit operator LuaState(IntPtr pointer) => new(pointer);
+        public static unsafe implicit operator LuaState(void* pointer) => new(pointer); 
+        #endregion
+
+        internal void TieProxyLibrary(string dllname)
         {
             var reg = new LuaRegister[]
             {
                 new()
             };
 
-            LuaApi.lua_createtable(state, 0, 0);
-            LuaApi.luaL_setfuncs(state, reg, 0);
-            LuaApi.lua_pushvalue(state, -1);
-            LuaApi.lua_setglobal(state, dllname);
+            LuaApi.lua_createtable(_state, 0, 0);
+            LuaApi.luaL_setfuncs(_state, reg, 0);
+            LuaApi.lua_pushvalue(_state, -1);
+            LuaApi.lua_setglobal(_state, dllname);
         }
-        public void RegisterCallback(LuaFunction function, string alias)
+        internal void RegisterCallback(LuaFunction function, string alias)
         {
-            LuaApi.lua_pushcclosure(state, function, 0);
-            LuaApi.lua_setglobal(state, alias);
+            LuaApi.lua_pushcclosure(_state, function, 0);
+            LuaApi.lua_setglobal(_state, alias);
+        }
+        internal void ReadRowValueQuotes(Quote[] quotes, Operations operation, long marketDepth)
+        {
+            var dataLen = (long)LuaApi.lua_rawlen(_state, LAST_ITEM);
+            var quotesSize = Math.Min(dataLen, marketDepth);
+
+            if (quotesSize > 0)
+            {
+                long passed = 0;
+                long thisIndex = 0;
+                long luaIndex = 1;
+                long increment = 1;
+
+                if (operation == Operations.Buy && quotesSize != 1)
+                {
+                    luaIndex = dataLen - quotesSize - 1;
+                    thisIndex = quotesSize - 1;
+                    increment = -1;
+                }
+
+                while (passed < quotesSize)
+                {
+                    if (LuaApi.lua_rawgeti(_state, LAST_ITEM, luaIndex++) != LuaApi.TYPE_TABLE)
+                    {
+                        PopFromStack();
+                        throw new QuikApiException("Array of quotes ended prior than expected. ");
+                    }
+
+                    if (LastItemIsTable() &&
+                        TryFetchDecimalFromTable("price", out Decimal5 price) &&
+                        TryFetchLongFromTable("quantity", out long size))
+                    {
+                        quotes[thisIndex] = new Quote
+                        {
+                            Price = price,
+                            Size = size,
+                            Operation = operation
+                        };
+
+                        PopFromStack();
+
+                        thisIndex += increment;
+                        passed++;
+                    }
+                    else
+                    {
+                        PopFromStack();
+
+                        break;
+                    }
+                }
+            }
+        }
+        internal string ReadValueSafe(LuaTypes type, IntPtr pStack, int i)
+        {
+            LuaApi.lua_pushnil(pStack);
+            LuaApi.lua_copy(pStack, i - 1, LAST_ITEM);
+
+            var value = type switch
+            {
+                LuaTypes.Boolean => (LuaApi.lua_toboolean(pStack, LAST_ITEM) == 1).ToString(),
+                LuaTypes.Number => LuaApi.lua_tonumberx(pStack, LAST_ITEM, IntPtr.Zero).ToString(),
+                LuaTypes.String => Marshal.PtrToStringAnsi(LuaApi.lua_tolstring(pStack, LAST_ITEM, out ulong strlen)),
+                LuaTypes.Table => LuaApi.lua_rawlen(pStack, LAST_ITEM).ToString(),
+                _ => throw new NotSupportedException(),
+            };
+
+            LuaApi.lua_settop(pStack, SECOND_ITEM);
+
+            return value;
+        }
+        internal void PrintStack(string comment = null)
+        {
+            Debug.Print(comment != null
+                ? $"========= {comment} ========="
+                : "=====================================");
+
+
+            for (int i = -1; i > -6; i--)
+            {
+                var type = (LuaTypes)LuaApi.lua_type(_state, i);
+
+                var value = type switch
+                {
+                    LuaTypes.Boolean => $"Bool {ReadValueSafe(type, _state, i)}",
+                    LuaTypes.Number => $"Number {ReadValueSafe(type, _state, i)}",
+                    LuaTypes.String => $"String {ReadValueSafe(type, _state, i)}",
+                    LuaTypes.Table => $"Table Size:{ReadValueSafe(type, _state, i)}",
+                    _ => type.ToString()
+                };
+                
+                Debug.Print($"[{-i}] [{value}]");
+            }
+        }
+        /// <summary>
+        /// Gets a table from the stack, goes to the specified column, retrieves a number from there and pushes it onto the stack
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
+        internal bool TryFetchDecimalFromTable(string columnName, out Decimal5 result)
+        {
+            // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
+            // 2 строчки создадут только 1 ячейку памяти
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            if (TryPopDecimal(out result))
+            {
+                return true;
+            }
+            else
+            {
+                PopFromStack();
+                return false;
+            }
+        }
+        /// <summary>
+        /// Gets a table from the stack, goes to the specified column, retrieves a number from there and pushes it onto the stack
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
+        internal bool TryFetchLongFromTable(string columnName, out long result)
+        {
+            // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
+            // 2 строчки создадут только 1 ячейку памяти
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            if (TryPopLong(out result))
+            {
+                return true;
+            }
+            else
+            {
+                PopFromStack();
+                return false;
+            }
         }
 
-        public int Exec(string function)
+        /// <summary>
+        /// Gets a table from the stack, goes to the specified column, retrieves a string from there and pushes it onto the stack
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
+        internal bool TryFetchStringFromTable(string columnName, out string result)
         {
-            LuaApi.lua_getglobal(state, function);
-            return LuaApi.lua_pcallk(state, 0, 1, 0, IntPtr.Zero, emptyKFunction);
+            // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
+            // 2 строчки создадут только 1 ячейку памяти
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            if (TryPopString(out result))
+            {
+                return true;
+            }
+            else
+            {
+                PopFromStack();
+                return false;
+            }
         }
-        public int Exec(string function, string arg)
+        /// <summary>
+        /// Gets a table from the stack, goes to the specified column, retrieves a table from there and pushes it onto the stack
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
+        internal bool PushColumnValueTable(string columnName)
         {
-            LuaApi.lua_getglobal(state, function);
-            LuaApi.lua_pushstring(state, arg);
-            return LuaApi.lua_pcallk(state, 1, 1, 0, IntPtr.Zero, emptyKFunction);
-        }
-        public long ToLong(int i)
-        {
-            return LuaApi.lua_tointegerx(state, i, IntPtr.Zero);
-        }
-        public string ToString(int i)
-        {
-            return Marshal.PtrToStringAnsi(LuaApi.lua_tolstring(state, i, out ulong len));
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            if (LastItemIsTable())
+            {
+                return true;
+            }
+            else
+            {
+                PopTwoFromStack();
+                return false;
+            }
         }
 
-        public static implicit operator LuaState(IntPtr pointer) => new(pointer);
+        internal bool TryPopLong(out long value)
+        {
+            value = 0L;
+
+            if (LuaApi.lua_isnumber(_state, -1) > 0)
+            {
+                value = LuaApi.lua_tointegerx(_state, -1, IntPtr.Zero);
+                LuaApi.lua_settop(_state, -2);
+                return true; 
+            }
+
+            return false;
+        }
+        internal bool TryPopDecimal(out Decimal5 value)
+        {
+            value = 0L;
+
+            if (LuaApi.lua_isnumber(_state, -1) > 0)
+            {
+                value = LuaApi.lua_tonumberx(_state, -1, IntPtr.Zero);
+                LuaApi.lua_settop(_state, -2);
+                return true; 
+            }
+
+            return false;
+        }
+        internal bool TryPopString(out string value)
+        {
+            value = null;
+
+            if (LuaApi.lua_isstring(_state, -1) > 0)
+            {
+                var pstr = LuaApi.lua_tolstring(_state, -1, out ulong len);
+
+                if (len > 0)
+                {
+                    value = Marshal.PtrToStringAnsi(pstr, (int)len);
+                }
+                else
+                {
+                    value = string.Empty;
+                }
+
+                LuaApi.lua_settop(_state, -2);
+                return true;
+            }
+
+            return false;
+        }
+        internal bool TryReadString(int i, out string value)
+        {
+            value = null;
+
+            if (LuaApi.lua_isstring(_state, i) > 0)
+            {
+                var pstr = LuaApi.lua_tolstring(_state, i, out ulong len);
+
+                if (len > 0)
+                {
+                    value = Marshal.PtrToStringAnsi(pstr, (int)len);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        #region Tested. Works fine
+        /// <summary>
+        /// Reads value of a field of the table on top of the stack
+        /// </summary>
+        internal string ReadRowValueString(string columnName)
+        {
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            string result = null;
+
+            if (LuaApi.lua_isstring(_state, -1) > 0)
+            {
+                var pstr = LuaApi.lua_tolstring(_state, -1, out ulong len);
+
+                if (len > 0)
+                {
+                    result = Marshal.PtrToStringAnsi(pstr, (int)len);
+                }
+            }
+
+            PopTwoFromStack();
+            return result;
+        }
+        /// <summary>
+        /// Reads value of a field of the table on top of the stack
+        /// </summary>
+        internal long? ReadRowValueLong(string columnName)
+        {
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            long? result = null;
+
+            if (LuaApi.lua_type(_state, -1) == LuaApi.TYPE_NUMBER)
+            {
+                result = (long)LuaApi.lua_tonumberx(_state, -1, IntPtr.Zero);
+            }
+
+            PopTwoFromStack();
+            return result;
+        }
+
+        internal bool ExecFunction(string name, int returnType)
+        {
+            LuaApi.lua_getglobal(_state, name);
+
+            return LuaApi.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
+                && LuaApi.lua_type(_state, -1) == returnType;
+        }
+        internal bool ExecFunction(string name, int returnType, string arg0)
+        {
+            LuaApi.lua_getglobal(_state, name);
+            LuaApi.lua_pushstring(_state, arg0);
+
+            return LuaApi.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
+                && LuaApi.lua_type(_state, -1) == returnType;
+        }
+        internal bool ExecFunction(string name, int returnType, string arg0, string arg1)
+        {
+            LuaApi.lua_getglobal(_state, name);
+            LuaApi.lua_pushstring(_state, arg0);
+            LuaApi.lua_pushstring(_state, arg1);
+
+            return LuaApi.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
+                && LuaApi.lua_type(_state, -1) == returnType; ;
+        }
+        internal bool ExecFunction(string name, int returnType, string arg0, string arg1, string arg2)
+        {
+            LuaApi.lua_getglobal(_state, name);
+            LuaApi.lua_pushstring(_state, arg0);
+            LuaApi.lua_pushstring(_state, arg1);
+            LuaApi.lua_pushstring(_state, arg2);
+
+            return LuaApi.lua_pcallk(_state, 3, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
+                && LuaApi.lua_type(_state, -1) == returnType; ;
+        }
+        #endregion
+
+        /// <summary>
+        /// Pops last item from the stack
+        /// </summary>
+        internal void PopFromStack()
+        {
+            LuaApi.lua_settop(_state, -2);
+        }
+
+        /// <summary>
+        /// Pops last two items from the stack
+        /// </summary>
+        internal void PopTwoFromStack()
+        {
+            LuaApi.lua_settop(_state, -3);
+        }
+
+        /// <summary>
+        /// Pops n items from the stack
+        /// </summary>
+        internal void PopFromStack(int numItems)
+        {
+            LuaApi.lua_settop(_state, -numItems-1);
+        }
+        internal bool LastItemIsTable()
+        {
+            return LuaApi.lua_type(_state, -1) == LuaApi.TYPE_TABLE;
+        }
+        internal bool LastItemIsString()
+        {
+            return LuaApi.lua_type(_state, -1) == LuaApi.TYPE_STRING;
+        }
     }
 }

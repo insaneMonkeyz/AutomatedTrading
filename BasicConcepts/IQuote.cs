@@ -1,9 +1,10 @@
 ﻿namespace BasicConcepts
 {
-    public interface IQuote
+    public interface IQuote : IEquatable<IQuote>
     {
-        Decimal5 Price { get; }
         Operations Operation { get; }
+        Decimal5 Price { get; }
         long Size { get; }
+
     }
 }

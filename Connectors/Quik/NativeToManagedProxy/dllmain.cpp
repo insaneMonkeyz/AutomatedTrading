@@ -14,7 +14,7 @@ extern "C"
     #include "Lua/include/lauxlib.h"
     #include "Lua/include/lua.h"
 
-    LUALIB_API int luaopen_ClrBootstrap(lua_State * L)
+    LUALIB_API int luaopen_NativeToManagedProxy(lua_State * L)
     {
         return NativeToManagedProxy::Initialize(L);
     } 
