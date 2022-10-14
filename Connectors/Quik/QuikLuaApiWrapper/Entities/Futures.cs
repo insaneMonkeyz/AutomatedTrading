@@ -3,11 +3,9 @@ using BasicConcepts.SecuritySpecifics;
 
 namespace QuikLuaApi.Entities
 {
-    internal class Futures : IFutures
+    internal class Futures : SecurityBase, IFutures
     {
         public ISecurity Underlying { get; init; }
-        public string Ticker { get; init; }
-        public string Description { get; init; }
         public DateTimeOffset Expiry { get; init; }
     }
 }

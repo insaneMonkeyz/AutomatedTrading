@@ -1,11 +1,6 @@
-﻿using BasicConcepts;
-
-namespace QuikLuaApi.Entities
+﻿namespace QuikLuaApi.Entities
 {
-    internal class Stock : ISecurity
+    internal class Stock : SecurityBase
     {
-        public string Ticker { get; init; }
-        public string Description { get; init; }
-        public string ClassCode { get; init; }
     }
 }

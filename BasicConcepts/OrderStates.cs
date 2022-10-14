@@ -14,26 +14,26 @@
         /// <summary>
         /// Filled or cancelled by user
         /// </summary>
-        Done = 2,
+        Done = 1 << 1,
         /// <summary>
         /// Awaiting to get registered
         /// </summary>
-        Registering = 4,
+        Registering = 1 << 2,
         /// <summary>
         /// Currently suspended by the exchange but expected to be repositioned back afterwards
         /// </summary>
-        OnHold = 8,
+        OnHold = 1 << 3,
         /// <summary>
         /// Change requested
         /// </summary>
-        Changing = 16,
+        Changing = 1 << 4,
         /// <summary>
         /// Cancel requested
         /// </summary>
-        Cancelling = 32,
+        Cancelling = 1 << 5,
         /// <summary>
         /// Successfully registered and still alive
         /// </summary>
-        Active = 64
+        Active = 1 << 6
     }
 }
