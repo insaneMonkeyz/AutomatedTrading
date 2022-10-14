@@ -263,16 +263,34 @@ namespace QuikLuaApi
         /// <summary>
         /// Reads value of a field of the table on top of the stack
         /// </summary>
-        internal long? ReadRowValueLong(string columnName)
+        internal long ReadRowValueLong(string columnName)
         {
             LuaApi.lua_pushstring(_state, columnName);
             LuaApi.lua_rawget(_state, SECOND_ITEM);
 
-            long? result = null;
+            long result = default;
 
             if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
             {
                 result = (long)LuaApi.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
+            }
+
+            PopFromStack();
+            return result;
+        }
+        /// <summary>
+        /// Reads value of a field of the table on top of the stack
+        /// </summary>
+        internal Decimal5 ReadRowValueDecimal5(string columnName)
+        {
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            Decimal5 result = default;
+
+            if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
+            {
+                result = LuaApi.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
             }
 
             PopFromStack();

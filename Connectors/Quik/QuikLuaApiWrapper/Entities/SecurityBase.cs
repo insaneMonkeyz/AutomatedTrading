@@ -8,8 +8,10 @@ namespace QuikLuaApi.Entities
         public string Description { get; init; }
         public string ClassCode { get; init; }
         public Guid ExchangeId { get; init; }
-        public Decimal5 MinPriceStep { get; init; }
-        public Decimal5 MinTradingSize { get; init; }
         public Currencies DenominationCurrency { get; init; }
+        public long PricePrecisionScale { get; init; }
+        public long ContractSize { get; init; }
+        public Decimal5 MinPriceStep { get; init; }
+        public Decimal5 MinTradingSize => QuikApi.DEFAULT_TRADING_SIZE;
     }
 }

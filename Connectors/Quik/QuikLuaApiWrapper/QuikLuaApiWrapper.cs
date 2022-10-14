@@ -5,7 +5,6 @@ using BasicConcepts;
 using BasicConcepts.SecuritySpecifics.Options;
 using QuikLuaApi.Entities;
 using QuikLuaApiWrapper;
-using QuikLuaApiWrapper.Entities;
 using static System.Formats.Asn1.AsnWriter;
 
 namespace QuikLuaApi
@@ -18,6 +17,14 @@ namespace QuikLuaApi
         {
             BidsParsed = 1,
             AsksParsed = 2
+        }
+        private struct SecurityParamsContainer
+        {
+            public long PricePrecisionScale;
+            public long ContractSize;
+            public string Description;
+            public Decimal5 MinPriceStep;
+            public Currencies DenominationCurrency;
         }
 
         private static LuaState _quikState;
@@ -150,7 +157,7 @@ namespace QuikLuaApi
                     if (_localState.TryFetchLongFromTable(countField, out long qCount) && qCount > 0)
                     {
                         _localState.PushColumnValueTable(quotesField);
-                        reader(ReadRowValueQuotes);
+                        reader(ReadQuotes);
                         _localState.PopFromStack();
                         return true;
                     }
@@ -235,7 +242,7 @@ namespace QuikLuaApi
             return 1;
         }
 
-        private static void ReadRowValueQuotes(Quote[] quotes, Operations operation, long marketDepth)
+        private static void ReadQuotes(Quote[] quotes, Operations operation, long marketDepth)
         {
             const int LAST_ITEM = -1;
             const int SECOND_ITEM = -2;
@@ -290,6 +297,7 @@ namespace QuikLuaApi
                 }
             }
         }
+
         private bool TryGetOptionType(string ticker, out OptionTypes type)
         {
             /*
@@ -317,13 +325,41 @@ namespace QuikLuaApi
 
             return type != default;
         }
+        private void GetSecurityParamsContainer(ref SecurityParamsContainer container, string classcode, string ticker)
+        {
+            if (_localState.ExecFunction(QuikApi.GET_SECURITY_METHOD, LuaApi.TYPE_TABLE, classcode, ticker))
+            {
+                var currency = _localState.ReadRowValueString(QuikApi.SECURITY_CURRENCY_PROPERTY);
+
+                container.PricePrecisionScale = _localState.ReadRowValueLong(QuikApi.SECURITY_PRICE_SCALE_PROPERTY);
+                container.MinPriceStep = _localState.ReadRowValueDecimal5(QuikApi.SECURITY_MIN_PRICE_STEP_PROPERTY);
+                container.ContractSize = _localState.ReadRowValueLong(QuikApi.SECURITY_CONTRACT_SIZE_PROPERTY);
+                container.Description = _localState.ReadRowValueString(QuikApi.SECURITY_DESCRIPTION_PROPERTY);
+                container.DenominationCurrency = currency switch
+                {
+                    QuikApi.USD_CURRENCY => Currencies.USD,
+                    QuikApi.RUB_CURRENCY => Currencies.RUB,
+                    _ => throw new NotImplementedException(
+                        $"Security {ticker} is denominated in a currency {currency} that is not supported.")
+                };
+            }
+        }
         private ISecurity GetOption(string ticker)
         {
-            if (_localState.TryFetchStringFromTable("name", out string descr) &&
-                _localState.TryFetchDecimalFromTable("option_strike", out Decimal5 strike) &&
-                _localState.TryFetchStringFromTable("base_active_classcode", out string undClass) &&
-                _localState.TryFetchStringFromTable("base_active_seccode", out string undTicker) &&
-                _localState.TryFetchStringFromTable("mat_date", out string mat_date) &&
+            var container = new SecurityParamsContainer();
+
+            GetSecurityParamsContainer(ref container, QuikApi.OPTIONS_CLASS_CODE, ticker);
+
+            if (container.MinPriceStep == 0 ||
+                container.Description == null)
+            {
+                return null;
+            }
+
+            if (_localState.TryFetchDecimalFromTable(QuikApi.SECURITY_STRIKE_PROPERTY, out Decimal5 strike) &&
+                _localState.TryFetchStringFromTable(QuikApi.SECURITY_UNDERLYING_CLASS_CODE_PROPERTY, out string undClass) &&
+                _localState.TryFetchStringFromTable(QuikApi.SECURITY_UNDERLYING_SEC_CODE_PROPERTY, out string undTicker) &&
+                _localState.TryFetchStringFromTable(QuikApi.SECURITY_EXPIRY_DATE_PROPERTY, out string mat_date) &&
                 mat_date.TryConvertToMoexExpiry(out DateTimeOffset expiry) &&
                 TryGetSecurity(undClass, undTicker, out ISecurity underlying) &&
                 TryGetOptionType(ticker, out OptionTypes type))
@@ -331,11 +367,17 @@ namespace QuikLuaApi
                 return new Option
                 {
                     Ticker = ticker,
-                    Description = descr,
                     Strike = strike,
                     OptionType = type,
                     Expiry = expiry,
-                    Underlying = underlying
+                    Underlying = underlying,
+                    Description = container.Description,
+                    MinPriceStep = container.MinPriceStep,
+                    ContractSize = container.ContractSize,
+                    PricePrecisionScale = container.PricePrecisionScale,
+                    DenominationCurrency = container.DenominationCurrency,
+                    ClassCode = QuikApi.OPTIONS_CLASS_CODE,
+                    ExchangeId = QuikApi.MoexExchangeId
                 };
             }
 
