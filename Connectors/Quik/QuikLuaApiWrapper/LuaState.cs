@@ -35,65 +35,13 @@ namespace QuikLuaApi
 
             LuaApi.lua_createtable(_state, 0, 0);
             LuaApi.luaL_setfuncs(_state, reg, 0);
-            LuaApi.lua_pushvalue(_state, -1);
+            LuaApi.lua_pushvalue(_state, LAST_ITEM);
             LuaApi.lua_setglobal(_state, dllname);
         }
         internal void RegisterCallback(LuaFunction function, string alias)
         {
             LuaApi.lua_pushcclosure(_state, function, 0);
             LuaApi.lua_setglobal(_state, alias);
-        }
-        internal void ReadRowValueQuotes(Quote[] quotes, Operations operation, long marketDepth)
-        {
-            var dataLen = (long)LuaApi.lua_rawlen(_state, LAST_ITEM);
-            var quotesSize = Math.Min(dataLen, marketDepth);
-
-            if (quotesSize > 0)
-            {
-                long passed = 0;
-                long thisIndex = 0;
-                long luaIndex = 1;
-                long increment = 1;
-
-                if (operation == Operations.Buy && quotesSize != 1)
-                {
-                    luaIndex = dataLen - quotesSize - 1;
-                    thisIndex = quotesSize - 1;
-                    increment = -1;
-                }
-
-                while (passed < quotesSize)
-                {
-                    if (LuaApi.lua_rawgeti(_state, LAST_ITEM, luaIndex++) != LuaApi.TYPE_TABLE)
-                    {
-                        PopFromStack();
-                        throw new QuikApiException("Array of quotes ended prior than expected. ");
-                    }
-
-                    if (LastItemIsTable() &&
-                        TryFetchDecimalFromTable("price", out Decimal5 price) &&
-                        TryFetchLongFromTable("quantity", out long size))
-                    {
-                        quotes[thisIndex] = new Quote
-                        {
-                            Price = price,
-                            Size = size,
-                            Operation = operation
-                        };
-
-                        PopFromStack();
-
-                        thisIndex += increment;
-                        passed++;
-                    }
-                    else
-                    {
-                        PopFromStack();
-
-                        break;
-                    }
-                }
-            }
         }
         internal string ReadValueSafe(LuaTypes type, IntPtr pStack, int i)
         {
@@ -180,7 +128,6 @@ namespace QuikLuaApi
                 return false;
             }
         }
-
         /// <summary>
         /// Gets a table from the stack, goes to the specified column, retrieves a string from there and pushes it onto the stack
         /// </summary>
@@ -228,10 +175,10 @@ namespace QuikLuaApi
         {
             value = 0L;
 
-            if (LuaApi.lua_isnumber(_state, -1) > 0)
+            if (LuaApi.lua_isnumber(_state, LAST_ITEM) > 0)
             {
-                value = LuaApi.lua_tointegerx(_state, -1, IntPtr.Zero);
-                LuaApi.lua_settop(_state, -2);
+                value = LuaApi.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero);
+                LuaApi.lua_settop(_state, SECOND_ITEM);
                 return true; 
             }
 
@@ -241,9 +188,9 @@ namespace QuikLuaApi
         {
             value = 0L;
 
-            if (LuaApi.lua_isnumber(_state, -1) > 0)
+            if (LuaApi.lua_isnumber(_state, LAST_ITEM) > 0)
             {
-                value = LuaApi.lua_tonumberx(_state, -1, IntPtr.Zero);
+                value = LuaApi.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
                 LuaApi.lua_settop(_state, -2);
                 return true; 
             }
@@ -254,9 +201,9 @@ namespace QuikLuaApi
         {
             value = null;
 
-            if (LuaApi.lua_isstring(_state, -1) > 0)
+            if (LuaApi.lua_isstring(_state, LAST_ITEM) > 0)
             {
-                var pstr = LuaApi.lua_tolstring(_state, -1, out ulong len);
+                var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
                 if (len > 0)
                 {
@@ -267,7 +214,7 @@ namespace QuikLuaApi
                     value = string.Empty;
                 }
 
-                LuaApi.lua_settop(_state, -2);
+                LuaApi.lua_settop(_state, SECOND_ITEM);
                 return true;
             }
 
@@ -303,17 +250,14 @@ namespace QuikLuaApi
 
             string result = null;
 
-            if (LuaApi.lua_isstring(_state, -1) > 0)
+            if (LuaApi.lua_isstring(_state, LAST_ITEM) > 0)
             {
-                var pstr = LuaApi.lua_tolstring(_state, -1, out ulong len);
+                var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
-                if (len > 0)
-                {
-                    result = Marshal.PtrToStringAnsi(pstr, (int)len);
-                }
+                result = len > 0 ? Marshal.PtrToStringAnsi(pstr, (int)len) : string.Empty;
             }
 
-            PopTwoFromStack();
+            PopFromStack();
             return result;
         }
         /// <summary>
@@ -326,12 +270,12 @@ namespace QuikLuaApi
 
             long? result = null;
 
-            if (LuaApi.lua_type(_state, -1) == LuaApi.TYPE_NUMBER)
+            if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
             {
-                result = (long)LuaApi.lua_tonumberx(_state, -1, IntPtr.Zero);
+                result = (long)LuaApi.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
             }
 
-            PopTwoFromStack();
+            PopFromStack();
             return result;
         }
 
@@ -340,7 +284,7 @@ namespace QuikLuaApi
             LuaApi.lua_getglobal(_state, name);
 
             return LuaApi.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, -1) == returnType;
+                && LuaApi.lua_type(_state, LAST_ITEM) == returnType;
         }
         internal bool ExecFunction(string name, int returnType, string arg0)
         {
@@ -348,7 +292,7 @@ namespace QuikLuaApi
             LuaApi.lua_pushstring(_state, arg0);
 
             return LuaApi.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, -1) == returnType;
+                && LuaApi.lua_type(_state, LAST_ITEM) == returnType;
         }
         internal bool ExecFunction(string name, int returnType, string arg0, string arg1)
         {
@@ -357,7 +301,7 @@ namespace QuikLuaApi
             LuaApi.lua_pushstring(_state, arg1);
 
             return LuaApi.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, -1) == returnType; ;
+                && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
         }
         internal bool ExecFunction(string name, int returnType, string arg0, string arg1, string arg2)
         {
@@ -367,7 +311,7 @@ namespace QuikLuaApi
             LuaApi.lua_pushstring(_state, arg2);
 
             return LuaApi.lua_pcallk(_state, 3, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, -1) == returnType; ;
+                && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
         }
         #endregion
 
@@ -396,11 +340,11 @@ namespace QuikLuaApi
         }
         internal bool LastItemIsTable()
         {
-            return LuaApi.lua_type(_state, -1) == LuaApi.TYPE_TABLE;
+            return LuaApi.lua_type(_state, LAST_ITEM) == LuaApi.TYPE_TABLE;
         }
         internal bool LastItemIsString()
         {
-            return LuaApi.lua_type(_state, -1) == LuaApi.TYPE_STRING;
+            return LuaApi.lua_type(_state, LAST_ITEM) == LuaApi.TYPE_STRING;
         }
     }
 }

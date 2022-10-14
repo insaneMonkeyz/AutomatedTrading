@@ -2,8 +2,8 @@
 {
     public interface ICalendarSpread : ISecurity, IExpiring
     {
-        ISecurity NearTermSecurity { get; }
-        ISecurity LongTermSecurity { get; }
-        TimeSpan TimeDelta { get; }
+        IExpiring NearTermLeg { get; }
+        IExpiring LongTermLeg { get; }
+        TimeSpan ExpiryTimeDelta { get; }
     }
 }

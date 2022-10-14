@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\BasicConcepts\BasicConcepts.csproj" />
+    <ProjectReference Include="..\..\..\Core\Core.csproj" />
   </ItemGroup>
 
 </Project>

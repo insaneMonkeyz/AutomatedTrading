@@ -1,7 +1,6 @@
 ﻿namespace BasicConcepts.SecuritySpecifics
 {
-    public interface IFutures : ISecurity, IExpiring
+    public interface IFutures : IDerivative, IExpiring
     {
-        ISecurity Underlying { get; }
     }
 }

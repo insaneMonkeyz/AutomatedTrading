@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
 
-namespace QuikLuaApiWrapper.Entities
+namespace QuikLuaApi.Entities
 {
     internal class OrderBook : IOptimizedOrderBook
     {

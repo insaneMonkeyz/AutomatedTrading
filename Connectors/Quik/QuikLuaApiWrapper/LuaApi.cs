@@ -113,6 +113,8 @@ namespace QuikLuaApi
         internal const int TYPE_STRING = 4;
         internal const int TYPE_TABLE = 5;
 
+        internal const int TRUE = 1;
+
 
         [DllImport(LUA_DLLNAME, CallingConvention = CallingConvention.Cdecl)]
         internal static extern void lua_createtable(IntPtr luaState, int narr, int nrec);

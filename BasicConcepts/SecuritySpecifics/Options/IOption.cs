@@ -1,9 +1,8 @@
 ﻿namespace BasicConcepts.SecuritySpecifics.Options
 {
-    public interface IOption : ISecurity, IExpiring
+    public interface IOption : IDerivative, IExpiring
     {
         Decimal5 Strike { get; }
-        ISecurity Underlying { get; }
         OptionTypes OptionType { get; }
     }
 }
