@@ -101,6 +101,10 @@ namespace QuikLuaApi
                 LuaApi.lua_pushstring(_localState, "one");
                 LuaApi.lua_pushstring(_localState, "two");
                 LuaApi.lua_pushstring(_localState, "three");
+
+                var classes = GetClasses();
+                var options = GetSecuritiesOfAClass(QuikApi.OPTIONS_CLASS_CODE);
+                var opt = GetSecurity("SPBOPT", options.First());
             }
             catch (Exception ex)
             {

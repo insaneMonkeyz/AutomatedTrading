@@ -26,23 +26,6 @@ namespace QuikLuaApi
         public static unsafe implicit operator LuaState(void* pointer) => new(pointer); 
         #endregion
 
-        internal void TieProxyLibrary(string dllname)
-        {
-            var reg = new LuaRegister[]
-            {
-                new()
-            };
-
-            LuaApi.lua_createtable(_state, 0, 0);
-            LuaApi.luaL_setfuncs(_state, reg, 0);
-            LuaApi.lua_pushvalue(_state, LAST_ITEM);
-            LuaApi.lua_setglobal(_state, dllname);
-        }
-        internal void RegisterCallback(LuaFunction function, string alias)
-        {
-            LuaApi.lua_pushcclosure(_state, function, 0);
-            LuaApi.lua_setglobal(_state, alias);
-        }
         internal string ReadValueSafe(LuaTypes type, IntPtr pStack, int i)
         {
             LuaApi.lua_pushnil(pStack);
@@ -251,6 +234,40 @@ namespace QuikLuaApi
             return false;
         }
 
+        internal string PopString()
+        {
+            var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+
+            var value = len > 0 
+                ? Marshal.PtrToStringAnsi(pstr, (int)len) 
+                : string.Empty;
+
+            LuaApi.lua_settop(_state, SECOND_ITEM);
+
+            return value;
+        }
+
+
+        #region Tested
+        internal void TieProxyLibrary(string dllname)
+        {
+            var reg = new LuaRegister[]
+            {
+                new()
+            };
+
+            LuaApi.lua_createtable(_state, 0, 0);
+            LuaApi.luaL_setfuncs(_state, reg, 0);
+            LuaApi.lua_pushvalue(_state, LAST_ITEM);
+            LuaApi.lua_setglobal(_state, dllname);
+        }
+        internal void RegisterCallback(LuaFunction function, string alias)
+        {
+            LuaApi.lua_pushcclosure(_state, function, 0);
+            LuaApi.lua_setglobal(_state, alias);
+        }
+
+
         /// <summary>
         /// Reads value of a field of the table on top of the stack
         /// </summary>
@@ -343,7 +360,6 @@ namespace QuikLuaApi
                 && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
         }
 
-
         internal T ExecFunction<T>(string name, int returnType, Func<T> callback)
         {
             LuaApi.lua_getglobal(_state, name);
@@ -360,13 +376,29 @@ namespace QuikLuaApi
 
             return result;
         }
+        internal T ExecFunction<T>(string name, int returnType, Func<T> callback, string arg0)
+        {
+            LuaApi.lua_getglobal(_state, name);
+            LuaApi.lua_pushstring(_state, arg0);
+
+            T result = default;
+
+            // pcallk заменит все аргументы которые потребовались для его вызова на результат или nil
+            if (LuaApi.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
+                LuaApi.lua_type(_state, LAST_ITEM) == returnType)
+            {
+                result = callback();
+            }
+
+            LuaApi.lua_settop(_state, SECOND_ITEM);
+
+            return result;
+        }
         internal T ExecFunction<T>(string name, int returnType, Func<T> callback, string arg0, string arg1)
         {
-            PrintStack("Entered ExecFunction()");
             LuaApi.lua_getglobal(_state, name);
             LuaApi.lua_pushstring(_state, arg0);
             LuaApi.lua_pushstring(_state, arg1);
-            PrintStack("Function Params pushed");
 
             T result = default;
 
@@ -374,13 +406,10 @@ namespace QuikLuaApi
             if (LuaApi.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
                 LuaApi.lua_type(_state, LAST_ITEM) == returnType)
             {
-                PrintStack($"Security {arg1} found");
                 result = callback();
             }
 
-            PrintStack($"Removing ExecFunction leftovers from stack");
             LuaApi.lua_settop(_state, SECOND_ITEM);
-            PrintStack("ExecFunction() completed");
 
             return result;
         }
@@ -404,7 +433,6 @@ namespace QuikLuaApi
             return result;
         }
 
-
         /// <summary>
         /// Pops last item from the stack
         /// </summary>
@@ -412,7 +440,6 @@ namespace QuikLuaApi
         {
             LuaApi.lua_settop(_state, SECOND_ITEM);
         }
-
         /// <summary>
         /// Pops last two items from the stack
         /// </summary>
@@ -420,14 +447,14 @@ namespace QuikLuaApi
         {
             LuaApi.lua_settop(_state, -3);
         }
-
         /// <summary>
         /// Pops n items from the stack
         /// </summary>
         internal void PopFromStack(int numItems)
         {
-            LuaApi.lua_settop(_state, -numItems-1);
+            LuaApi.lua_settop(_state, -numItems - 1);
         }
+
         internal bool LastItemIsTable()
         {
             return LuaApi.lua_type(_state, LAST_ITEM) == LuaApi.TYPE_TABLE;
@@ -436,5 +463,6 @@ namespace QuikLuaApi
         {
             return LuaApi.lua_type(_state, LAST_ITEM) == LuaApi.TYPE_STRING;
         }
+        #endregion
     }
 }

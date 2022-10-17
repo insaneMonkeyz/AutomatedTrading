@@ -18,6 +18,40 @@ namespace QuikLuaApi
     {
         internal static GetSecurity RequestSavedSecurity = delegate { return null; };
 
+        internal static IEnumerable<string> GetClasses()
+        {
+            IEnumerable<string> parser()
+            {
+                var chain = _localState.PopString();
+
+                return string.IsNullOrWhiteSpace(chain) 
+                    ? Enumerable.Empty<string>() 
+                    : chain.Split(',');
+            }
+
+            return _localState.ExecFunction(
+                      name: QuikApi.GET_CLASSES_LIST_METHOD,
+                returnType: LuaApi.TYPE_STRING,
+                  callback: parser);
+        }
+        internal static IEnumerable<string> GetSecuritiesOfAClass(string classcode)
+        {
+            IEnumerable<string> parser()
+            {
+                var chain = _localState.PopString();
+
+                return string.IsNullOrWhiteSpace(chain)
+                    ? Enumerable.Empty<string>()
+                    : chain.Split(',');
+            }
+
+            return _localState.ExecFunction(
+                      name: QuikApi.GET_SECURITIES_OF_A_CLASS_METHOD,
+                returnType: LuaApi.TYPE_STRING,
+                  callback: parser,
+                      arg0: classcode);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -30,9 +64,7 @@ namespace QuikLuaApi
         {
             static ISecurity parseSecurityParameters()
             {
-                _localState.PrintStack("Parsing SecurityParamsContainer");
                 var container = GetSecurityParamsContainer();
-                _localState.PrintStack("SecurityParamsContainer parsed");
 
                 if (!container.StateIsCorrect)
                 {

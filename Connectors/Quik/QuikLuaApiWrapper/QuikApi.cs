@@ -11,6 +11,8 @@ namespace QuikLuaApi
         public const string IS_CONNECTED_METHOD = "isConnected";
         public const string GET_ORDERBOOK_METHOD = "getQuoteLevel2";
         public const string GET_SECURITY_METHOD = "getSecurityInfo";
+        public const string GET_CLASSES_LIST_METHOD = "getClassesList";
+        public const string GET_SECURITIES_OF_A_CLASS_METHOD = "getClassSecurities";
         public const string GET_PARAM_METHOD = "getParamEx";
         
         public const string SECURITY_TICKER_PROPERTY = "code";
