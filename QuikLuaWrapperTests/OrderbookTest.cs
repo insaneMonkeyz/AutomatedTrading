@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
+using QuikLuaApiWrapper;
 
 namespace QuikLuaWrapperTests
 {
@@ -12,7 +13,7 @@ namespace QuikLuaWrapperTests
         [Test]
         public void CopyingCorrectness()
         {
-            IOptimizedOrderBook orderbook = QuikLuaApi.QuikLuaApiWrapper.GetOrderbook(null);
+            IOptimizedOrderBook orderbook = Quik.GetOrderbook(null);
 
             var q1 = new Quote()
             {

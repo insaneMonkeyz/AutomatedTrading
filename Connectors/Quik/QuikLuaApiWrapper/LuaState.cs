@@ -68,7 +68,7 @@ namespace QuikLuaApi
                 : "=====================================");
 
 
-            for (int i = -1; i > -6; i--)
+            for (int i = -1; i > -4; i--)
             {
                 var type = (LuaTypes)LuaApi.lua_type(_state, i);
 
@@ -184,6 +184,18 @@ namespace QuikLuaApi
 
             return false;
         }
+        internal bool TryPopNumberAsBool()
+        {
+            var value = 0L;
+
+            if (LuaApi.lua_isnumber(_state, LAST_ITEM) > 0)
+            {
+                value = LuaApi.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero);
+                LuaApi.lua_settop(_state, SECOND_ITEM);
+            }
+
+            return value == LuaApi.TRUE;
+        }
         internal bool TryPopDecimal(out Decimal5 value)
         {
             value = 0L;
@@ -239,7 +251,6 @@ namespace QuikLuaApi
             return false;
         }
 
-        #region Tested. Works fine
         /// <summary>
         /// Reads value of a field of the table on top of the stack
         /// </summary>
@@ -331,14 +342,75 @@ namespace QuikLuaApi
             return LuaApi.lua_pcallk(_state, 3, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
                 && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
         }
-        #endregion
+
+
+        internal T ExecFunction<T>(string name, int returnType, Func<T> callback)
+        {
+            LuaApi.lua_getglobal(_state, name);
+
+            T result = default;
+
+            if (LuaApi.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
+                LuaApi.lua_type(_state, LAST_ITEM) == returnType)
+            {
+                result = callback();
+            }
+
+            LuaApi.lua_settop(_state, SECOND_ITEM);
+
+            return result;
+        }
+        internal T ExecFunction<T>(string name, int returnType, Func<T> callback, string arg0, string arg1)
+        {
+            PrintStack("Entered ExecFunction()");
+            LuaApi.lua_getglobal(_state, name);
+            LuaApi.lua_pushstring(_state, arg0);
+            LuaApi.lua_pushstring(_state, arg1);
+            PrintStack("Function Params pushed");
+
+            T result = default;
+
+            // pcallk заменит все аргументы которые потребовались для его вызова на результат или nil
+            if (LuaApi.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
+                LuaApi.lua_type(_state, LAST_ITEM) == returnType)
+            {
+                PrintStack($"Security {arg1} found");
+                result = callback();
+            }
+
+            PrintStack($"Removing ExecFunction leftovers from stack");
+            LuaApi.lua_settop(_state, SECOND_ITEM);
+            PrintStack("ExecFunction() completed");
+
+            return result;
+        }
+        internal T ExecFunction<T>(string name, int returnType, Func<T> callback, string arg0, string arg1, string arg2)
+        {
+            LuaApi.lua_getglobal(_state, name);
+            LuaApi.lua_pushstring(_state, arg0);
+            LuaApi.lua_pushstring(_state, arg1);
+            LuaApi.lua_pushstring(_state, arg2);
+
+            T result = default;
+
+            if (LuaApi.lua_pcallk(_state, 3, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
+                LuaApi.lua_type(_state, LAST_ITEM) == returnType)
+            {
+                result = callback();
+            }
+
+            LuaApi.lua_settop(_state, SECOND_ITEM);
+
+            return result;
+        }
+
 
         /// <summary>
         /// Pops last item from the stack
         /// </summary>
         internal void PopFromStack()
         {
-            LuaApi.lua_settop(_state, -2);
+            LuaApi.lua_settop(_state, SECOND_ITEM);
         }
 
         /// <summary>

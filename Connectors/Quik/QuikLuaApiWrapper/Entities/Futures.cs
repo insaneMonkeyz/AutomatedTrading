@@ -5,7 +5,13 @@ namespace QuikLuaApi.Entities
 {
     internal class Futures : SecurityBase, IFutures
     {
+        public override string ClassCode => QuikApi.FUTURES_CLASS_CODE;
         public ISecurity Underlying { get; init; }
         public DateTimeOffset Expiry { get; init; }
+
+        public Futures(SecurityParamsContainer container) : base(container)
+        {
+
+        }
     }
 }

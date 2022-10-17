@@ -8,9 +8,15 @@ namespace QuikLuaApi
 {
     internal class QuikApi
     {
+        public const string IS_CONNECTED_METHOD = "isConnected";
+        public const string GET_ORDERBOOK_METHOD = "getQuoteLevel2";
         public const string GET_SECURITY_METHOD = "getSecurityInfo";
+        public const string GET_PARAM_METHOD = "getParamEx";
+        
+        public const string SECURITY_TICKER_PROPERTY = "code";
+        public const string SECURITY_CLASS_CODE_PROPERTY = "class_code";
         public const string SECURITY_DESCRIPTION_PROPERTY = "name";
-        public const string SECURITY_CURRENCY_PROPERTY = "face_value";
+        public const string SECURITY_CURRENCY_PROPERTY = "face_unit";
         public const string SECURITY_MIN_PRICE_STEP_PROPERTY = "min_price_step";
         public const string SECURITY_PRICE_SCALE_PROPERTY = "scale";
         public const string SECURITY_CONTRACT_SIZE_PROPERTY = "lot_size";
@@ -18,6 +24,22 @@ namespace QuikLuaApi
         public const string SECURITY_STRIKE_PROPERTY = "option_strike";
         public const string SECURITY_UNDERLYING_CLASS_CODE_PROPERTY = "base_active_classcode";
         public const string SECURITY_UNDERLYING_SEC_CODE_PROPERTY = "base_active_seccode";
+        public const string SECURITY_NEAR_TERM_LEG_CLASS_CODE_PROPERTY = "sell_leg_classcode";
+        public const string SECURITY_NEAR_TERM_LEG_SEC_CODE_PROPERTY = "sell_leg_seccode";
+        public const string SECURITY_LONG_TERM_LEG_CLASS_CODE_PROPERTY = "buy_leg_classcode";
+        public const string SECURITY_LONG_TERM_LEG_SEC_CODE_PROPERTY = "buy_leg_seccode";
+
+        public const string PARAM_SECURITY_OPTION_TYPE = "optiontype";
+
+        public const string PARAM_RESPONSE_RESULT_PROPERTY = "result";
+        public const string PARAM_RESPONSE_VALUE_PROPERTY = "param_value";
+
+        public const long PARAM_RESPONSE_TYPE_DOUBLE = 1;
+        public const long PARAM_RESPONSE_TYPE_LONG = 2;
+        public const long PARAM_RESPONSE_TYPE_CHAR = 3;
+        public const long PARAM_RESPONSE_TYPE_ENUM = 4;
+        public const long PARAM_RESPONSE_TYPE_TIME = 5;
+        public const long PARAM_RESPONSE_TYPE_DATE = 6;
         
         public const string RUB_CURRENCY = "SUR";
         public const string USD_CURRENCY = "USD";
