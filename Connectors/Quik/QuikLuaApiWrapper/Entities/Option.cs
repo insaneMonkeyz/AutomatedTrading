@@ -5,7 +5,7 @@ namespace QuikLuaApi.Entities
 {
     internal class Option : SecurityBase, IOption
     {
-        public override string ClassCode => QuikApi.OPTIONS_CLASS_CODE;
+        public override string ClassCode => QuikApi.QuikApi.OPTIONS_CLASS_CODE;
         public Decimal5 Strike { get; init; }
         public OptionTypes OptionType { get; init; }
         public ISecurity Underlying { get; init; }

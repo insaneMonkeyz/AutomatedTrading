@@ -4,8 +4,8 @@ namespace QuikLuaApi.Entities
 {
     internal abstract class SecurityBase : ISecurity
     {
-        public Decimal5 MinTradingSize => QuikApi.DEFAULT_TRADING_SIZE;
-        public Guid ExchangeId => QuikApi.MoexExchangeId;
+        public Decimal5 MinTradingSize => QuikApi.QuikApi.DEFAULT_TRADING_SIZE;
+        public Guid ExchangeId => QuikApi.QuikApi.MoexExchangeId;
         public abstract string ClassCode { get; }
         public string Ticker { get; init; }
         public string Description { get; init; }

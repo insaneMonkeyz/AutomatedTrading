@@ -5,11 +5,12 @@ using BasicConcepts;
 using BasicConcepts.SecuritySpecifics.Options;
 using QuikLuaApi.Entities;
 using QuikLuaApiWrapper;
+using QuikLuaApi.QuikApi;
 using static System.Formats.Asn1.AsnWriter;
+using QuikLuaApiWrapper.Entities;
 
 namespace QuikLuaApi
 {
-
     public partial class QuikLuaApiWrapper
     {
         [Flags]
@@ -25,45 +26,74 @@ namespace QuikLuaApi
         public static bool IsConnected
         {
             get => _localState.ExecFunction(
-                      name: QuikApi.IS_CONNECTED_METHOD, 
+                      name: QuikLuaApi.QuikApi.QuikApi.IS_CONNECTED_METHOD, 
                 returnType: LuaApi.TYPE_NUMBER, 
-                  callback: _localState.TryPopNumberAsBool);
+                  callback: _localState.ReadAsBool);
         }
 
-
-        internal OrderbookParsingResult UpdateOrderBook(IOptimizedOrderBook orderbook, string classCode, string ticker)
+        internal static IEnumerable<QuikTable> ParseTables(string name)
         {
-            OrderbookParsingResult result = default;
+            var numAccounts = (int)_localState.ExecFunction(Methods.GET_NUMBER_OF_ITEMS, LuaApi.TYPE_NUMBER, _localState.ReadAsNumber, name);
+            var result = new List<QuikTable>(numAccounts);
 
-            if (_localState.ExecFunction(QuikApi.GET_ORDERBOOK_METHOD, LuaApi.TYPE_TABLE, classCode, ticker))
+            for (int i = 0; i < numAccounts; i++)
             {
-                static bool processQuotes(string countField, string quotesField, Action<OneSideQuotesReader> reader)
+                if (_localState.ExecFunction(Methods.GET_ITEM, LuaApi.TYPE_TABLE, name, i))
                 {
-                    if (_localState.TryFetchLongFromTable(countField, out long qCount) && qCount > 0)
+                    var table = new QuikTable(name);
+
+                    LuaApi.lua_pushnil(_localState);
+
+                    while (LuaApi.lua_next(_localState, -2) != LuaApi.OK_RESULT)
                     {
-                        _localState.PushColumnValueTable(quotesField);
-                        reader(ReadQuotes);
+                        var value = _localState.ReadValueSafe(LuaTypes.String, _localState, -1);
+                        var title = _localState.ReadValueSafe(LuaTypes.String, _localState, -2);
+
+                        table[title] = value;
+
                         _localState.PopFromStack();
-                        return true;
                     }
-                    else
-                    {
-                        return false;
-                    }
+
+                    result.Add(table);
                 }
 
-                if (processQuotes("bid_count", "bid", orderbook.UseBids))
-                {
-                    result |= OrderbookParsingResult.BidsParsed;
-                }
-                if (processQuotes("offer_count", "offer", orderbook.UseAsks))
-                {
-                    result |= OrderbookParsingResult.AsksParsed;
-                }
+                _localState.PopFromStack();
             }
 
-            // pop getQuoteLevel2 result
-            _localState.PopFromStack();
+            return result;
+        }
+
+        public static T[][] ParseTable<T>(string name, Func<T> parser)
+        {
+            var numAccounts = _localState.ExecFunction(Methods.GET_NUMBER_OF_ITEMS, LuaApi.TYPE_NUMBER, _localState.ReadAsNumber, name);
+
+            var result = new T[numAccounts][];
+
+            for (int i = 0; i < numAccounts; i++)
+            {
+                if (_localState.ExecFunction(Methods.GET_ITEM, LuaApi.TYPE_TABLE, name, i))
+                {
+                    result[i] = TableIterator(parser);
+                }
+
+                _localState.PopFromStack();
+            }
+
+            return result;
+        }
+
+        public static T[] TableIterator<T>(Func<T> parser)
+        {
+            var dataLen = (long)LuaApi.lua_rawlen(_localState, -1);
+            var result = new T[dataLen];
+
+            LuaApi.lua_pushnil(_localState);
+
+            for (int i = 0; i < dataLen && LuaApi.lua_next(_localState, -2) != LuaApi.OK_RESULT; i++)
+            {
+                result[i] = parser();
+            }
+
             return result;
         }
 
@@ -96,14 +126,30 @@ namespace QuikLuaApi
 
             try
             {
-                System.Diagnostics.Debugger.Launch();
-
                 LuaApi.lua_pushstring(_localState, "one");
                 LuaApi.lua_pushstring(_localState, "two");
                 LuaApi.lua_pushstring(_localState, "three");
 
+                //var firms = ParseTable("firms").ToArray();
+                //var money_limits = ParseTables("money_limits").ToArray();
+                //var trade_accounts = ParseTables("trade_accounts").ToArray();
+                //var account_positions = ParseTables("account_positions").ToArray();
+                //var futures_client_limits = ParseTables("futures_client_limits").ToArray();
+
+                //var futlims = ParseTables("futures_client_limits")
+                //    .Select(t => t.Deserialize<DerivativesTradingAccount>());
+
+                var accounts = GetDerivativesExchangeAccounts();
+
+                System.Diagnostics.Debugger.Launch();
+
+                //var accounts = GetAccounts().ToArray();
+
+                //GetDerivativesMarketFunds("U7A0016", "FORTS9202", Account.CLEARING_LIMIT_TYPE, QuikApi.Account.RUB_CURRENCY);
+                //GetDerivativesMarketFunds("U7A0016", "FORTS9202", Account.MONEY_LIMIT_TYPE, QuikApi.Account.RUB_CURRENCY);
+
                 var classes = GetClasses();
-                var options = GetSecuritiesOfAClass(QuikApi.OPTIONS_CLASS_CODE);
+                var options = GetSecuritiesOfAClass(QuikApi.QuikApi.OPTIONS_CLASS_CODE);
                 var opt = GetSecurity("SPBOPT", options.First());
             }
             catch (Exception ex)
@@ -112,62 +158,6 @@ namespace QuikLuaApi
                 return -1;
             }
             return 1;
-        }
-
-        private static void ReadQuotes(Quote[] quotes, Operations operation, long marketDepth)
-        {
-            const int LAST_ITEM = -1;
-            const int SECOND_ITEM = -2;
-
-            var dataLen = (long)LuaApi.lua_rawlen(_localState, LAST_ITEM);
-            var quotesSize = Math.Min(dataLen, marketDepth);
-
-            if (quotesSize > 0)
-            {
-                long passed = 0;
-                long thisIndex = 0;
-                long luaIndex = 1;
-                long increment = 1;
-
-                if (operation == Operations.Buy && quotesSize != 1)
-                {
-                    luaIndex = dataLen - quotesSize - 1;
-                    thisIndex = quotesSize - 1;
-                    increment = -1;
-                }
-
-                while (passed < quotesSize)
-                {
-                    if (LuaApi.lua_rawgeti(_localState, LAST_ITEM, luaIndex++) != LuaApi.TYPE_TABLE)
-                    {
-                        _localState.PopFromStack();
-                        throw new QuikApiException("Array of quotes ended prior than expected. ");
-                    }
-
-                    if (_localState.LastItemIsTable() &&
-                        _localState.TryFetchDecimalFromTable("price", out Decimal5 price) &&
-                        _localState.TryFetchLongFromTable("quantity", out long size))
-                    {
-                        quotes[thisIndex] = new Quote
-                        {
-                            Price = price,
-                            Size = size,
-                            Operation = operation
-                        };
-
-                        _localState.PopFromStack();
-
-                        thisIndex += increment;
-                        passed++;
-                    }
-                    else
-                    {
-                        _localState.PopFromStack();
-
-                        break;
-                    }
-                }
-            }
         }
     }
 }

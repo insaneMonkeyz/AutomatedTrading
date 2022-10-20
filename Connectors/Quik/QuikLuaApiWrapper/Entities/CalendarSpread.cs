@@ -5,7 +5,7 @@ namespace QuikLuaApi.Entities
 {
     internal class CalendarSpread : SecurityBase, ICalendarSpread
     {
-        public override string ClassCode => QuikApi.CALENDAR_SPREADS_CLASS_CODE;
+        public override string ClassCode => QuikApi.QuikApi.CALENDAR_SPREADS_CLASS_CODE;
         public TimeSpan ExpiryTimeDelta
         {
             get => LongTermLeg.Expiry - NearTermLeg.Expiry;
