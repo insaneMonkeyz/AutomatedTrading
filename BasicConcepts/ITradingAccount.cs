@@ -8,8 +8,8 @@ namespace BasicConcepts
 {
     public interface ITradingAccount
     {
-        string Code { get; }
-        string Description { get; }
+        string AccountCode { get; }
+        string? Description { get; }
         Decimal5 TotalFunds { get; }
         Decimal5 UnusedFunds { get; }
         Decimal5 FloatingIncome { get; }

@@ -2,13 +2,13 @@
 
 namespace QuikLuaApi
 {
-    internal class SecurityParamsContainer
+    internal struct SecurityParamsContainer
     {
         public string Ticker;
         public string ClassCode;
         public long PricePrecisionScale;
         public long ContractSize;
-        public string Description;
+        public string? Description;
         public Decimal5 MinPriceStep;
         public Currencies DenominationCurrency;
 
@@ -21,7 +21,6 @@ namespace QuikLuaApi
                     !string.IsNullOrEmpty(ClassCode) &&
                     PricePrecisionScale >= 0 &&
                     ContractSize > 0 &&
-                    Description != null &&
                     MinPriceStep > 0;
             }
         }

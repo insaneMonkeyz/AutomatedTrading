@@ -6,5 +6,10 @@
         {
 
         }
+
+        public static QuikApiException ParseExceptionMsg(string property, string expectedType)
+        {
+            return new QuikApiException($"Failed to parse '{property}' value. Provided value is not a {expectedType}");
+        }
     }
 }

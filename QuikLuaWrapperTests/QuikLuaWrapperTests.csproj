@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BasicConcepts\BasicConcepts.csproj" />
-    <ProjectReference Include="..\Connectors\Quik\QuikLuaApiWrapper\QuikLuaApiWrapper.csproj" />
+    <ProjectReference Include="..\Connectors\Quik\QuikLuaApiWrapper\Quik.csproj" />
   </ItemGroup>
 
 </Project>

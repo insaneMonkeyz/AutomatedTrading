@@ -1,4 +1,4 @@
-﻿namespace BasicConcepts
+﻿namespace BasicConcepts.SecuritySpecifics
 {
     public interface IExpiring
     {

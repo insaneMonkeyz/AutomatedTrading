@@ -1,10 +1,12 @@
-﻿namespace QuikLuaApi.Entities
+﻿using BasicConcepts.SecuritySpecifics;
+
+namespace QuikLuaApi.Entities
 {
-    internal class Stock : SecurityBase
+    internal class Stock : SecurityBase, IStock
     {
         public override string ClassCode => QuikApi.QuikApi.STOCK_CLASS_CODE;
 
-        public Stock(SecurityParamsContainer container) : base(container)
+        public Stock(ref SecurityParamsContainer container) : base(ref container)
         {
 
         }

@@ -4,7 +4,7 @@
     {
         Guid ExchangeId { get; } 
         string Ticker { get; }
-        string Description { get; }
+        string? Description { get; }
 
         /// <summary>
         /// Number of digits apter the point. E.g. 2 = 0.01

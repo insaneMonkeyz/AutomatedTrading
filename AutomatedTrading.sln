@@ -17,7 +17,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClrBootstrap", "Connectors\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeToManagedProxy", "Connectors\Quik\NativeToManagedProxy\NativeToManagedProxy.vcxproj", "{EF27322F-29E7-436E-A37E-D8C857FC9687}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuikLuaApiWrapper", "Connectors\Quik\QuikLuaApiWrapper\QuikLuaApiWrapper.csproj", "{0AD1E47C-F4CF-477E-A3F5-C3AF4B66FB8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quik", "Connectors\Quik\QuikLuaApiWrapper\Quik.csproj", "{0AD1E47C-F4CF-477E-A3F5-C3AF4B66FB8C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{33076292-419D-4078-A26B-EF08F16DB261}"
 EndProject

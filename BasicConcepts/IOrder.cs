@@ -1,4 +1,6 @@
-﻿namespace BasicConcepts
+﻿using BasicConcepts.SecuritySpecifics;
+
+namespace BasicConcepts
 {
     public interface IOrder : IExpiring
     {

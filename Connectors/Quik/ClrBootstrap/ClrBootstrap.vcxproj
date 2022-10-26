@@ -174,7 +174,7 @@
     <ClCompile Include="bootstrap.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\QuikLuaApiWrapper\QuikLuaApiWrapper.csproj">
+    <ProjectReference Include="..\QuikLuaApiWrapper\Quik.csproj">
       <Project>{0ad1e47c-f4cf-477e-a3f5-c3af4b66fb8c}</Project>
     </ProjectReference>
   </ItemGroup>

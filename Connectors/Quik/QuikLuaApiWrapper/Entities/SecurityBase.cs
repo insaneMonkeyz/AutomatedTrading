@@ -8,13 +8,13 @@ namespace QuikLuaApi.Entities
         public Guid ExchangeId => QuikApi.QuikApi.MoexExchangeId;
         public abstract string ClassCode { get; }
         public string Ticker { get; init; }
-        public string Description { get; init; }
+        public string? Description { get; init; }
         public Currencies DenominationCurrency { get; init; }
         public long PricePrecisionScale { get; init; }
         public long ContractSize { get; init; }
         public Decimal5 MinPriceStep { get; init; }
 
-        public SecurityBase(SecurityParamsContainer container)
+        public SecurityBase(ref SecurityParamsContainer container)
         {
             Ticker = container.Ticker;
             Description = container.Description;

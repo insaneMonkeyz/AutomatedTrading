@@ -1,5 +1,4 @@
-﻿using BasicConcepts;
-using BasicConcepts.SecuritySpecifics;
+﻿using BasicConcepts.SecuritySpecifics;
 
 namespace QuikLuaApi.Entities
 {
@@ -11,18 +10,18 @@ namespace QuikLuaApi.Entities
             get => LongTermLeg.Expiry - NearTermLeg.Expiry;
         }
         public DateTimeOffset Expiry { get; }
-        public IExpiring NearTermLeg { get; }
-        public IExpiring LongTermLeg { get; }
+        public IExpiring? NearTermLeg { get; }
+        public IExpiring? LongTermLeg { get; }
     
-        public CalendarSpread(SecurityParamsContainer container, IExpiring neartermLeg, IExpiring longtermLeg) 
-            : base(container)
+        public CalendarSpread(ref SecurityParamsContainer container, IExpiring neartermLeg, IExpiring longtermLeg) 
+            : base(ref container)
         {
             NearTermLeg = neartermLeg;
             LongTermLeg = longtermLeg;
             Expiry = NearTermLeg.Expiry;
         }
-        public CalendarSpread(SecurityParamsContainer container, DateTimeOffset expiry) 
-            : base(container)
+        public CalendarSpread(ref SecurityParamsContainer container, DateTimeOffset expiry) 
+            : base(ref container)
         {
             Expiry = expiry;
         }

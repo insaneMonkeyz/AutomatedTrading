@@ -7,8 +7,10 @@ using BasicConcepts;
 using QuikLuaApi;
 using QuikLuaApi.QuikApi;
 using QuikLuaApiWrapper.Extensions;
+using static QuikLuaApi.QuikLuaApiWrapper;
+using static QuikLuaApiWrapper.ApiWrapper.GenericQuikTable;
 
-namespace QuikLuaApiWrapper.ApiWrapper.Account
+namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
 {
     /// <summary>
     /// Wrapper таблицы лимитов по клиентским счетам
@@ -17,7 +19,8 @@ namespace QuikLuaApiWrapper.ApiWrapper.Account
     {
         public const string NAME = "futures_client_limits";
 
-        private const string GET_METOD = "getFuturesLimit";
+        public const string GET_METOD = "getFuturesLimit";
+        public const string CALLBACK_METHOD = "OnFuturesLimitChange";
 
         private const string COLLATERAL = "cbplused";
         private const string TOTAL_FUNDS = "cbplimit";
@@ -26,7 +29,7 @@ namespace QuikLuaApiWrapper.ApiWrapper.Account
         private const string RECORDED_INCOME = "accruedint";
 
         private const string LIMIT_TYPE = "limit_type";
-        private const string MONEY_LIMIT_TYPE = "0";
+        private const long MONEY_LIMIT_TYPE = 0;
 
         private const string ACCOUNT_CURRENCY = "currcode";
         private const string ACCOUNT_ID = "trdaccid";
@@ -34,44 +37,14 @@ namespace QuikLuaApiWrapper.ApiWrapper.Account
 
         private static LuaState _stack;
 
-        public struct Request
-        {
-            public string FirmId;
-            public string ClientCode;
-            public string CurrencyCode;
-        }
-
-        public static void RequestData<T>(LuaState stack, ref Request request, Action<T> reader, T readerArg)
-        {
-            if (stack.ExecFunction(
-                    name: GET_METOD,
-              returnType: LuaApi.TYPE_TABLE,
-                    arg0: request.FirmId,
-                    arg1: request.ClientCode,
-                    arg2: MONEY_LIMIT_TYPE,
-                    arg3: request.CurrencyCode))
-            {
-                reader(readerArg);
-            }
-
-            stack.PopFromStack();
-        }
-        public static void ReadAllocated<T>(LuaState stack, Action<T> reader, T readerArg)
+        public static void Set(LuaState stack)
         {
             _stack = stack;
-
-            reader(readerArg);
-        }
-        public static T? ReadAllocated<T>(LuaState stack, Func<T?> reader)
-        {
-            _stack = stack;
-
-            return reader();
         }
 
-        public static Currencies AccountCurrency
+        public static Currencies? AccountCurrency
         {
-            get => _stack.ReadRowValueString(ACCOUNT_CURRENCY).CodeToCurrency();
+            get => _stack.ReadRowValueString(ACCOUNT_CURRENCY)?.CodeToCurrency();
         }
         public static Decimal5 TotalFunds
         {
@@ -93,17 +66,17 @@ namespace QuikLuaApiWrapper.ApiWrapper.Account
         {
             get => _stack.ReadRowValueDecimal5(RECORDED_INCOME);
         }
-        public static string AccountId
+        public static string? ClientCode
         {
             get => _stack.ReadRowValueString(ACCOUNT_ID);
         }
-        public static string FirmId
+        public static string? FirmId
         {
             get => _stack.ReadRowValueString(FIRM_ID);
         }
         public static bool IsMainAccount
         {
-            get => _stack.ReadRowValueString(LIMIT_TYPE) == MONEY_LIMIT_TYPE;
+            get => _stack.ReadRowValueLong(LIMIT_TYPE) == MONEY_LIMIT_TYPE;
         }
     }
 }

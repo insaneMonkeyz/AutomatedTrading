@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,6 +37,20 @@ namespace QuikLuaApiWrapper.Extensions
                 Account.RUB_CURRENCY => Currencies.RUB,
                 _ => throw new NotImplementedException($"Currency '{code}' is not supported.")
             };
+        }
+        public static void DebugPrintWarning(this string msg)
+        {
+            var text = "=======================================================================\n" +
+                       "                               W A R N I N G                           \n" +
+                       "=======================================================================\n" +
+                       msg +
+                       "=======================================================================";
+
+            Debug.Print(text);
+        }
+        public static QuikApiException ToSecurityParsingException(this string property)
+        {
+            return new QuikApiException($"Can't parse essential parameter '{property}' to build a security.");
         }
     }
 }
