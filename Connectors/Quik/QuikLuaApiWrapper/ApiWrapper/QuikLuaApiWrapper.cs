@@ -9,6 +9,7 @@ using QuikLuaApiWrapper.Entities;
 using Quik.ApiWrapper;
 using QuikLuaApiWrapper.ApiWrapper.QuikApi;
 using BasicConcepts.SecuritySpecifics;
+using QuikLuaApiWrapper.Extensions;
 
 namespace QuikLuaApi
 {
@@ -190,6 +191,27 @@ namespace QuikLuaApi
             public T DefaultValue;
         }
 
+        internal static Decimal5? GetDecimal5Param(SecurityBase security, string param)
+        {
+            var @params = new GetItemParams
+            {
+                ReturnType = GetParam.Values.Double,
+                ClassCode = security.ClassCode,
+                Ticker = security.Ticker,
+                Parameter = param
+            };
+
+            if (!Decimal5.TryParse(ReadSpecificEntry(ref @params), out Decimal5 value))
+            {
+                $"Parameter '{param}' of security {security.ClassCode}:{security.Ticker} was not set"
+                    .DebugPrintWarning();
+
+                return null;
+            }
+
+            return value;
+        }
+
         internal static string? ReadSpecificEntry(ref GetItemParams param)
         {
             string? result = null;
@@ -206,14 +228,15 @@ namespace QuikLuaApi
                 }
                 else if (type == (long)GetParam.Values.NoValue)
                 {
-                    Debug.Print($"Value of parameter {param.Parameter} was not present");
+                    ($"Value of parameter {param.Parameter} was not present for security " +
+                        $"'{param.ClassCode}:{param.Ticker}'").DebugPrintWarning();
                 }
                 else
                 {
                     _localState.PopFromStack();
 
-                    throw new ArgumentException($"Provided return type '{param.ReturnType}' " +
-                        $"does not match the return type '{type}' of {GetParam.METHOD} method");
+                    throw new ArgumentException($"Provided return type '{param.ReturnType}' of parameter '{param.Parameter}' " +
+                        $" for security '{param.ClassCode}:{param.Ticker}' does not match the return type '{type}' of {GetParam.METHOD} method");
                 }
             }
 

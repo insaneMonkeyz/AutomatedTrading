@@ -24,10 +24,10 @@ namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
         public const string FUTURES_CLASS_CODE = "SPBFUT";
         public const string STOCK_CLASS_CODE = "TQBR";
 
-        public const string PRICE_STEP_VALUE = "STEPPRICE";
-        public const string OPTIONTYPE = "OPTIONTYPE";
-        public const string UPPER_PRICE_LIMIT = "PRICEMAX";
-        public const string LOWER_PRICE_LIMIT = "PRICEMIN";
+        public const string PARAM_OPTIONTYPE = "OPTIONTYPE";
+        public const string PARAM_PRICE_STEP_VALUE = "STEPPRICE";
+        public const string PARAM_UPPER_PRICE_LIMIT = "PRICEMAX";
+        public const string PARAM_LOWER_PRICE_LIMIT = "PRICEMIN";
 
         private const string TICKER = "code";
         private const string CLASS_CODE = "class_code";

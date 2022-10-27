@@ -8,7 +8,7 @@ namespace BasicConcepts.SecuritySpecifics
 {
     public interface ILimitedPrice
     {
-        public Decimal5 UpperPriceLimit { get; }
-        public Decimal5 LowerPriceLimit { get; }
+        public Decimal5? UpperPriceLimit { get; }
+        public Decimal5? LowerPriceLimit { get; }
     }
 }

@@ -106,15 +106,13 @@ namespace Quik.ApiWrapper
         }
         public static void UpdateSecurity<T>(T security) where T : SecurityBase
         {
-            _getSecurityParamRequest.ClassCode = security.ClassCode;
-            _getSecurityParamRequest.Ticker = security.Ticker;
-            _getSecurityParamRequest.Parameter = QuikSecurity.PRICE_STEP_VALUE;
-            _getSecurityParamRequest.ReturnType = GetParam.Values.Double;
+            security.PriceStepValue = GetDecimal5Param(security, QuikSecurity.PARAM_PRICE_STEP_VALUE);
 
-            string? result;
-
-            result = ReadSpecificEntry(ref _getSecurityParamRequest);
-            security.PriceStepValue = Decimal5.TryParse(result, out Decimal5 value) ? value : null;
+            if (security is MoexDerivativeBase baseSec)
+            {
+                baseSec.UpperPriceLimit = GetDecimal5Param(security, QuikSecurity.PARAM_UPPER_PRICE_LIMIT);
+                baseSec.LowerPriceLimit = GetDecimal5Param(security, QuikSecurity.PARAM_LOWER_PRICE_LIMIT);
+            }
         }
         
         private static ISecurity? CreateCalendarSpread()
