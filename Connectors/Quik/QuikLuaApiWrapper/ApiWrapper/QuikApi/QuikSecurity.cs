@@ -24,6 +24,11 @@ namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
         public const string FUTURES_CLASS_CODE = "SPBFUT";
         public const string STOCK_CLASS_CODE = "TQBR";
 
+        public const string PRICE_STEP_VALUE = "STEPPRICE";
+        public const string OPTIONTYPE = "OPTIONTYPE";
+        public const string UPPER_PRICE_LIMIT = "PRICEMAX";
+        public const string LOWER_PRICE_LIMIT = "PRICEMIN";
+
         private const string TICKER = "code";
         private const string CLASS_CODE = "class_code";
         private const string CLASS_NAME = "class_name";
@@ -44,12 +49,6 @@ namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
         private const string SHORT_CURRCODE = "second_currcode";//RUB в USDRUB
         private const string QUOTE_CURRENCY = "step_price_currency";
         private const string TRADE_CURRENCY = "trade_currency";
-
-        private const string PRICE_STEP_VALUE = "STEPPRICET";
-        private const string PRICE_STEP_CURRENCY = "CURSTEPPRICE";
-        private const string OPTIONTYPE = "OPTIONTYPE";
-        private const string UPPER_PRICE_LIMIT = "PRICEMAX";
-        private const string LOWER_PRICE_LIMIT = "PRICEMIN";
 
         private static LuaState _stack;
 

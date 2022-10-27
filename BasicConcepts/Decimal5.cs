@@ -463,14 +463,19 @@ namespace BasicConcepts
             }
         }
 
-        public static bool TryParse(string value, out Decimal5 result)
+        public static bool TryParse(string? value, out Decimal5 result)
         {
+            result = default;
+
+            if (value == null)
+            {
+                return false;
+            }
+
             int sign = 1;
             int decimalLengthDeviation = default;
             bool isSeparated = default;
             long mantissa = default;
-
-            result = default;
 
             for (int i = 0; i < value.Length; i++)
             {
@@ -683,10 +688,9 @@ namespace BasicConcepts
             return new Decimal5() { mantissa = mantissa * sign };
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return obj != null && 
-                   obj is Decimal5 decimal5 && 
+            return obj is Decimal5 decimal5 && 
                    decimal5.mantissa == mantissa;
         }
         public override  int GetHashCode()

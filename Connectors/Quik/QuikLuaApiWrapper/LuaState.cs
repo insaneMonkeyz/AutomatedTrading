@@ -122,6 +122,28 @@ namespace QuikLuaApi
         /// </summary>
         /// <param name="columnName"></param>
         /// <returns></returns>
+        internal bool TryFetchCharFromTable(string columnName, out char result)
+        {
+            // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
+            // 2 строчки создадут только 1 ячейку памяти
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            if (TryPopChar(out result))
+            {
+                return true;
+            }
+            else
+            {
+                PopFromStack();
+                return false;
+            }
+        }
+        /// <summary>
+        /// Gets a table from the stack, goes to the specified column, retrieves a string from there and pushes it onto the stack
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
         internal bool TryFetchStringFromTable(string columnName, out string result)
         {
             // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
@@ -182,6 +204,28 @@ namespace QuikLuaApi
                 value = LuaApi.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
                 LuaApi.lua_settop(_state, -2);
                 return true; 
+            }
+
+            return false;
+        }
+        internal bool TryPopChar(out char value)
+        {
+            value = default;
+
+            if (LuaApi.lua_isstring(_state, LAST_ITEM) > 0)
+            {
+                var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+
+                if (len > 0)
+                {
+                    unsafe
+                    {
+                        value = *(char*)pstr.ToPointer();
+                    }
+                }
+
+                LuaApi.lua_settop(_state, SECOND_ITEM);
+                return true;
             }
 
             return false;
@@ -298,6 +342,42 @@ namespace QuikLuaApi
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Reads value of a field of the table on top of the stack
+        /// </summary>
+        /// <exception cref="QuikApiException"/>
+        internal char ReadRowValueChar(string columnName)
+        {
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            switch (LuaApi.lua_type(_state, LAST_ITEM))
+            {
+                case LuaApi.TYPE_STRING:
+                    {
+                        var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+
+                        char result = default;
+
+                        if (len > 0)
+                        {
+                            unsafe { result = *(char*)pstr.ToPointer(); }
+                        }
+
+                        PopFromStack();
+
+                        return result;
+
+                    }
+                case LuaApi.TYPE_NULL:
+                    {
+                        PopFromStack();
+                        return default;
+                    }
+                default: throw QuikApiException.ParseExceptionMsg(columnName, "char");
+            }
         }
 
         /// <summary>

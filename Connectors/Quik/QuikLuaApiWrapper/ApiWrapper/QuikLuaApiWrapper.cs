@@ -130,6 +130,41 @@ namespace QuikLuaApi
             return result;
         }
 
+        internal static class GetParam
+        {
+            public const string STRING_VALUE = "param_image";
+            public const string VALUE = "param_value";
+            public const string METHOD = "getParamEx";
+            public const string RESULT_TYPE = "param_type";
+            public const string RESULT_STATUS = "result";
+
+            public const int SUCCESS = '1';
+            public const int FAIL = '0';
+
+            public enum Values : long
+            {
+                /// <summary>
+                /// param is found, but isn't evaluated (i.e. default)
+                /// </summary>
+                /// 
+                NoValue =  '0',
+                Double,
+                Long,
+                Char,
+                Enum,
+                Time,
+                Date
+            }
+
+        }
+
+        internal struct GetItemParams
+        {
+            public string ClassCode;
+            public string Ticker;
+            public string Parameter;
+            public GetParam.Values ReturnType;
+        }
         internal struct Method2Params<T>
         {
             public string Method;
@@ -155,11 +190,40 @@ namespace QuikLuaApi
             public T DefaultValue;
         }
 
+        internal static string? ReadSpecificEntry(ref GetItemParams param)
+        {
+            string? result = null;
+
+            if (_localState.ExecFunction(GetParam.METHOD, LuaApi.TYPE_TABLE, param.ClassCode, param.Ticker, param.Parameter) &&
+                _localState.ReadRowValueChar(GetParam.RESULT_STATUS) == GetParam.SUCCESS)
+            {
+                if (_localState.TryFetchCharFromTable(GetParam.RESULT_TYPE, out char type) &&
+                    type == (long)param.ReturnType)
+                {
+                    result = type == (long)GetParam.Values.Char
+                            ? _localState.ReadRowValueString(GetParam.STRING_VALUE)
+                            : _localState.ReadRowValueString(GetParam.VALUE);
+                }
+                else if (type == (long)GetParam.Values.NoValue)
+                {
+                    Debug.Print($"Value of parameter {param.Parameter} was not present");
+                }
+                else
+                {
+                    _localState.PopFromStack();
+
+                    throw new ArgumentException($"Provided return type '{param.ReturnType}' " +
+                        $"does not match the return type '{type}' of {GetParam.METHOD} method");
+                }
+            }
+
+            _localState.PopFromStack();
+
+            return result;
+        }
         internal static T ReadSpecificEntry<T>(ref Method2Params<T> param)
         {
             T result = param.DefaultValue;
-
-            _localState.PrintStack("Beginning ReadSpecificEntry");
 
             if (_localState.ExecFunction(param.Method, param.ReturnType, param.Arg0, param.Arg1))
             {
@@ -167,8 +231,6 @@ namespace QuikLuaApi
             }
 
             _localState.PopFromStack();
-
-            _localState.PrintStack("Completed ReadSpecificEntry");
 
             return result;
         }
@@ -246,12 +308,17 @@ namespace QuikLuaApi
                 SecurityWrapper.ResolveSecurity = SecurityWrapper.GetSecurity;
 
                 var availableFutures = SecurityWrapper.GetAvailableSecuritiesOfType(typeof(IFutures));
-                var availableOptions = SecurityWrapper.GetAvailableSecuritiesOfType(typeof(IOption));
-                var availableSpreads = SecurityWrapper.GetAvailableSecuritiesOfType(typeof(ICalendarSpread));
+                //var availableOptions = SecurityWrapper.GetAvailableSecuritiesOfType(typeof(IOption));
+                //var availableSpreads = SecurityWrapper.GetAvailableSecuritiesOfType(typeof(ICalendarSpread));
 
                 var fut = SecurityWrapper.GetSecurity(typeof(IFutures), availableFutures.First());
-                var opt = SecurityWrapper.GetSecurity(typeof(IOption), availableOptions.First());
-                var spr = SecurityWrapper.GetSecurity(typeof(ICalendarSpread), availableSpreads.First());
+                //var opt = SecurityWrapper.GetSecurity(typeof(IOption), availableOptions.First());
+                //var spr = SecurityWrapper.GetSecurity(typeof(ICalendarSpread), availableSpreads.First());
+
+                if (fut is Futures futures)
+                {
+                    SecurityWrapper.UpdateSecurity(futures); 
+                }
 
                 while (true)
                 {

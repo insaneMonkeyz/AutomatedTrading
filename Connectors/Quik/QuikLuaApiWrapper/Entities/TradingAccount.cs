@@ -41,5 +41,14 @@ namespace QuikLuaApiWrapper.Entities
             return $"{AccountCode} Total funds: {AccountCurrency} {TotalFunds.ToString(2u)}; Floating income {AccountCurrency} {FloatingIncome.ToString(2u)};";
         }
 
+        public Decimal5 GetBuyMarginRequirements(ISecurity security)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Decimal5 GetSellMarginRequirements(ISecurity security)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

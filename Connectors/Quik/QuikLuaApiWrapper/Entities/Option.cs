@@ -1,15 +1,21 @@
 ﻿using BasicConcepts;
+using BasicConcepts.SecuritySpecifics;
 using BasicConcepts.SecuritySpecifics.Options;
 
 namespace QuikLuaApi.Entities
 {
-    internal class Option : SecurityBase, IOption
+    internal class Option : MoexDerivativeBase, IOption
     {
         public override string ClassCode => QuikApi.QuikApi.OPTIONS_CLASS_CODE;
         public Decimal5 Strike { get; init; }
         public OptionTypes OptionType { get; }
         public ISecurity? Underlying { get; init; }
-        public DateTimeOffset Expiry { get; init; }
+
+        public double IV => throw new NotImplementedException();
+        public double Delta => throw new NotImplementedException();
+        public double Vega => throw new NotImplementedException();
+        public double Gamma => throw new NotImplementedException();
+        public double Theta => throw new NotImplementedException();
 
         public Option(ref SecurityParamsContainer container) : base(ref container)
         {

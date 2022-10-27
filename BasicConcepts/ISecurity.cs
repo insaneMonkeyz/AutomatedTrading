@@ -12,6 +12,7 @@
         long PricePrecisionScale { get; }
         long ContractSize { get; }
         Decimal5 MinPriceStep { get; }
+        Decimal5? PriceStepValue { get; }
         Decimal5 MinTradingSize { get; }
         Currencies DenominationCurrency { get; }
     }

@@ -11,10 +11,11 @@ using QuikLuaApiWrapper.ApiWrapper.QuikApi;
 using QuikLuaApiWrapper.Entities;
 
 using GetSecurityParams = QuikLuaApi.QuikLuaApiWrapper.Method2Params<BasicConcepts.ISecurity?>;
-using GetCsv1Param = QuikLuaApi.QuikLuaApiWrapper.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
 using GetCsvNoParams = QuikLuaApi.QuikLuaApiWrapper.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
+using GetCsv1Param = QuikLuaApi.QuikLuaApiWrapper.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
 
 using static QuikLuaApi.QuikLuaApiWrapper;
+
 using QuikLuaApi.Entities;
 using QuikLuaApiWrapper.Extensions;
 
@@ -24,6 +25,13 @@ namespace Quik.ApiWrapper
 
     internal class SecurityWrapper
     {
+        private static readonly Dictionary<Type, Func<ISecurity?>> _securityTypeToCreateMethod = new()
+        {
+            { typeof(IStock), CreateStock },
+            { typeof(IFutures), CreateFutures },
+            { typeof(IOption), CreateOption },
+            { typeof(ICalendarSpread), CreateCalendarSpread },
+        };
         private static readonly Dictionary<Type, string> _securityTypeToClassCode = new()
         {
             { typeof(IStock), QuikSecurity.STOCK_CLASS_CODE },
@@ -54,12 +62,18 @@ namespace Quik.ApiWrapper
             Action = GetCsvValues,
             DefaultValue = Enumerable.Empty<string>()
         };
-        private static GetSecurityParams _getSecurityParams = new()
+        private static GetSecurityParams _getSecurityRequest = new()
         {
             Method = QuikSecurity.GET_METOD,
             ReturnType = LuaApi.TYPE_TABLE,
             Arg0 = string.Empty,
             Arg1 = string.Empty
+        };
+        private static GetItemParams _getSecurityParamRequest = new()
+        {
+            Ticker = string.Empty,
+            ClassCode = string.Empty,
+            Parameter = string.Empty
         };
 
         public static SecurityWrapper Instance { get; } = new();
@@ -84,11 +98,23 @@ namespace Quik.ApiWrapper
         }
         public static ISecurity? GetSecurity(Type securityType, string ticker)
         {
-            _getSecurityParams.Action = CreateStock;
-            _getSecurityParams.Arg0 = _securityTypeToClassCode[securityType];
-            _getSecurityParams.Arg1 = ticker;
+            _getSecurityRequest.Action = _securityTypeToCreateMethod[securityType];
+            _getSecurityRequest.Arg0 = _securityTypeToClassCode[securityType];
+            _getSecurityRequest.Arg1 = ticker;
 
-            return ReadSpecificEntry(ref _getSecurityParams);
+            return ReadSpecificEntry(ref _getSecurityRequest);
+        }
+        public static void UpdateSecurity<T>(T security) where T : SecurityBase
+        {
+            _getSecurityParamRequest.ClassCode = security.ClassCode;
+            _getSecurityParamRequest.Ticker = security.Ticker;
+            _getSecurityParamRequest.Parameter = QuikSecurity.PRICE_STEP_VALUE;
+            _getSecurityParamRequest.ReturnType = GetParam.Values.Double;
+
+            string? result;
+
+            result = ReadSpecificEntry(ref _getSecurityParamRequest);
+            security.PriceStepValue = Decimal5.TryParse(result, out Decimal5 value) ? value : null;
         }
         
         private static ISecurity? CreateCalendarSpread()

@@ -4,6 +4,6 @@
     {
         IExpiring? NearTermLeg { get; }
         IExpiring? LongTermLeg { get; }
-        TimeSpan ExpiryTimeDelta { get; }
+        TimeSpan? ExpiryTimeDelta { get; }
     }
 }
