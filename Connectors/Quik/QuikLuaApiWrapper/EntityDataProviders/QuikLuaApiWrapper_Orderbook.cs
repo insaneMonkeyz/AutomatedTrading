@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
-using QuikLuaApi;
+using Quik;
 
-namespace QuikLuaApi
+namespace Quik
 {
     //public partial class QuikLuaApiWrapper
     //{

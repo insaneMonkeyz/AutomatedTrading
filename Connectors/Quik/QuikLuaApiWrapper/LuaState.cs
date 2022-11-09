@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 using BasicConcepts;
 using KeraLua;
 
-namespace QuikLuaApi
+namespace Quik
 {
-    internal struct LuaState
+    internal class LuaState
     {
         private const int LAST_ITEM = -1;
         private const int SECOND_ITEM = -2;
@@ -177,7 +177,7 @@ namespace QuikLuaApi
             }
             else
             {
-                PopTwoFromStack();
+                PopFromStack();
                 return false;
             }
         }

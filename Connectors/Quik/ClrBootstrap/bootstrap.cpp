@@ -6,7 +6,7 @@ namespace NativeToManagedProxy
     #pragma managed
     int Initialize(void* luaStack)
     {
-        QuikLuaApi::QuikLuaApiWrapper^ apiWrapper = gcnew QuikLuaApi::QuikLuaApiWrapper();
+        Quik::QuikProxy^ apiWrapper = gcnew Quik::QuikProxy();
         return apiWrapper->Initialize(luaStack);
     }
 }

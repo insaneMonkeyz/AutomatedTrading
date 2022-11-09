@@ -5,9 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
-using QuikLuaApi.Entities;
 
-namespace QuikLuaApiWrapper.Entities
+namespace Quik.Entities
 {
     internal class DerivativesTradingAccount : ITradingAccount
     {
@@ -15,15 +14,15 @@ namespace QuikLuaApiWrapper.Entities
         private string _firmId;
 
         public bool IsMoneyAccount { get; init; }
-        public string AccountCode 
-        { 
-            get => _code; 
+        public string AccountCode
+        {
+            get => _code;
             init => _code = value ?? throw new ArgumentNullException(nameof(AccountCode));
         }
-        public string FirmId 
-        { 
-            get => _firmId; 
-            init => _firmId = value ?? throw new ArgumentNullException(nameof(FirmId)); 
+        public string FirmId
+        {
+            get => _firmId;
+            init => _firmId = value ?? throw new ArgumentNullException(nameof(FirmId));
         }
         public string? Description { get; set; }
         public Decimal5 TotalFunds { get; set; }
@@ -31,6 +30,7 @@ namespace QuikLuaApiWrapper.Entities
         public Decimal5 FloatingIncome { get; set; }
         public Decimal5 CollateralMargin { get; set; }
         public Currencies AccountCurrency { get; init; }
+        public string? MoexCurrCode { get; init; }
         IEnumerable<ISecurityBalance> ITradingAccount.SecuritiesBalance => SecuritiesBalance;
 
 
@@ -39,16 +39,6 @@ namespace QuikLuaApiWrapper.Entities
         public override string ToString()
         {
             return $"{AccountCode} Total funds: {AccountCurrency} {TotalFunds.ToString(2u)}; Floating income {AccountCurrency} {FloatingIncome.ToString(2u)};";
-        }
-
-        public Decimal5 GetBuyMarginRequirements(ISecurity security)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Decimal5 GetSellMarginRequirements(ISecurity security)
-        {
-            throw new NotImplementedException();
         }
     }
 }

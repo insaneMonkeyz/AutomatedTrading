@@ -4,23 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
-using QuikLuaApi;
-using QuikLuaApi.QuikApi;
-using QuikLuaApiWrapper.Extensions;
-using static QuikLuaApi.QuikLuaApiWrapper;
-using static QuikLuaApiWrapper.ApiWrapper.GenericQuikTable;
+using Quik.QuikApi;
+using static Quik.QuikProxy;
 
-namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
+namespace Quik.EntityDataProviders.QuikApiWrappers
 {
     /// <summary>
     /// Wrapper таблицы лимитов по клиентским счетам
     /// </summary>
-    internal static class FuturesLimits
+    internal static class FuturesLimitsWrapper
     {
         public const string NAME = "futures_client_limits";
 
         public const string GET_METOD = "getFuturesLimit";
         public const string CALLBACK_METHOD = "OnFuturesLimitChange";
+
+        public const long MONEY_LIMIT_TYPE = 0;
 
         private const string COLLATERAL = "cbplused";
         private const string TOTAL_FUNDS = "cbplimit";
@@ -29,7 +28,6 @@ namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
         private const string RECORDED_INCOME = "accruedint";
 
         private const string LIMIT_TYPE = "limit_type";
-        private const long MONEY_LIMIT_TYPE = 0;
 
         private const string ACCOUNT_CURRENCY = "currcode";
         private const string ACCOUNT_ID = "trdaccid";
@@ -42,9 +40,13 @@ namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
             _stack = stack;
         }
 
-        public static Currencies? AccountCurrency
+        public static string? MoexCurrencyCode
         {
-            get => _stack.ReadRowValueString(ACCOUNT_CURRENCY)?.CodeToCurrency();
+            get => _stack.ReadRowValueString(ACCOUNT_CURRENCY);
+        }
+        public static Currencies AccountCurrency
+        {
+            get => _stack.ReadRowValueString(ACCOUNT_CURRENCY).CodeToCurrency();
         }
         public static Decimal5 TotalFunds
         {

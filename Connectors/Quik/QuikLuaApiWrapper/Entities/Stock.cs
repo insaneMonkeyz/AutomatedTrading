@@ -1,6 +1,6 @@
 ﻿using BasicConcepts.SecuritySpecifics;
 
-namespace QuikLuaApi.Entities
+namespace Quik.Entities
 {
     internal class Stock : SecurityBase, IStock
     {

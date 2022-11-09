@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuikLuaApi.QuikApi
+namespace Quik.QuikApi
 {
     internal static class Account
     {

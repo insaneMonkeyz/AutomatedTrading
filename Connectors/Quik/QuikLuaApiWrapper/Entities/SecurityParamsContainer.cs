@@ -1,6 +1,6 @@
 ﻿using BasicConcepts;
 
-namespace QuikLuaApi
+namespace Quik.Entities
 {
     internal struct SecurityParamsContainer
     {

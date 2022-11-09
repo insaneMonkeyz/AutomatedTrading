@@ -2,7 +2,7 @@
 using BasicConcepts.SecuritySpecifics;
 using BasicConcepts.SecuritySpecifics.Options;
 
-namespace QuikLuaApi.Entities
+namespace Quik.Entities
 {
     internal class Option : MoexDerivativeBase, IOption
     {

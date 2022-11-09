@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
-using QuikLuaApi;
-using QuikLuaApi.QuikApi;
-using QuikLuaApiWrapper.Extensions;
+using Quik.QuikApi;
 
-namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
+namespace Quik.EntityDataProviders.QuikApiWrappers
 {
-    internal static class QuikSecurity
+    internal static class SecurityWrapper
     {
         public const string NAME = "securities";
 
@@ -28,6 +26,8 @@ namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
         public const string PARAM_PRICE_STEP_VALUE = "STEPPRICE";
         public const string PARAM_UPPER_PRICE_LIMIT = "PRICEMAX";
         public const string PARAM_LOWER_PRICE_LIMIT = "PRICEMIN";
+        public const string PARAM_BUY_MARGIN_REQUIREMENTS = "BUYDEPO";
+        public const string PARAM_SELL_MARGIN_REQUIREMENTS = "SELLDEPO";
 
         private const string TICKER = "code";
         private const string CLASS_CODE = "class_code";
@@ -57,9 +57,9 @@ namespace QuikLuaApiWrapper.ApiWrapper.QuikApi
             _stack = stack;
         }
 
-        public static Currencies? Currency
+        public static Currencies Currency
         {
-            get => _stack.ReadRowValueString(CURRENCY)?.CodeToCurrency();
+            get => _stack.ReadRowValueString(CURRENCY).CodeToCurrency();
         }
         public static string? Ticker
         {

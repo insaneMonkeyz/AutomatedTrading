@@ -1,6 +1,6 @@
 ﻿using BasicConcepts;
 
-namespace QuikLuaApi.Entities
+namespace Quik.Entities
 {
     internal abstract class SecurityBase : ISecurity
     {

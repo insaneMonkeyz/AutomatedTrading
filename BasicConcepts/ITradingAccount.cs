@@ -16,7 +16,5 @@ namespace BasicConcepts
         Currencies AccountCurrency { get; }
         Decimal5 CollateralMargin { get; }
         IEnumerable<ISecurityBalance> SecuritiesBalance { get; }
-        Decimal5 GetBuyMarginRequirements(ISecurity security);
-        Decimal5 GetSellMarginRequirements(ISecurity security);
     }
 }

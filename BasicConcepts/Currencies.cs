@@ -8,6 +8,7 @@ namespace BasicConcepts
 {
     public enum Currencies
     {
+        Unknown,
         USD,
         EUR,
         RUB,

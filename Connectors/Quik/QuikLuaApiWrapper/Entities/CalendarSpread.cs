@@ -1,7 +1,7 @@
 ﻿using BasicConcepts;
 using BasicConcepts.SecuritySpecifics;
 
-namespace QuikLuaApi.Entities
+namespace Quik.Entities
 {
     internal class CalendarSpread : MoexDerivativeBase, ICalendarSpread
     {

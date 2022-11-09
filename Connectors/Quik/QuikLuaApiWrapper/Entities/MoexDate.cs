@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MoexCommonTypes
+namespace Quik.Entities
 {
     public struct MoexDate
     {

@@ -1,4 +1,4 @@
-﻿namespace QuikLuaApi
+﻿namespace Quik
 {
     public class QuikApiException : Exception
     {

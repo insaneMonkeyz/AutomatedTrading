@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BasicConcepts;
-using MoexCommonTypes;
-using QuikLuaApi;
-using QuikLuaApi.QuikApi;
+﻿using System.Diagnostics;
 
-namespace QuikLuaApiWrapper.Extensions
+using BasicConcepts;
+using Quik.Entities;
+using Quik.QuikApi;
+
+namespace Quik
 {
     internal static class Extentions
     {
@@ -28,13 +23,15 @@ namespace QuikLuaApiWrapper.Extensions
 
             return false;
         }
-        public static Currencies CodeToCurrency(this string code)
+        public static Currencies CodeToCurrency(this string? code)
         {
             return code switch
             {
                 Account.USD_CURRENCY => Currencies.USD,
                 Account.SUR_CURRENCY => Currencies.RUB,
                 Account.RUB_CURRENCY => Currencies.RUB,
+                null => Currencies.Unknown,
+                "" => Currencies.Unknown,
                 _ => throw new NotImplementedException($"Currency '{code}' is not supported.")
             };
         }

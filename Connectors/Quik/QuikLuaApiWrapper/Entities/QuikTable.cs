@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using BasicConcepts;
-using QuikLuaApiWrapper.Extensions;
 
-namespace QuikLuaApi.Entities
+namespace Quik.Entities
 {
     internal class QuikTable
     {
@@ -63,9 +62,7 @@ namespace QuikLuaApi.Entities
             }
             if (type == typeof(Currencies))
             {
-                return !string.IsNullOrWhiteSpace(value) 
-                    ? value.CodeToCurrency()
-                    : Currencies.RUB;
+                return value.CodeToCurrency();
             }
             if (type == typeof(long))
             {
