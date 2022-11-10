@@ -24,5 +24,7 @@ namespace Quik.Entities
             PricePrecisionScale = container.PricePrecisionScale;
             DenominationCurrency = container.DenominationCurrency;
         }
+
+        public override string ToString() => Ticker;
     }
 }

@@ -380,9 +380,17 @@ namespace Quik
 
                 System.Diagnostics.Debugger.Launch();
 
+
+                var posProvider = DerivativesBalanceDataProvider.Instance;
                 var secProvider = SecurityDataProvider.Instance;
 
                 SecurityDataProvider.ResolveSecurity = secProvider.GetSecurity;
+
+                posProvider.GetSecurity = (dummy) =>
+                {
+                    return secProvider.GetSecurity(typeof(IFutures), dummy.Ticker);
+                };
+                var positions = posProvider.GetAllPositions();
 
                 var availableClasses = secProvider.GetAvailableClasses();
                 var availableFutures = secProvider.GetAvailableSecuritiesOfType(typeof(IFutures));

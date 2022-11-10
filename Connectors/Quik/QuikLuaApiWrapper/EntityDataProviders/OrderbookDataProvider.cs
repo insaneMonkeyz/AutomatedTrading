@@ -11,7 +11,6 @@ namespace Quik.EntityDataProviders
 {
     internal sealed class OrderbookDataProvider : BaseDataProvider<IOptimizedOrderBook , SecurityDummy>
     {
-        public static OrderbookDataProvider Instance { get; } = new();
         protected override string QuikCallbackMethod => OrderbookWrapper.CALLBACK_METHOD;
 
         public IOptimizedOrderBook CreateOrderBook(SecurityBase sec)
@@ -35,7 +34,7 @@ namespace Quik.EntityDataProviders
             OrderbookWrapper.UpdateOrderBook(_dummy.ClassCode, book);
         }
 
-        protected override OrderBook Create(LuaState state)
+        protected override OrderBook? Create(LuaState state)
         {
             throw new InvalidOperationException("Automatic creation of orderbooks is not allowed. " +
                 "Must manually create one and then use Update() method to fill it with values.");
@@ -47,5 +46,10 @@ namespace Quik.EntityDataProviders
             _dummy.Ticker = OrderbookWrapper.Ticker;
             _dummy.ClassCode = OrderbookWrapper.ClassCode;
         }
+
+        #region Singleton
+        public static OrderbookDataProvider Instance { get; } = new();
+        private OrderbookDataProvider() { }
+        #endregion
     }
 }

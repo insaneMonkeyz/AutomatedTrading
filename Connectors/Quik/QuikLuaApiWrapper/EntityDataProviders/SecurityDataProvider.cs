@@ -61,8 +61,6 @@ namespace Quik.EntityDataProviders
 
         private readonly object _userRequestLock = new();
 
-        public static SecurityDataProvider Instance { get; } = new();
-
         /// <summary>
         /// Reference to a method that SecurityWrapper will invoke 
         /// when it needs to find specific security. <para/>
@@ -70,19 +68,6 @@ namespace Quik.EntityDataProviders
         /// to resolve underlying security dependencies
         /// </summary>
         public static ResolveSecurityHandler ResolveSecurity = delegate { return null; };
-
-        private SecurityDataProvider()
-        {
-            _securityTypeToCreateMethod.Add(typeof(IStock), CreateStock);
-            _securityTypeToCreateMethod.Add(typeof(IFutures), CreateFutures);
-            _securityTypeToCreateMethod.Add(typeof(IOption), CreateOption);
-            _securityTypeToCreateMethod.Add(typeof(ICalendarSpread), CreateCalendarSpread);
-
-            _securitiesCsvRequest.Action = GetCsvValues;
-            _classesCsvRequest.Action = GetCsvValues;
-
-            SecurityWrapper.Set(State);
-        }
 
         public Decimal5? GetBuyMarginRequirements(SecurityBase security)
         {
@@ -140,9 +125,13 @@ namespace Quik.EntityDataProviders
                 var expiry = SecurityWrapper.Expiry
                         ?? throw QuikApiException.ParseExceptionMsg(nameof(SecurityWrapper.Expiry), "string");
 
-                return nearTermLeg is IExpiring nearterm && longTermLeg is IExpiring longterm
+                var result = nearTermLeg is IExpiring nearterm && longTermLeg is IExpiring longterm
                     ? new CalendarSpread(ref container, nearterm, longterm)
                     : new CalendarSpread(ref container, expiry);
+
+                UpdateSecurity(result);
+
+                return result;
             }
 
             return null;
@@ -151,7 +140,7 @@ namespace Quik.EntityDataProviders
         {
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
-                return new Option(ref container)
+                var result = new Option(ref container)
                 {
                     Underlying = ResolveUnderlying(SecurityWrapper.UnderlyingClassCode, SecurityWrapper.UnderlyingSecCode),
 
@@ -161,6 +150,10 @@ namespace Quik.EntityDataProviders
                     Expiry = SecurityWrapper.Expiry
                         ?? throw QuikApiException.ParseExceptionMsg(nameof(SecurityWrapper.Expiry), "string")
                 };
+
+                UpdateSecurity(result);
+
+                return result;
             }
 
             return null;
@@ -169,13 +162,17 @@ namespace Quik.EntityDataProviders
         {
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
-                return new Futures(ref container)
+                var result = new Futures(ref container)
                 {
                     Underlying = ResolveUnderlying(SecurityWrapper.UnderlyingClassCode, SecurityWrapper.UnderlyingSecCode),
 
                     Expiry = SecurityWrapper.Expiry
                         ?? throw QuikApiException.ParseExceptionMsg(nameof(SecurityWrapper.Expiry), "string")
                 };
+
+                UpdateSecurity(result);
+
+                return result;
             }
 
             return null;
@@ -227,5 +224,21 @@ namespace Quik.EntityDataProviders
                     ? ResolveSecurity(type, underlyingCode)
                     : null;
         }
+
+        #region Singleton
+        public static SecurityDataProvider Instance { get; } = new();
+        private SecurityDataProvider()
+        {
+            _securityTypeToCreateMethod.Add(typeof(IStock), CreateStock);
+            _securityTypeToCreateMethod.Add(typeof(IFutures), CreateFutures);
+            _securityTypeToCreateMethod.Add(typeof(IOption), CreateOption);
+            _securityTypeToCreateMethod.Add(typeof(ICalendarSpread), CreateCalendarSpread);
+
+            _securitiesCsvRequest.Action = GetCsvValues;
+            _classesCsvRequest.Action = GetCsvValues;
+
+            SecurityWrapper.Set(State);
+        }
+        #endregion
     }
 }

@@ -26,7 +26,7 @@ namespace Quik.EntityDataProviders
 
         protected abstract void Update(TEntity entity, LuaState state);
         protected abstract void SetDummy(LuaState state);
-        protected abstract TEntity Create(LuaState state);
+        protected abstract TEntity? Create(LuaState state);
 
         private int OnEntityChanged(IntPtr state)
         {

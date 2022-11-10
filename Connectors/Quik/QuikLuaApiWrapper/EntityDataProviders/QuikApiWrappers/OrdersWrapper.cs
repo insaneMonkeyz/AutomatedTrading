@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BasicConcepts
+namespace Quik.EntityDataProviders.QuikApiWrappers
 {
-    public interface ISecurityBalance
+    internal class OrdersWrapper
     {
-        ISecurity Security { get; }
-        long Amount { get; }
     }
 }

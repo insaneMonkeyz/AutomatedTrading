@@ -19,8 +19,6 @@ namespace Quik.EntityDataProviders
             ReturnType = LuaApi.TYPE_TABLE,
         };
 
-        public static AccountDataProvider Instance { get; } = new();
-
         protected override string QuikCallbackMethod => FuturesLimitsWrapper.CALLBACK_METHOD;
 
         public List<DerivativesTradingAccount> GetAllEntities()
@@ -87,5 +85,10 @@ namespace Quik.EntityDataProviders
 
             return result;
         }
+
+        #region Singleton
+        public static AccountDataProvider Instance { get; } = new();
+        private AccountDataProvider() { } 
+        #endregion
     }
 }
