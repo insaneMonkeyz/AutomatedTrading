@@ -167,6 +167,16 @@ namespace Quik
             public T1 Arg1;
         }
 
+        internal struct MultiGetMethod2ParamsNoReturn<TActionArg0, TActionArg1>
+        {
+            public string Method;
+            public string Arg0;
+            public string Arg1;
+            public int ReturnType1;
+            public int ReturnType2;
+            public Action2Params<TActionArg0, TActionArg1> ActionParams;
+            public Action<TActionArg0, TActionArg1> Action;
+        }
         internal struct Method2ParamsNoReturn<TActionArg>
         {
             public string Method;
@@ -278,6 +288,20 @@ namespace Quik
                 }
 
                 _localState.PopFromStack(); 
+            }
+        }
+        internal static void ReadSpecificEntry<T0,T1>(ref MultiGetMethod2ParamsNoReturn<T0,T1> param)
+        {
+            lock (SyncRoot)
+            {
+                if (_localState.ExecDoubleReturnFunction(param.Method, 
+                    param.ReturnType1, param.ReturnType2, 
+                    param.Arg0, param.Arg1))
+                {
+                    param.Action(param.ActionParams.Arg0, param.ActionParams.Arg1);
+                }
+
+                _localState.PopTwoFromStack(); 
             }
         }
         internal static void ReadSpecificEntry<T>(ref Method2ParamsNoReturn<T> param)

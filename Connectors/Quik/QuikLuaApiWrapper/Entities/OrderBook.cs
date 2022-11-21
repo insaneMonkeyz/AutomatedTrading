@@ -55,7 +55,8 @@ namespace Quik.Entities
             }
         }
 
-        public ISecurity Security { get; init; }
+        public SecurityBase Security { get; init; }
+        ISecurity IOrderBook.Security => Security;
 
         public Quote[] Bids
         {

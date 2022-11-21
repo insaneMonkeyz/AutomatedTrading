@@ -12,12 +12,7 @@ namespace Quik.EntityDataProviders
 {
     internal sealed class AccountDataProvider : BaseDataProvider<DerivativesTradingAccount, DerivativesAccountDummy>
     {
-        private static UpdateParams _updateParams = new()
-        {
-            Arg2 = FuturesLimitsWrapper.MONEY_LIMIT_TYPE.ToString(),
-            Method = FuturesLimitsWrapper.GET_METOD,
-            ReturnType = LuaApi.TYPE_TABLE,
-        };
+        private static UpdateParams _updateParams;
 
         protected override string QuikCallbackMethod => FuturesLimitsWrapper.CALLBACK_METHOD;
 
@@ -35,8 +30,6 @@ namespace Quik.EntityDataProviders
                     _updateParams.Arg1 = entity.AccountCode;
                     _updateParams.Arg3 = entity.MoexCurrCode;
                     _updateParams.ActionParams.Arg0 = entity;
-                    _updateParams.ActionParams.Arg1 = State;
-                    _updateParams.Action = Update;
 
                     ReadSpecificEntry(ref _updateParams); 
                 }
@@ -88,7 +81,20 @@ namespace Quik.EntityDataProviders
 
         #region Singleton
         public static AccountDataProvider Instance { get; } = new();
-        private AccountDataProvider() { } 
+        private AccountDataProvider()
+        {
+            _updateParams = new()
+            {
+                Arg2 = FuturesLimitsWrapper.MONEY_LIMIT_TYPE.ToString(),
+                Method = FuturesLimitsWrapper.GET_METOD,
+                ReturnType = LuaApi.TYPE_TABLE,
+                Action = Update,
+                ActionParams = new()
+                {
+                    Arg1 = State
+                },
+            };
+        } 
         #endregion
     }
 }

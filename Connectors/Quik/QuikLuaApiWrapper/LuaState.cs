@@ -467,6 +467,16 @@ namespace Quik
             return result;
         }
 
+        internal bool ExecDoubleReturnFunction(string name, int returnType1, int returnType2, string arg0, string arg1)
+        {
+            LuaApi.lua_getglobal(_state, name);
+            LuaApi.lua_pushstring(_state, arg0);
+            LuaApi.lua_pushstring(_state, arg1);
+
+            return LuaApi.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
+                && LuaApi.lua_type(_state, LAST_ITEM)   == returnType1
+                && LuaApi.lua_type(_state, SECOND_ITEM) == returnType2;
+        }
         internal bool ExecFunction(string name, int returnType)
         {
             LuaApi.lua_getglobal(_state, name);

@@ -4,87 +4,40 @@ namespace Quik.Entities
 {
     public struct MoexDate
     {
-        public MoexDate(uint value) : this()
+        public readonly int Day;
+        public readonly int Month;
+        public readonly int Year;
+        public readonly DateTime Date;
+
+        private MoexDate(uint value) : this()
         {
-            _value = value;
+            Day = GetDay(value);
+            Month = GetMonth(value);
+            Year = GetYear(value);
+
+            Date = new DateTime(Year, Month, Day);
         }
 
-        public uint Value
+        public static int GetYear(uint value)
         {
-            get => _value;
-            set
-            {
-                _value = value;
-                _dayHasValue = false;
-                _monthHasValue = false;
-                _yearHasValue = false;
-                _dateHasValue = false;
-            }
+            return (int)value / 10_000;
         }
-        uint _value;
-
-        public int Day
+        public static int GetMonth(uint value)
         {
-            get
-            {
-                if (!_dayHasValue)
-                {
-                    _day = (int)(_value % 100);
-                    _dayHasValue = true;
-                }
-
-                return _day;
-            }
+            return (int)value / 100 % 100;
         }
-        int _day;
-        bool _dayHasValue;
-
-        public int Month
+        public static int GetDay(uint value)
         {
-            get
-            {
-                if (!_monthHasValue)
-                {
-                    _month = (int)(_value / 100 % 100);
-                    _monthHasValue = true;
-                }
-
-                return _month;
-            }
+            return (int)value % 100;
         }
-        int _month;
-        bool _monthHasValue;
-
-        public int Year
+        public static DateTime GetDateTime(uint value)
         {
-            get
-            {
-                if (!_yearHasValue)
-                {
-                    _year = (int)(_value / 10_000);
-                    _yearHasValue = true;
-                }
-
-                return _year;
-            }
+            return (new MoexDate(value)).Date;
         }
-        int _year;
-        bool _yearHasValue;
 
-        public DateTime Date
+        public static implicit operator MoexDate(uint value)
         {
-            get
-            {
-                if (!_dateHasValue)
-                {
-                    _date = new DateTime(Year, Month, Day);
-                    _dateHasValue = true;
-                }
-
-                return _date;
-            }
+            return new MoexDate(value);
         }
-        DateTime _date;
-        bool _dateHasValue;
     }
 }

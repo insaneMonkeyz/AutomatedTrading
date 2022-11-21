@@ -16,12 +16,7 @@ namespace Quik.EntityDataProviders
     internal delegate ISecurity? GetSecurityHandler(SecurityDummy security);
     internal class DerivativesBalanceDataProvider : BaseDataProvider<SecurityBalance, SecurityDummy>
     {
-        private static UpdateParams _updateParams = new()
-        {
-            Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
-            Method = DerivativesPositionsWrapper.GET_METOD,
-            ReturnType = LuaApi.TYPE_TABLE,
-        };
+        private static UpdateParams _updateParams;
 
         protected override string QuikCallbackMethod => DerivativesPositionsWrapper.CALLBACK_METHOD;
 
@@ -39,8 +34,6 @@ namespace Quik.EntityDataProviders
                 _updateParams.Arg1 = entity.AccountId;
                 _updateParams.Arg2 = entity.Security.Ticker;
                 _updateParams.ActionParams.Arg0 = entity;
-                _updateParams.ActionParams.Arg1 = State;
-                _updateParams.Action = Update;
 
                 ReadSpecificEntry(ref _updateParams); 
             }
@@ -84,7 +77,17 @@ namespace Quik.EntityDataProviders
 
         #region Singleton
         public static DerivativesBalanceDataProvider Instance { get; } = new();
-        private DerivativesBalanceDataProvider() { }
+        private DerivativesBalanceDataProvider()
+        {
+            _updateParams = new()
+            {
+                Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
+                Method = DerivativesPositionsWrapper.GET_METOD,
+                ReturnType = LuaApi.TYPE_TABLE,
+                ActionParams = new() { Arg1 = State },
+                Action = Update,
+            };
+        }
         #endregion
     }
 }
