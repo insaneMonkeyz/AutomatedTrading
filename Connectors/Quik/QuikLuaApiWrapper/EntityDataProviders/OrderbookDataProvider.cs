@@ -4,16 +4,17 @@ using Quik;
 using Quik.Entities;
 
 using static Quik.QuikProxy;
-using Quik.EntityDataProviders.EntityDummies;
+using Quik.EntityDataProviders.RequestContainers;
 using BasicConcepts.SecuritySpecifics;
+using Quik.EntityDataProviders.Attributes;
 
 namespace Quik.EntityDataProviders
 {
-    internal sealed class OrderbookDataProvider : BaseDataProvider<IOptimizedOrderBook , SecurityDummy>
+    internal sealed class OrderbookDataProvider : DataProvider<OrderBook, OrderbookRequestContainer>
     {
         protected override string QuikCallbackMethod => OrderbookWrapper.CALLBACK_METHOD;
 
-        public IOptimizedOrderBook CreateOrderBook(SecurityBase sec)
+        public IOptimizedOrderBook CreateOrderBook(Security sec)
         {
             var book = new OrderBook()
             {
@@ -24,14 +25,14 @@ namespace Quik.EntityDataProviders
 
             return book;
         }
-        public override void Update(IOptimizedOrderBook entity)
+        public override void Update(OrderBook entity)
         {
             Update(entity, State);
         }
-        protected override void Update(IOptimizedOrderBook book, LuaState state)
+        protected override void Update(OrderBook book, LuaState state)
         {
             OrderbookWrapper.Set(state);
-            OrderbookWrapper.UpdateOrderBook(_dummy.ClassCode, book);
+            OrderbookWrapper.UpdateOrderBook(_resolveEntityRequest.ClassCode, book);
         }
 
         protected override OrderBook? Create(LuaState state)
@@ -39,17 +40,19 @@ namespace Quik.EntityDataProviders
             throw new InvalidOperationException("Automatic creation of orderbooks is not allowed. " +
                 "Must manually create one and then use Update() method to fill it with values.");
         }
-        protected override void SetDummy(LuaState state)
+        protected override void BuildEntityResolveRequest(LuaState state)
         {
             OrderbookWrapper.Set(state);
 
-            _dummy.Ticker = OrderbookWrapper.Ticker;
-            _dummy.ClassCode = OrderbookWrapper.ClassCode;
+            _resolveEntityRequest.Ticker = OrderbookWrapper.Ticker;
+            _resolveEntityRequest.ClassCode = OrderbookWrapper.ClassCode;
         }
 
         #region Singleton
+        [SingletonInstance]
         public static OrderbookDataProvider Instance { get; } = new();
-        private OrderbookDataProvider() { }
+        private OrderbookDataProvider() : base(EntityResolversFactory.GetOrderbooksResolver())
+        { }
         #endregion
     }
 }

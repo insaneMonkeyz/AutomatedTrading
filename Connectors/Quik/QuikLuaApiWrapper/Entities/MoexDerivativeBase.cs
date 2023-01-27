@@ -3,7 +3,7 @@ using BasicConcepts.SecuritySpecifics;
 
 namespace Quik.Entities
 {
-    internal abstract class MoexDerivativeBase : SecurityBase, ILimitedPrice, IExpiring
+    internal abstract class MoexDerivativeBase : Security, ILimitedPrice, IExpiring
     {
         public Decimal5? UpperPriceLimit { get; internal set; }
         public Decimal5? LowerPriceLimit { get; internal set; }

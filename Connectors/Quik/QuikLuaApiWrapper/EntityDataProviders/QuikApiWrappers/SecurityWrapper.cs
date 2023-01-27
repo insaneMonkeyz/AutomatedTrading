@@ -57,6 +57,13 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
             _stack = stack;
         }
 
+        public static readonly IEnumerable<string> DerivativeClasses = new string[]
+        {
+            FUTURES_CLASS_CODE,
+            OPTIONS_CLASS_CODE,
+            CALENDAR_SPREADS_CLASS_CODE
+        };
+
         public static Currencies Currency
         {
             get => _stack.ReadRowValueString(CURRENCY).CodeToCurrency();

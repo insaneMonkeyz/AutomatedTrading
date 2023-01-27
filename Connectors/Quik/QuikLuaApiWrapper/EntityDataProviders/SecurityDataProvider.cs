@@ -3,20 +3,32 @@ using BasicConcepts.SecuritySpecifics;
 using BasicConcepts.SecuritySpecifics.Options;
 using Quik.Entities;
 using Quik.EntityDataProviders.QuikApiWrappers;
-
+using Quik.EntityDataProviders.RequestContainers;
 using static Quik.QuikProxy;
 
 using GetCsv1Param = Quik.QuikProxy.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
 using GetCsvNoParams = Quik.QuikProxy.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
 using GetSecurityParams = Quik.QuikProxy.Method2Params<BasicConcepts.ISecurity?>;
+using SecurityResolver = Quik.EntityDataProviders.EntityResolver<Quik.EntityDataProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
 
 namespace Quik.EntityDataProviders
 {
-    internal delegate ISecurity? ResolveSecurityHandler(Type securityType, string ticker);
-
-    internal sealed class SecurityDataProvider
+    internal static class SecurityDataProvider
     {
-        private static Dictionary<Type, Func<ISecurity?>> _securityTypeToCreateMethod = new(4);
+        private static readonly Dictionary<Type, Func<ISecurity?>> _securityTypeToCreateMethod = new(4)
+        {
+            { typeof(IStock), CreateStock },
+            { typeof(IFutures), CreateFutures },
+            { typeof(IOption), CreateOption },
+            { typeof(ICalendarSpread), CreateCalendarSpread }
+        };
+        private static readonly Dictionary<string, Func<ISecurity?>> _classcodeToCreateMethod = new(4)
+        {
+            { SecurityWrapper.STOCK_CLASS_CODE, CreateStock },
+            { SecurityWrapper.FUTURES_CLASS_CODE, CreateFutures },
+            { SecurityWrapper.OPTIONS_CLASS_CODE, CreateOption },
+            { SecurityWrapper.CALENDAR_SPREADS_CLASS_CODE, CreateCalendarSpread }
+        };
         private static readonly Dictionary<Type, string> _securityTypeToClassCode = new()
         {
             { typeof(IStock), SecurityWrapper.STOCK_CLASS_CODE },
@@ -59,26 +71,22 @@ namespace Quik.EntityDataProviders
             Parameter = string.Empty
         };
 
-        private readonly object _userRequestLock = new();
+        private static readonly object _userRequestLock = new();
+        private static readonly object _securityRequestLock = new();
+        private static readonly SecurityRequestContainer _securityRequest = new();
+        private static readonly SecurityResolver _entityResolver
+            = EntityResolversFactory.GetSecurityResolver();
 
-        /// <summary>
-        /// Reference to a method that SecurityWrapper will invoke 
-        /// when it needs to find specific security. <para/>
-        /// If left unset, <see cref="SecurityDataProvider"/> will be unable 
-        /// to resolve underlying security dependencies
-        /// </summary>
-        public static ResolveSecurityHandler ResolveSecurity = delegate { return null; };
-
-        public Decimal5? GetBuyMarginRequirements(SecurityBase security)
+        public static Decimal5? GetBuyMarginRequirements(Security security)
         {
             return GetDecimal5Param(security, SecurityWrapper.PARAM_BUY_MARGIN_REQUIREMENTS);
         }
-        public Decimal5? GetSellMarginRequirements(SecurityBase security)
+        public static Decimal5? GetSellMarginRequirements(Security security)
         {
             return GetDecimal5Param(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
         }
 
-        public IEnumerable<string> GetAvailableSecuritiesOfType(Type type)
+        public static IEnumerable<string> GetAvailableSecuritiesOfType(Type type)
         {
             lock (_userRequestLock)
             {
@@ -87,14 +95,14 @@ namespace Quik.EntityDataProviders
                 return ReadSpecificEntry(ref _securitiesCsvRequest); 
             }
         }
-        public IEnumerable<string> GetAvailableClasses()
+        public static IEnumerable<string> GetAvailableClasses()
         {
             lock (_userRequestLock)
             {
                 return ReadSpecificEntry(ref _classesCsvRequest); 
             }
         }
-        public ISecurity? GetSecurity(Type securityType, string ticker)
+        public static ISecurity? GetSecurity(Type securityType, string ticker)
         {
             lock (_userRequestLock)
             {
@@ -105,7 +113,23 @@ namespace Quik.EntityDataProviders
                 return ReadSpecificEntry(ref _getSecurityRequest); 
             }
         }
-        public void UpdateSecurity<T>(T security) where T : SecurityBase
+        public static ISecurity? GetSecurity(SecurityRequestContainer request)
+        {
+            if (!request.HasData)
+            {
+                return null;
+            }
+
+            lock (_userRequestLock)
+            {
+                _getSecurityRequest.Action = _classcodeToCreateMethod[request.ClassCode];
+                _getSecurityRequest.Arg0 = request.ClassCode;
+                _getSecurityRequest.Arg1 = request.Ticker;
+
+                return ReadSpecificEntry(ref _getSecurityRequest);
+            }
+        }
+        public static void UpdateSecurity<T>(T security) where T : Security
         {
             security.PriceStepValue = GetDecimal5Param(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
 
@@ -115,8 +139,8 @@ namespace Quik.EntityDataProviders
                 baseSec.LowerPriceLimit = GetDecimal5Param(security, SecurityWrapper.PARAM_LOWER_PRICE_LIMIT);
             }
         }
-        
-        private ISecurity? CreateCalendarSpread()
+
+        private static ISecurity? CreateCalendarSpread()
         {
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -125,7 +149,8 @@ namespace Quik.EntityDataProviders
                 var expiry = SecurityWrapper.Expiry
                         ?? throw QuikApiException.ParseExceptionMsg(nameof(SecurityWrapper.Expiry), "string");
 
-                var result = nearTermLeg is IExpiring nearterm && longTermLeg is IExpiring longterm
+                var result = nearTermLeg is IExpiring nearterm 
+                          && longTermLeg is IExpiring longterm
                     ? new CalendarSpread(ref container, nearterm, longterm)
                     : new CalendarSpread(ref container, expiry);
 
@@ -136,7 +161,7 @@ namespace Quik.EntityDataProviders
 
             return null;
         }
-        private ISecurity? CreateOption()
+        private static ISecurity? CreateOption()
         {
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -158,7 +183,7 @@ namespace Quik.EntityDataProviders
 
             return null;
         }
-        private ISecurity? CreateFutures()
+        private static ISecurity? CreateFutures()
         {
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -177,14 +202,14 @@ namespace Quik.EntityDataProviders
 
             return null;
         }
-        private ISecurity? CreateStock()
+        private static ISecurity? CreateStock()
         {
             return TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
                 ? new Stock(ref container)
                 : null;
         }
 
-        private bool TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
+        private static bool TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
         {
             container = new ()
             {
@@ -207,7 +232,7 @@ namespace Quik.EntityDataProviders
 
             return true;
         }
-        private IEnumerable<string> GetCsvValues()
+        private static IEnumerable<string> GetCsvValues()
         {
             var csv = State.ReadAsString();
 
@@ -215,30 +240,23 @@ namespace Quik.EntityDataProviders
                 ? Enumerable.Empty<string>()
                 : csv.Split(',', StringSplitOptions.RemoveEmptyEntries);
         }
-        private ISecurity? ResolveUnderlying(string? classCode, string? secCode)
+        private static ISecurity? ResolveUnderlying(string? classCode, string? secCode)
         {
-            return
-                  secCode is string underlyingCode  &&
-                classCode is string underlyingClass &&
-                _classCodeToSecurityType.TryGetValue(underlyingClass, out Type type)
-                    ? ResolveSecurity(type, underlyingCode)
-                    : null;
+            lock (_securityRequestLock)
+            {
+                _securityRequest.ClassCode = classCode;
+                _securityRequest.Ticker = secCode;
+
+                return _entityResolver.GetEntity(_securityRequest);
+            }
         }
 
-        #region Singleton
-        public static SecurityDataProvider Instance { get; } = new();
-        private SecurityDataProvider()
+        static SecurityDataProvider()
         {
-            _securityTypeToCreateMethod.Add(typeof(IStock), CreateStock);
-            _securityTypeToCreateMethod.Add(typeof(IFutures), CreateFutures);
-            _securityTypeToCreateMethod.Add(typeof(IOption), CreateOption);
-            _securityTypeToCreateMethod.Add(typeof(ICalendarSpread), CreateCalendarSpread);
-
             _securitiesCsvRequest.Action = GetCsvValues;
             _classesCsvRequest.Action = GetCsvValues;
 
             SecurityWrapper.Set(State);
         }
-        #endregion
     }
 }

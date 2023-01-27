@@ -1,25 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BasicConcepts;
+﻿using BasicConcepts;
 using Quik.Entities;
-using Quik.EntityDataProviders.EntityDummies;
+using Quik.EntityDataProviders.Attributes;
+using Quik.EntityDataProviders.RequestContainers;
 using Quik.EntityDataProviders.QuikApiWrappers;
+
 using static Quik.QuikProxy;
+
 using UpdateParams = Quik.QuikProxy.MultiGetMethod2ParamsNoReturn<Quik.Entities.Order, Quik.LuaState>;
+using SecurityResolver = Quik.EntityDataProviders.EntityResolver<Quik.EntityDataProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
 
 namespace Quik.EntityDataProviders
 {
-    internal class OrderDataProvider : BaseDataProvider<Order, object>
+    internal class OrderDataProvider : DataProvider<Order, OrderRequestContainer>
     {
-        private readonly SecurityDummy _securityDummy = new();
-        private static UpdateParams _updateParams;
+        private readonly SecurityResolver _securityResolver;
+        private readonly SecurityRequestContainer _securityRequest = new();
+        private UpdateParams _updateParams;
 
         protected override string QuikCallbackMethod => OrdersWrapper.CALLBACK_METHOD;
-
-        public event GetSecurityHandler GetSecurity = delegate { return null; };
 
         public List<Order> GetAllOrders()
         {
@@ -30,7 +28,7 @@ namespace Quik.EntityDataProviders
             lock (_userRequestLock)
             {
                 _updateParams.Arg0 = entity.Security.ClassCode;
-                _updateParams.Arg1 = entity.IdString;
+                _updateParams.Arg1 = entity.ExchangeAssignedIdString;
                 _updateParams.ActionParams.Arg0 = entity;
 
                 ReadSpecificEntry(ref _updateParams);
@@ -39,55 +37,51 @@ namespace Quik.EntityDataProviders
 
         protected override Order? Create(LuaState state)
         {
-            SetDummy(state);
+            BuildSecurityResolveRequest(state);
 
-            if (_securityDummy.HasData)
+            if (_securityResolver.GetEntity(_securityRequest) is not Security sec)
             {
-                if (GetSecurity(_securityDummy) is SecurityBase sec)
-                {
-                    OrdersWrapper.Set(state);
-
-                    var flags = OrdersWrapper.Flags;
-                    var order = new Order()
-                    {
-                        Security = sec,
-                        ExecutionMode = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
-                        Expiry = OrdersWrapper.Expiry ?? default,
-                        IsLimit = flags.HasFlag(OrderFlags.IsLimitOrder),
-                        Quote = new OrderQuote
-                        {
-                            Price = OrdersWrapper.Price,
-                            Size = OrdersWrapper.Size,
-                            Operation = flags.HasFlag(OrderFlags.IsSellOrder)
-                                ? Operations.Sell
-                                : Operations.Buy
-                        }
-                    };
-
-                    Update(order, state);
-
-                    return order;
-                }
-                else
-                {
-                    $"Coudn't resolve security {_securityDummy} to create an order."
-                        .DebugPrintWarning();
-                }
-            }
-            else
-            {
-                "Coudn't create an order. Nesessary information about it's security is not provided."
+                $"Coudn't resolve security {_securityRequest} to create an order."
                     .DebugPrintWarning();
+
+                return null;
             }
 
-            return null;
+            OrdersWrapper.Set(state);
+
+            var flags = OrdersWrapper.Flags;
+            var order = new Order()
+            {
+                Security = sec,
+                ExecutionMode = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
+                Expiry = OrdersWrapper.Expiry ?? default,
+                IsLimit = flags.HasFlag(OrderFlags.IsLimitOrder),
+                Quote = new OrderQuote
+                {
+                    Price = OrdersWrapper.Price,
+                    Size = OrdersWrapper.Size,
+                    Operation = flags.HasFlag(OrderFlags.IsSellOrder)
+                        ? Operations.Sell
+                        : Operations.Buy
+                }
+            };
+
+            Update(order, state);
+
+            return order;
         }
-        protected override void SetDummy(LuaState state)
+        protected void BuildSecurityResolveRequest(LuaState state)
         {
             OrdersWrapper.Set(state);
 
-            _securityDummy.Ticker = OrdersWrapper.Ticker;
-            _securityDummy.ClassCode = OrdersWrapper.ClassCode;
+            _securityRequest.Ticker = OrdersWrapper.Ticker;
+            _securityRequest.ClassCode = OrdersWrapper.ClassCode;
+        }
+        protected override void BuildEntityResolveRequest(LuaState state)
+        {
+            OrdersWrapper.Set(state);
+
+            _resolveEntityRequest.ExchangeAssignedId = OrdersWrapper.ExchangeOrderId;
         }
         protected override void Update(Order entity, LuaState state)
         {
@@ -114,9 +108,11 @@ namespace Quik.EntityDataProviders
         }
 
         #region Singleton
+        [SingletonInstance]
         public static OrderDataProvider Instance { get; } = new();
-        private OrderDataProvider()
+        private OrderDataProvider() : base(EntityResolversFactory.GetOrdersResolver())
         {
+            _securityResolver = EntityResolversFactory.GetSecurityResolver();
             _updateParams = new()
             {
                 Method = OrdersWrapper.GET_METOD,

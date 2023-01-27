@@ -4,7 +4,8 @@ namespace BasicConcepts
 {
     public interface IOrder : IExpiring
     {
-        long Id { get; }
+        long InternalId { get; }
+        long ExchangeAssignedId { get; }
         OrderExecutionModes ExecutionMode { get; }
         OrderStates State { get; }
         ISecurity Security { get; }

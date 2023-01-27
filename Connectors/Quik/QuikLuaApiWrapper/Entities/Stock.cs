@@ -2,7 +2,7 @@
 
 namespace Quik.Entities
 {
-    internal class Stock : SecurityBase, IStock
+    internal class Stock : Security, IStock
     {
         public override string ClassCode => QuikApi.QuikApi.STOCK_CLASS_CODE;
 

@@ -9,10 +9,10 @@ namespace Quik.Entities
 {
     internal class Order : IOrder
     {
-        private SecurityBase _security;
-        private string _orderId;
+        private Security _security;
+        private string _exchangeAssignedId;
 
-        public SecurityBase Security
+        public Security Security
         {
             get => _security;
             init => _security = value ?? throw new ArgumentNullException(nameof(value));
@@ -21,11 +21,12 @@ namespace Quik.Entities
         public List<IOrderExecution> Executions { get; }
 
         public OrderStates State { get; set; }
-        public string IdString
+        public string ExchangeAssignedIdString
         {
-            get => _orderId ??= Id.ToString();
+            get => _exchangeAssignedId ??= ExchangeAssignedId.ToString();
         }
-        public long Id { get; init; }
+        public long ExchangeAssignedId { get; set; }
+        public long InternalId { get; init; }
         public bool IsLimit { get; init; }
         public long RemainingSize { get; set; }
         public long ExecutedSize => Quote.Size - RemainingSize;

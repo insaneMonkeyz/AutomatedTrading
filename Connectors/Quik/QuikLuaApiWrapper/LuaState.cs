@@ -427,7 +427,7 @@ namespace Quik
             LuaApi.lua_pushstring(_state, columnName);
             LuaApi.lua_rawget(_state, SECOND_ITEM);
 
-            long result = default;
+            long result;
 
             if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
             {
@@ -451,7 +451,7 @@ namespace Quik
             LuaApi.lua_pushstring(_state, columnName);
             LuaApi.lua_rawget(_state, SECOND_ITEM);
 
-            Decimal5 result = default;
+            Decimal5 result;
 
             if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
             {

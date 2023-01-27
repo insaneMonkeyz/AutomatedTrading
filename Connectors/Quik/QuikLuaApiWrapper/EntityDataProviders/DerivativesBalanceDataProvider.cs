@@ -1,26 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BasicConcepts;
+﻿using BasicConcepts;
 using Quik.Entities;
-using Quik.EntityDataProviders.EntityDummies;
+using Quik.EntityDataProviders.Attributes;
 using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityDataProviders.RequestContainers;
 
 using static Quik.QuikProxy;
 using UpdateParams = Quik.QuikProxy.Method4ParamsNoReturn<Quik.Entities.SecurityBalance, Quik.LuaState>;
 
 namespace Quik.EntityDataProviders
 {
-    internal delegate ISecurity? GetSecurityHandler(SecurityDummy security);
-    internal class DerivativesBalanceDataProvider : BaseDataProvider<SecurityBalance, SecurityDummy>
+    internal delegate ISecurity? GetSecurityHandler(SecurityRequestContainer security);
+    
+    internal class DerivativesBalanceDataProvider : DataProvider<SecurityBalance, SecurityBalanceRequestContainer>
     {
         private static UpdateParams _updateParams;
 
-        protected override string QuikCallbackMethod => DerivativesPositionsWrapper.CALLBACK_METHOD;
+        private readonly DerivativeRequestContainer _securityRequest = new();
+        private readonly EntityResolver<SecurityRequestContainer, Security> _securitiesResolver
+            = EntityResolversFactory.GetSecurityResolver();
 
-        public GetSecurityHandler GetSecurity = delegate { return default; };
+        protected override string QuikCallbackMethod => DerivativesPositionsWrapper.CALLBACK_METHOD;
 
         public List<SecurityBalance> GetAllPositions()
         {
@@ -39,6 +38,21 @@ namespace Quik.EntityDataProviders
             }
         }
 
+        private void BuildSecurityResolveRequest(LuaState state)
+        {
+            DerivativesPositionsWrapper.Set(state);
+
+            _securityRequest.Ticker = DerivativesPositionsWrapper.Ticker;
+        }
+        protected override void BuildEntityResolveRequest(LuaState state)
+        {
+            DerivativesPositionsWrapper.Set(state);
+
+            _resolveEntityRequest.Ticker = DerivativesPositionsWrapper.Ticker;
+            _resolveEntityRequest.FirmId = DerivativesPositionsWrapper.FirmId;
+            _resolveEntityRequest.ClientCode = DerivativesPositionsWrapper.AccountId;
+        }
+
         protected override void Update(SecurityBalance entity, LuaState state)
         {
             DerivativesPositionsWrapper.Set(state);
@@ -46,38 +60,31 @@ namespace Quik.EntityDataProviders
             entity.Collateral = DerivativesPositionsWrapper.Collateral;
             entity.Amount = DerivativesPositionsWrapper.CurrentPos.GetValueOrDefault();
         }
-        protected override void SetDummy(LuaState state)
-        {
-            DerivativesPositionsWrapper.Set(state);
-
-            _dummy.Ticker = DerivativesPositionsWrapper.Ticker;
-        }
         protected override SecurityBalance? Create(LuaState state)
         {
-            SetDummy(state);
+            BuildSecurityResolveRequest(state);
 
-            if (!string.IsNullOrEmpty(_dummy.Ticker) && 
-                GetSecurity(_dummy) is ISecurity security)
+            if (_securitiesResolver.GetEntity(_securityRequest) is not ISecurity security)
             {
-                DerivativesPositionsWrapper.Set(state);
-
-                return new SecurityBalance(security)
-                {
-                    FirmId = DerivativesPositionsWrapper.FirmId,
-                    AccountId = DerivativesPositionsWrapper.AccountId,
-                    Collateral = DerivativesPositionsWrapper.Collateral,
-                    Amount = DerivativesPositionsWrapper.CurrentPos.GetValueOrDefault()
-                };
-            }
-            else
-            {
+                $"Coudn't create SecurityBalance entity. Failed to resolve security {_securityRequest.Ticker} it belongs to".DebugPrintWarning();
                 return default;
             }
+            
+            DerivativesPositionsWrapper.Set(state);
+
+            return new SecurityBalance(security)
+            {
+                FirmId = DerivativesPositionsWrapper.FirmId,
+                AccountId = DerivativesPositionsWrapper.AccountId,
+                Collateral = DerivativesPositionsWrapper.Collateral,
+                Amount = DerivativesPositionsWrapper.CurrentPos.GetValueOrDefault()
+            };
         }
 
         #region Singleton
+        [SingletonInstance]
         public static DerivativesBalanceDataProvider Instance { get; } = new();
-        private DerivativesBalanceDataProvider()
+        private DerivativesBalanceDataProvider() : base(EntityResolversFactory.GetBalanceResolver())
         {
             _updateParams = new()
             {

@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using BasicConcepts;
 using Quik.Entities;
+using Quik.EntityDataProviders;
 using Quik.QuikApi;
 
 namespace Quik
@@ -52,6 +54,22 @@ namespace Quik
         public static QuikApiException ToSecurityParsingException(this string property)
         {
             return new QuikApiException($"Can't parse essential parameter '{property}' to build a security.");
+        }
+        public static PropertyInfo? GetTaggedProperty<TAttribute>(this Type type) where TAttribute : Attribute
+        {
+            return type
+                .GetProperties()
+                .FirstOrDefault(p => p.HasAttribute<TAttribute>());
+        }
+        public static MethodInfo? GetTaggedMethod<TAttribute>(this Type type) where TAttribute : Attribute
+        {
+            return type
+                .GetMethods()
+                .FirstOrDefault(p => p.HasAttribute<TAttribute>());
+        }
+        public static bool HasAttribute<TAttribute>(this MemberInfo subj) where TAttribute : Attribute
+        {
+            return subj.CustomAttributes.Any(a => a.AttributeType == typeof(TAttribute));
         }
     }
 }

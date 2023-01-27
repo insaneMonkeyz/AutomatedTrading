@@ -2,7 +2,7 @@
 
 namespace Quik.Entities
 {
-    internal abstract class SecurityBase : ISecurity
+    internal abstract class Security : ISecurity, IUniquelyIdentifiable
     {
         public Decimal5 MinTradingSize => QuikApi.QuikApi.DEFAULT_TRADING_SIZE;
         public Guid ExchangeId => QuikApi.QuikApi.MoexExchangeId;
@@ -14,8 +14,14 @@ namespace Quik.Entities
         public Decimal5 MinPriceStep { get; init; }
         public Currencies DenominationCurrency { get; init; }
         public Decimal5? PriceStepValue { get; internal set; }
+        public int UniqueId
+        {
+            get => _uniqueId ??= 
+                HashCode.Combine(nameof(Security), ClassCode, Ticker);
+        }
+        private int? _uniqueId;
 
-        public SecurityBase(ref SecurityParamsContainer container)
+        public Security(ref SecurityParamsContainer container)
         {
             Ticker = container.Ticker;
             Description = container.Description;

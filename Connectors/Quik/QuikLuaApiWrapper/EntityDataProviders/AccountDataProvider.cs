@@ -2,7 +2,8 @@
 using Quik;
 using Quik.Entities;
 using Quik.EntityDataProviders;
-using Quik.EntityDataProviders.EntityDummies;
+using Quik.EntityDataProviders.Attributes;
+using Quik.EntityDataProviders.RequestContainers;
 using Quik.EntityDataProviders.QuikApiWrappers;
 
 using static Quik.QuikProxy;
@@ -10,7 +11,7 @@ using UpdateParams = Quik.QuikProxy.Method4ParamsNoReturn<Quik.Entities.Derivati
 
 namespace Quik.EntityDataProviders
 {
-    internal sealed class AccountDataProvider : BaseDataProvider<DerivativesTradingAccount, DerivativesAccountDummy>
+    internal sealed class AccountDataProvider : DataProvider<DerivativesTradingAccount, AccountRequestContainer>
     {
         private static UpdateParams _updateParams;
 
@@ -51,13 +52,13 @@ namespace Quik.EntityDataProviders
                                    + FuturesLimitsWrapper.RecorderIncome;
         }
 
-        protected override void SetDummy(LuaState state)
+        protected override void BuildEntityResolveRequest(LuaState state)
         {
             FuturesLimitsWrapper.Set(state);
 
-            _dummy.IsMoneyAccount = FuturesLimitsWrapper.IsMainAccount;
-            _dummy.FirmId = FuturesLimitsWrapper.FirmId;
-            _dummy.ClientCode = FuturesLimitsWrapper.ClientCode;
+            _resolveEntityRequest.IsMoneyAccount = FuturesLimitsWrapper.IsMainAccount;
+            _resolveEntityRequest.FirmId = FuturesLimitsWrapper.FirmId;
+            _resolveEntityRequest.ClientCode = FuturesLimitsWrapper.ClientCode;
         }
         protected override DerivativesTradingAccount Create(LuaState state)
         {
@@ -80,8 +81,9 @@ namespace Quik.EntityDataProviders
         }
 
         #region Singleton
+        [SingletonInstance]
         public static AccountDataProvider Instance { get; } = new();
-        private AccountDataProvider()
+        private AccountDataProvider() : base(EntityResolversFactory.GetAccountsResolver())
         {
             _updateParams = new()
             {

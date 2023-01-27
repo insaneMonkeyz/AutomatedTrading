@@ -1,10 +1,15 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using Quik.Entities;
 using Quik.EntityDataProviders;
 using Quik.EntityDataProviders.QuikApiWrappers;
 using BasicConcepts;
 using BasicConcepts.SecuritySpecifics;
 using BasicConcepts.SecuritySpecifics.Options;
+using System.Reflection;
+using Quik.EntityDataProviders.Attributes;
+using System.Runtime.InteropServices.ComTypes;
+using KeraLua;
 
 namespace Quik
 {
@@ -222,7 +227,7 @@ namespace Quik
             public T DefaultValue;
         }
 
-        internal static Decimal5? GetDecimal5Param(SecurityBase security, string param)
+        internal static Decimal5? GetDecimal5Param(Security security, string param)
         {
             var @params = new GetItemParams
             {
@@ -242,7 +247,6 @@ namespace Quik
 
             return value;
         }
-
         internal static string? ReadSpecificEntry(ref GetItemParams param)
         {
             string? result = null;
@@ -379,9 +383,6 @@ namespace Quik
             {
                 lua.TieProxyLibrary("NativeToManagedProxy");
                 lua.RegisterCallback(Main, "main");
-
-                AccountDataProvider.Instance.SubscribeCallback(lua.RegisterCallback);
-                OrderbookDataProvider.Instance.SubscribeCallback(lua.RegisterCallback);
             }
             catch (Exception ex)
             {
@@ -404,6 +405,10 @@ namespace Quik
 
                 System.Diagnostics.Debugger.Launch();
 
+                foreach (var provider in SingletonProvider.GetInstances<IDataProvider>())
+                {
+                    provider.SubscribeCallback(_localState.RegisterCallback);
+                }
 
                 var posProvider = DerivativesBalanceDataProvider.Instance;
                 var secProvider = SecurityDataProvider.Instance;

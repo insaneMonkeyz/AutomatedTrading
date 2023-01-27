@@ -7,7 +7,7 @@
         string? Description { get; }
 
         /// <summary>
-        /// Number of digits apter the point. E.g. 2 = 0.01
+        /// Number of digits apter the point. PricePrecisionScale of 0.01 is 2
         /// </summary>
         long PricePrecisionScale { get; }
         long ContractSize { get; }

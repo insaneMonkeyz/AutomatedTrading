@@ -14,7 +14,7 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
         public const string CALLBACK_METHOD = "OnOrder";
 
         private const string EXCHANGE_ORDER_ID = "order_num";
-        private const string ORDER_ID = "trans_id";
+        private const string TRANSACTION_ID = "trans_id";
         private const string FLAGS = "flags";
         private const string ACCOUNT_ID = "account";
         private const string PRICE = "price";
@@ -38,15 +38,15 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
         {
             get => _stack.ReadRowValueLong(EXCHANGE_ORDER_ID);
         }
-        public static long OrderId
+        public static long TransactionId
         {
-            get => _stack.ReadRowValueLong(ORDER_ID);
+            get => _stack.ReadRowValueLong(TRANSACTION_ID);
         }
         public static OrderFlags Flags
         {
             get => (OrderFlags)_stack.ReadRowValueLong(FLAGS);
         }
-        public static string? AccoundId
+        public static string? Account
         {
             get => _stack.ReadRowValueString(ACCOUNT_ID);
         }

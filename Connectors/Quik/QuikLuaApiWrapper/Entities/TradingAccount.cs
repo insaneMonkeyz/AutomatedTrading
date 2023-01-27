@@ -8,10 +8,11 @@ using BasicConcepts;
 
 namespace Quik.Entities
 {
-    internal class DerivativesTradingAccount : ITradingAccount
+    internal class DerivativesTradingAccount : ITradingAccount, IUniquelyIdentifiable
     {
         private string _code;
         private string _firmId;
+        private int? _uniqueId;
 
         public bool IsMoneyAccount { get; init; }
         public string AccountCode
@@ -31,6 +32,12 @@ namespace Quik.Entities
         public Decimal5 CollateralMargin { get; set; }
         public Currencies AccountCurrency { get; init; }
         public string? MoexCurrCode { get; init; }
+        public int UniqueId
+        {
+            get => _uniqueId ??=
+                HashCode.Combine(nameof(DerivativesTradingAccount),
+                    FirmId, AccountCode);
+        }
         IEnumerable<ISecurityBalance> ITradingAccount.SecuritiesBalance => SecuritiesBalance;
 
 
