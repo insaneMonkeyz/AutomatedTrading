@@ -10,9 +10,17 @@ using Quik.EntityDataProviders.Attributes;
 
 namespace Quik.EntityDataProviders
 {
-    internal sealed class OrderbookDataProvider : DataProvider<OrderBook, OrderbookRequestContainer>
+    internal sealed class OrderbookDataProvider : UpdatesSupportingDataProvider<OrderBook, OrderbookRequestContainer>
     {
         protected override string QuikCallbackMethod => OrderbookWrapper.CALLBACK_METHOD;
+        protected override string AllEntitiesTable => string.Empty;
+
+        private static readonly List<OrderBook> _emptyList= new(0);
+
+        public override List<OrderBook> GetAllEntities()
+        {
+            return _emptyList;
+        }
 
         public IOptimizedOrderBook CreateOrderBook(Security sec)
         {

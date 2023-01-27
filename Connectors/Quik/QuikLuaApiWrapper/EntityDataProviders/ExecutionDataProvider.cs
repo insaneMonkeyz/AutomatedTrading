@@ -12,17 +12,9 @@ namespace Quik.EntityDataProviders
     {
         protected readonly OrderRequestContainer _orderRequestContainer = new();
         protected readonly EntityResolver<OrderRequestContainer, Order> _orderResolver;
+
         protected override string QuikCallbackMethod => ExecutionWrapper.CALLBACK_METHOD;
-
-        public List<OrderExecution> GetAllEntities()
-        {
-            return ReadWholeTable(ExecutionWrapper.NAME, Create);
-        }
-
-        public override void Update(OrderExecution entity)
-        {
-            throw new NotSupportedException("Updating order executions is not supported.");
-        }
+        protected override string AllEntitiesTable => ExecutionWrapper.NAME;
 
         protected override OrderExecution? Create(LuaState state)
         {
@@ -52,14 +44,6 @@ namespace Quik.EntityDataProviders
 
             return result;
         }
-
-        protected override void BuildEntityResolveRequest(LuaState state)
-        {
-            ExecutionWrapper.Set(state);
-
-            _resolveEntityRequest.TradeId = ExecutionWrapper.TradeId;
-            _resolveEntityRequest.ExchangeAssignedOrderId = ExecutionWrapper.ExchangeOrderId;
-        }
         protected void BuildOrderResolveRequest(LuaState state)
         {
             ExecutionWrapper.Set(state);
@@ -67,28 +51,12 @@ namespace Quik.EntityDataProviders
             _orderRequestContainer.ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId;
         }
 
-        protected override void Update(OrderExecution entity, LuaState state)
-        {
-            throw new NotImplementedException();
-        }
-
         #region Singleton
         [SingletonInstance]
         public static ExecutionDataProvider Instance { get; } = new();
-        private ExecutionDataProvider() : base(EntityResolversFactory.GetOrderExecutionsResolver())
+        private ExecutionDataProvider() 
         {
-            throw new NotImplementedException();
-
             _orderResolver = EntityResolversFactory.GetOrdersResolver();
-
-            //_updateParams = new()
-            //{
-            //    Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
-            //    Method = DerivativesPositionsWrapper.GET_METOD,
-            //    ReturnType = LuaApi.TYPE_TABLE,
-            //    ActionParams = new() { Arg1 = State },
-            //    Action = Update,
-            //};
         }
         #endregion
     }

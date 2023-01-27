@@ -11,16 +11,13 @@ using UpdateParams = Quik.QuikProxy.Method4ParamsNoReturn<Quik.Entities.Derivati
 
 namespace Quik.EntityDataProviders
 {
-    internal sealed class AccountDataProvider : DataProvider<DerivativesTradingAccount, AccountRequestContainer>
+    internal sealed class AccountDataProvider : UpdatesSupportingDataProvider<DerivativesTradingAccount, AccountRequestContainer>
     {
         private static UpdateParams _updateParams;
 
         protected override string QuikCallbackMethod => FuturesLimitsWrapper.CALLBACK_METHOD;
+        protected override string AllEntitiesTable => FuturesLimitsWrapper.NAME;
 
-        public List<DerivativesTradingAccount> GetAllEntities()
-        {
-            return ReadWholeTable(FuturesLimitsWrapper.NAME, Create);
-        }
         public override void Update(DerivativesTradingAccount entity)
         {
             lock (_userRequestLock)

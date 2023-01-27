@@ -11,7 +11,7 @@ namespace Quik.EntityDataProviders
 {
     internal delegate ISecurity? GetSecurityHandler(SecurityRequestContainer security);
     
-    internal class DerivativesBalanceDataProvider : DataProvider<SecurityBalance, SecurityBalanceRequestContainer>
+    internal class DerivativesBalanceDataProvider : UpdatesSupportingDataProvider<SecurityBalance, SecurityBalanceRequestContainer>
     {
         private static UpdateParams _updateParams;
 
@@ -20,11 +20,8 @@ namespace Quik.EntityDataProviders
             = EntityResolversFactory.GetSecurityResolver();
 
         protected override string QuikCallbackMethod => DerivativesPositionsWrapper.CALLBACK_METHOD;
+        protected override string AllEntitiesTable => DerivativesPositionsWrapper.NAME;
 
-        public List<SecurityBalance> GetAllPositions()
-        {
-            return ReadWholeTable(DerivativesPositionsWrapper.NAME, Create);
-        }
         public override void Update(SecurityBalance entity)
         {
             lock (_userRequestLock)
@@ -38,12 +35,6 @@ namespace Quik.EntityDataProviders
             }
         }
 
-        private void BuildSecurityResolveRequest(LuaState state)
-        {
-            DerivativesPositionsWrapper.Set(state);
-
-            _securityRequest.Ticker = DerivativesPositionsWrapper.Ticker;
-        }
         protected override void BuildEntityResolveRequest(LuaState state)
         {
             DerivativesPositionsWrapper.Set(state);
@@ -51,6 +42,12 @@ namespace Quik.EntityDataProviders
             _resolveEntityRequest.Ticker = DerivativesPositionsWrapper.Ticker;
             _resolveEntityRequest.FirmId = DerivativesPositionsWrapper.FirmId;
             _resolveEntityRequest.ClientCode = DerivativesPositionsWrapper.AccountId;
+        }
+        private void BuildSecurityResolveRequest(LuaState state)
+        {
+            DerivativesPositionsWrapper.Set(state);
+
+            _securityRequest.Ticker = DerivativesPositionsWrapper.Ticker;
         }
 
         protected override void Update(SecurityBalance entity, LuaState state)

@@ -79,11 +79,11 @@ namespace Quik.EntityDataProviders
 
         public static Decimal5? GetBuyMarginRequirements(Security security)
         {
-            return GetDecimal5Param(security, SecurityWrapper.PARAM_BUY_MARGIN_REQUIREMENTS);
+            return GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_BUY_MARGIN_REQUIREMENTS);
         }
         public static Decimal5? GetSellMarginRequirements(Security security)
         {
-            return GetDecimal5Param(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
+            return GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
         }
 
         public static IEnumerable<string> GetAvailableSecuritiesOfType(Type type)
@@ -131,12 +131,12 @@ namespace Quik.EntityDataProviders
         }
         public static void UpdateSecurity<T>(T security) where T : Security
         {
-            security.PriceStepValue = GetDecimal5Param(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
+            security.PriceStepValue = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
 
             if (security is MoexDerivativeBase baseSec)
             {
-                baseSec.UpperPriceLimit = GetDecimal5Param(security, SecurityWrapper.PARAM_UPPER_PRICE_LIMIT);
-                baseSec.LowerPriceLimit = GetDecimal5Param(security, SecurityWrapper.PARAM_LOWER_PRICE_LIMIT);
+                baseSec.UpperPriceLimit = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_UPPER_PRICE_LIMIT);
+                baseSec.LowerPriceLimit = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_LOWER_PRICE_LIMIT);
             }
         }
 
@@ -224,9 +224,9 @@ namespace Quik.EntityDataProviders
 
             if (!container.StateIsCorrect)
             {
-                ("Failed to create security. " +
-                    "Essentials parameters missing or incorrect")
-                        .DebugPrintWarning();
+                "Failed to create security. Essential parameters missing or incorrect"
+                    .DebugPrintWarning();
+
                 return false;
             }
 

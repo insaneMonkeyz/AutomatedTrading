@@ -227,7 +227,7 @@ namespace Quik
             public T DefaultValue;
         }
 
-        internal static Decimal5? GetDecimal5Param(Security security, string param)
+        internal static Decimal5? GetDecimal5From_getParamEx(Security security, string param)
         {
             var @params = new GetItemParams
             {
@@ -254,7 +254,7 @@ namespace Quik
             lock (SyncRoot)
             {
                 if (_localState.ExecFunction(GetParam.METHOD, LuaApi.TYPE_TABLE, param.ClassCode, param.Ticker, param.Parameter) &&
-                        _localState.ReadRowValueChar(GetParam.RESULT_STATUS) == GetParam.SUCCESS)
+                    _localState.ReadRowValueChar(GetParam.RESULT_STATUS) == GetParam.SUCCESS)
                 {
                     if (_localState.TryFetchCharFromTable(GetParam.RESULT_TYPE, out char type))
                     {

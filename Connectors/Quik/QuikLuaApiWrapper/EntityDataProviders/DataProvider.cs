@@ -1,10 +1,12 @@
 ﻿using Quik.Entities;
 using Quik.EntityDataProviders.Attributes;
+using Quik.EntityDataProviders.QuikApiWrappers;
 using Quik.EntityDataProviders.RequestContainers;
 
 namespace Quik.EntityDataProviders
 {
-    internal delegate void EntityStateChangedHandler<T>(T entity);
+    internal delegate void EntityUpdatedHandler<T>(T entity);
+    internal delegate void EntityCreatedHandler<T>(T entity);
     internal delegate TEntity? GetChangingEntityHandler<TEntity, TRequestContainer>(TRequestContainer dummy);
 
     /// <summary>
@@ -20,42 +22,28 @@ namespace Quik.EntityDataProviders
         where TEntity : class
     {
         protected abstract string QuikCallbackMethod { get; }
+        protected abstract string AllEntitiesTable { get; }
 
         protected readonly object _callbackLock = new();
         protected readonly object _userRequestLock = new();
-        protected readonly TRequestContainer _resolveEntityRequest = new();
-        protected readonly EntityResolver<TRequestContainer, TEntity> _entityResolver;
 
-        public EntityStateChangedHandler<TEntity> EntityChanged = delegate { };
-
-        public DataProvider(EntityResolver<TRequestContainer, TEntity> resolver)
-        {
-            _entityResolver = resolver;
-        }
+        public EntityCreatedHandler<TEntity> NewEntity = delegate { };
 
         public void SubscribeCallback(CallbackSubscriber subscribe)
         {
-            subscribe(OnEntityChanged, QuikCallbackMethod);
+            subscribe(OnNewData, QuikCallbackMethod);
         }
-        public abstract void Update(TEntity entity);
-
-        protected abstract void Update(TEntity entity, LuaState state);
-        protected abstract void BuildEntityResolveRequest(LuaState state);
+        public virtual List<TEntity> GetAllEntities()
+        {
+            return QuikProxy.ReadWholeTable(AllEntitiesTable, Create);
+        }
         protected abstract TEntity? Create(LuaState state);
 
-        private int OnEntityChanged(IntPtr state)
+        protected virtual int OnNewData(IntPtr state)
         {
-            lock (_callbackLock)
+            if (Create(state) is TEntity entity)
             {
-                BuildEntityResolveRequest(state);
-                // ваще то этот коллбек может вызываться и при появлении новых сущностей.
-                // разберись с этим
-                if (_entityResolver.GetEntity(_resolveEntityRequest) is TEntity entity)
-                {
-                    Update(entity, state);
-
-                    EntityChanged(entity);
-                } 
+                NewEntity(entity);
             }
 
             return 1;

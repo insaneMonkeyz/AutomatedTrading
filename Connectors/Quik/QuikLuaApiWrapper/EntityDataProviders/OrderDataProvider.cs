@@ -11,18 +11,15 @@ using SecurityResolver = Quik.EntityDataProviders.EntityResolver<Quik.EntityData
 
 namespace Quik.EntityDataProviders
 {
-    internal class OrderDataProvider : DataProvider<Order, OrderRequestContainer>
+    internal class OrderDataProvider : UpdatesSupportingDataProvider<Order, OrderRequestContainer>
     {
         private readonly SecurityResolver _securityResolver;
         private readonly SecurityRequestContainer _securityRequest = new();
         private UpdateParams _updateParams;
 
         protected override string QuikCallbackMethod => OrdersWrapper.CALLBACK_METHOD;
+        protected override string AllEntitiesTable => OrdersWrapper.NAME;
 
-        public List<Order> GetAllOrders()
-        {
-            return ReadWholeTable(OrdersWrapper.NAME, Create);
-        }
         public override void Update(Order entity)
         {
             lock (_userRequestLock)
