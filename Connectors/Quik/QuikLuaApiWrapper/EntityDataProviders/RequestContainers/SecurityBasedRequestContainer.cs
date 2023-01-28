@@ -3,6 +3,7 @@
 namespace Quik.EntityDataProviders.RequestContainers
 {
     internal abstract class SecurityBasedRequestContainer<T> : IRequestContainer<T>
+        where T : class
     {
         public string? ClassCode;
         public string? Ticker;

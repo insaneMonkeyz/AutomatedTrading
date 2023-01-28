@@ -75,7 +75,7 @@ namespace Quik.EntityDataProviders
         private static readonly object _securityRequestLock = new();
         private static readonly SecurityRequestContainer _securityRequest = new();
         private static readonly SecurityResolver _entityResolver
-            = EntityResolversFactory.GetSecurityResolver();
+            = EntityResolvers.GetSecurityResolver();
 
         public static Decimal5? GetBuyMarginRequirements(Security security)
         {
@@ -129,7 +129,7 @@ namespace Quik.EntityDataProviders
                 return ReadSpecificEntry(ref _getSecurityRequest);
             }
         }
-        public static void UpdateSecurity<T>(T security) where T : Security
+        public static void UpdateSecurity(Security security)
         {
             security.PriceStepValue = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
 

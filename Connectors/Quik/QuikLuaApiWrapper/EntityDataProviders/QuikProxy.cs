@@ -162,25 +162,40 @@ namespace Quik
             public string Parameter;
             public GetParam.Values ReturnType;
         }
-        internal struct Action1Param<T>
+        internal struct VoidCallback1Param<TReturn>
         {
-            public T Arg0;
+            public TReturn Arg0;
         }
-        internal struct Action2Params<T0,T1>
+        internal struct Callback1Param<TArg,TReturn>
         {
-            public T0 Arg0;
-            public T1 Arg1;
+            public TArg Arg;
+            public Func<TArg, TReturn> Invoke;
+            public TReturn DefaultValue;
+        }
+        internal struct VoidCallback2Params<TCallbackArg0, TCallbackArg1>
+        {
+            public TCallbackArg0 Arg0;
+            public TCallbackArg1 Arg1;
+            public Action<TCallbackArg0, TCallbackArg1> Invoke;
         }
 
-        internal struct MultiGetMethod2ParamsNoReturn<TActionArg0, TActionArg1>
+        internal struct VoidMultiGetMethod2Params<TActionArg0, TActionArg1>
         {
             public string Method;
             public string Arg0;
             public string Arg1;
             public int ReturnType1;
             public int ReturnType2;
-            public Action2Params<TActionArg0, TActionArg1> ActionParams;
-            public Action<TActionArg0, TActionArg1> Action;
+            public VoidCallback2Params<TActionArg0, TActionArg1> Callback;
+        }
+        internal struct MultiGetMethod2Params<TCallbackArg, TCallbackReturn>
+        {
+            public string Method;
+            public string Arg0;
+            public string Arg1;
+            public int ReturnType1;
+            public int ReturnType2;
+            public Callback1Param<TCallbackArg, TCallbackReturn> Callback;
         }
         internal struct Method2ParamsNoReturn<TActionArg>
         {
@@ -188,10 +203,10 @@ namespace Quik
             public string Arg0;
             public string Arg1;
             public int ReturnType;
-            public Action1Param<TActionArg> ActionParams;
+            public VoidCallback1Param<TActionArg> ActionParams;
             public Action<TActionArg> Action;
         }
-        internal struct Method4ParamsNoReturn<TActionArg0,TActionArg1>
+        internal struct VoidMethod4Params<TCallbackArg0,TCallbackArg1>
         {
             public string Method;
             public string Arg0;
@@ -199,8 +214,17 @@ namespace Quik
             public string Arg2;
             public string Arg3;
             public int ReturnType;
-            public Action2Params<TActionArg0,TActionArg1> ActionParams;
-            public Action<TActionArg0, TActionArg1> Action;
+            public VoidCallback2Params<TCallbackArg0,TCallbackArg1> Callback;
+        }
+        internal struct Method4Params<TCallbackArg,TCallbackReturn>
+        {
+            public string Method;
+            public string Arg0;
+            public string Arg1;
+            public string Arg2;
+            public string Arg3;
+            public int ReturnType;
+            public Callback1Param<TCallbackArg, TCallbackReturn> Callback;
         }
         internal struct Method2Params<T>
         {
@@ -281,20 +305,37 @@ namespace Quik
 
             return result;
         }
-        internal static void ReadSpecificEntry<T0,T1>(ref Method4ParamsNoReturn<T0,T1> param)
+        internal static void ReadSpecificEntry<TCallbackArg0,TCallbackArg1>(ref VoidMethod4Params<TCallbackArg0,TCallbackArg1> param)
         {
             lock (SyncRoot)
             {
                 if (_localState.ExecFunction(param.Method, param.ReturnType, 
                     param.Arg0, param.Arg1, param.Arg2, param.Arg3))
                 {
-                    param.Action(param.ActionParams.Arg0, param.ActionParams.Arg1);
+                    param.Callback.Invoke(param.Callback.Arg0, param.Callback.Arg1);
                 }
 
                 _localState.PopFromStack(); 
             }
         }
-        internal static void ReadSpecificEntry<T0,T1>(ref MultiGetMethod2ParamsNoReturn<T0,T1> param)
+        internal static TCallbackReturn ReadSpecificEntry<TCallback,TCallbackReturn>(ref Method4Params<TCallback,TCallbackReturn> param)
+        {
+            lock (SyncRoot)
+            {
+                var result = param.Callback.DefaultValue;
+
+                if (_localState.ExecFunction(param.Method, param.ReturnType, 
+                    param.Arg0, param.Arg1, param.Arg2, param.Arg3))
+                {
+                    result = param.Callback.Invoke(param.Callback.Arg);
+                }
+
+                _localState.PopFromStack();
+
+                return result;
+            }
+        }
+        internal static void ReadSpecificEntry<T0,T1>(ref VoidMultiGetMethod2Params<T0,T1> param)
         {
             lock (SyncRoot)
             {
@@ -302,10 +343,28 @@ namespace Quik
                     param.ReturnType1, param.ReturnType2, 
                     param.Arg0, param.Arg1))
                 {
-                    param.Action(param.ActionParams.Arg0, param.ActionParams.Arg1);
+                    param.Callback.Invoke(param.Callback.Arg0, param.Callback.Arg1);
                 }
 
                 _localState.PopTwoFromStack(); 
+            }
+        }
+        internal static TCallbackReturn ReadSpecificEntry<TCallbackArg, TCallbackReturn>(ref MultiGetMethod2Params<TCallbackArg, TCallbackReturn> param)
+        {
+            lock (SyncRoot)
+            {
+                var result = param.Callback.DefaultValue;
+
+                if (_localState.ExecDoubleReturnFunction(param.Method, 
+                    param.ReturnType1, param.ReturnType2, 
+                    param.Arg0, param.Arg1))
+                {
+                    result = param.Callback.Invoke(param.Callback.Arg);
+                }
+
+                _localState.PopTwoFromStack();
+
+                return result;
             }
         }
         internal static void ReadSpecificEntry<T>(ref Method2ParamsNoReturn<T> param)
@@ -405,7 +464,7 @@ namespace Quik
 
                 System.Diagnostics.Debugger.Launch();
 
-                foreach (var provider in SingletonProvider.GetInstances<IDataProvider>())
+                foreach (var provider in SingletonProvider.GetInstances<IQuikDataSubscriber>())
                 {
                     provider.SubscribeCallback(_localState.RegisterCallback);
                 }

@@ -21,7 +21,7 @@ namespace Quik.Entities
             get => _firmId;
             init => _firmId = value ?? throw new ArgumentNullException(nameof(value)); 
         }
-        public string AccountId 
+        public string Account 
         { 
             get => _accountId; 
             init => _accountId = value ?? throw new ArgumentNullException(nameof(value)); 

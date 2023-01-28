@@ -1,4 +1,5 @@
-﻿using Quik.EntityDataProviders.RequestContainers;
+﻿using Quik.Entities;
+using Quik.EntityDataProviders.RequestContainers;
 
 namespace Quik.EntityDataProviders
 {
@@ -13,7 +14,6 @@ namespace Quik.EntityDataProviders
         public EntityUpdatedHandler<TEntity> EntityChanged = delegate { };
 
         public abstract void Update(TEntity entity);
-
         protected abstract void Update(TEntity entity, LuaState state);
         protected abstract void BuildEntityResolveRequest(LuaState state);
         protected override int OnNewData(IntPtr state)
@@ -32,21 +32,16 @@ namespace Quik.EntityDataProviders
 
                     return 1;
                 }
-
-                entity = Create(state);
-
-                if (entity != null)
+                else
                 {
-                    NewEntity(entity);
+                    return base.OnNewData(state);
                 }
-
-                return 1;
             }
         }
 
-        public UpdatesSupportingDataProvider(EntityResolver<TRequestContainer, TEntity> resolver)
+        public UpdatesSupportingDataProvider()
         {
-            _entityResolver = resolver;
+            _entityResolver = EntityResolvers.GetResolver<TRequestContainer, TEntity>();
         } 
     }
 }

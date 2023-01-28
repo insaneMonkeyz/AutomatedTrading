@@ -5,7 +5,7 @@ namespace Quik.EntityDataProviders.RequestContainers
     internal class SecurityBalanceRequestContainer : IRequestContainer<SecurityBalance>
     {
         public string? FirmId;
-        public string? ClientCode;
+        public string? Account;
         public string? Ticker;
 
         /// <summary>
@@ -17,7 +17,7 @@ namespace Quik.EntityDataProviders.RequestContainers
             {
                return !(string.IsNullOrEmpty(Ticker)
                 || string.IsNullOrEmpty(FirmId)
-                || string.IsNullOrEmpty(ClientCode));
+                || string.IsNullOrEmpty(Account));
             }
         }
 
@@ -29,7 +29,7 @@ namespace Quik.EntityDataProviders.RequestContainers
             }
 
             return balance.FirmId == FirmId
-                && balance.AccountId == ClientCode
+                && balance.Account == Account
                 && balance.Security.Ticker == Ticker;
         }
 
@@ -37,14 +37,14 @@ namespace Quik.EntityDataProviders.RequestContainers
         {
             return obj is SecurityBalanceRequestContainer other
                 && FirmId == other.FirmId
-                && ClientCode == other.ClientCode
+                && Account == other.Account
                 && Ticker == other.Ticker;
         }
         public override int GetHashCode()
         {
             unchecked
             {
-                return HashCode.Combine(FirmId, ClientCode, Ticker) * 345756; 
+                return HashCode.Combine(FirmId, Account, Ticker) * 345756; 
             }
         }
     }

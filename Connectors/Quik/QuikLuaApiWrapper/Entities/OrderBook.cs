@@ -55,7 +55,7 @@ namespace Quik.Entities
             }
         }
 
-        public Security Security { get; init; }
+        public Security Security { get; }
         ISecurity IOrderBook.Security => Security;
 
         public Quote[] Bids
@@ -77,6 +77,11 @@ namespace Quik.Entities
                     return Clone(_asks);
                 }
             }
+        }
+
+        public OrderBook(Security security)
+        {
+            Security = security ?? throw new ArgumentNullException(nameof(security));
         }
 
         private Quote[] Clone(Quote[] src)

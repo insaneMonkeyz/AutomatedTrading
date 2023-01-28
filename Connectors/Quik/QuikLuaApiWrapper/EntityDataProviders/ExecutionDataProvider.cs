@@ -16,6 +16,11 @@ namespace Quik.EntityDataProviders
         protected override string QuikCallbackMethod => ExecutionWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => ExecutionWrapper.NAME;
 
+        public override OrderExecution? Create(OrderExecutionRequestContainer request)
+        {
+            throw new NotImplementedException("Need to implement 'SearchItems' from quik API in order " +
+                "to be able to fetch random order executions from server.");
+        }
         protected override OrderExecution? Create(LuaState state)
         {
             BuildOrderResolveRequest(state);
@@ -56,7 +61,7 @@ namespace Quik.EntityDataProviders
         public static ExecutionDataProvider Instance { get; } = new();
         private ExecutionDataProvider() 
         {
-            _orderResolver = EntityResolversFactory.GetOrdersResolver();
+            _orderResolver = EntityResolvers.GetOrdersResolver();
         }
         #endregion
     }

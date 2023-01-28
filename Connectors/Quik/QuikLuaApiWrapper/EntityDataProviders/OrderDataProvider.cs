@@ -6,7 +6,8 @@ using Quik.EntityDataProviders.QuikApiWrappers;
 
 using static Quik.QuikProxy;
 
-using UpdateParams = Quik.QuikProxy.MultiGetMethod2ParamsNoReturn<Quik.Entities.Order, Quik.LuaState>;
+using UpdateParams = Quik.QuikProxy.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.LuaState>;
+using CreateParams = Quik.QuikProxy.MultiGetMethod2Params<Quik.LuaState, Quik.Entities.Order?>;
 using SecurityResolver = Quik.EntityDataProviders.EntityResolver<Quik.EntityDataProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
 
 namespace Quik.EntityDataProviders
@@ -16,22 +17,26 @@ namespace Quik.EntityDataProviders
         private readonly SecurityResolver _securityResolver;
         private readonly SecurityRequestContainer _securityRequest = new();
         private UpdateParams _updateParams;
+        private CreateParams _createParams;
 
         protected override string QuikCallbackMethod => OrdersWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => OrdersWrapper.NAME;
 
-        public override void Update(Order entity)
+        public override Order? Create(OrderRequestContainer request)
         {
+            if (!request.HasData)
+            {
+                throw new ArgumentException($"{nameof(OrderRequestContainer)} request is missing essential parameters");
+            }
+
             lock (_userRequestLock)
             {
-                _updateParams.Arg0 = entity.Security.ClassCode;
-                _updateParams.Arg1 = entity.ExchangeAssignedIdString;
-                _updateParams.ActionParams.Arg0 = entity;
+                _createParams.Arg0 = request.ClassCode;
+                _createParams.Arg1 = request.ExchangeAssignedId;
 
-                ReadSpecificEntry(ref _updateParams);
+                return ReadSpecificEntry(ref _createParams);
             }
         }
-
         protected override Order? Create(LuaState state)
         {
             BuildSecurityResolveRequest(state);
@@ -67,18 +72,16 @@ namespace Quik.EntityDataProviders
 
             return order;
         }
-        protected void BuildSecurityResolveRequest(LuaState state)
+        public override void Update(Order entity)
         {
-            OrdersWrapper.Set(state);
+            lock (_userRequestLock)
+            {
+                _updateParams.Arg0 = entity.Security.ClassCode;
+                _updateParams.Arg1 = entity.ExchangeAssignedIdString;
+                _updateParams.Callback.Arg0 = entity;
 
-            _securityRequest.Ticker = OrdersWrapper.Ticker;
-            _securityRequest.ClassCode = OrdersWrapper.ClassCode;
-        }
-        protected override void BuildEntityResolveRequest(LuaState state)
-        {
-            OrdersWrapper.Set(state);
-
-            _resolveEntityRequest.ExchangeAssignedId = OrdersWrapper.ExchangeOrderId;
+                ReadSpecificEntry(ref _updateParams);
+            }
         }
         protected override void Update(Order entity, LuaState state)
         {
@@ -90,6 +93,20 @@ namespace Quik.EntityDataProviders
             entity.State = flags.HasFlag(OrderFlags.IsAlive)
                 ? OrderStates.Active
                 : OrderStates.Done;
+        }
+
+        protected void BuildSecurityResolveRequest(LuaState state)
+        {
+            OrdersWrapper.Set(state);
+
+            _securityRequest.Ticker = OrdersWrapper.Ticker;
+            _securityRequest.ClassCode = OrdersWrapper.ClassCode;
+        }
+        protected override void BuildEntityResolveRequest(LuaState state)
+        {
+            OrdersWrapper.Set(state);
+
+            _resolveEntityRequest.ExchangeAssignedId = OrdersWrapper.ExchangeOrderId.ToString();
         }
 
         private static OrderExecutionModes FromMoexExecutionMode(MoexOrderExecutionModes mode)
@@ -107,18 +124,30 @@ namespace Quik.EntityDataProviders
         #region Singleton
         [SingletonInstance]
         public static OrderDataProvider Instance { get; } = new();
-        private OrderDataProvider() : base(EntityResolversFactory.GetOrdersResolver())
+        private OrderDataProvider()
         {
-            _securityResolver = EntityResolversFactory.GetSecurityResolver();
+            _securityResolver = EntityResolvers.GetSecurityResolver();
             _updateParams = new()
             {
                 Method = OrdersWrapper.GET_METOD,
                 ReturnType1 = LuaApi.TYPE_TABLE,
                 ReturnType2 = LuaApi.TYPE_NUMBER,
-                Action = Update,
-                ActionParams = new()
-                {
-                    Arg1 = State
+                Callback = new()
+                {                    
+                    Arg1 = State,
+                    Invoke = Update
+                }
+            };
+            _createParams = new()
+            {
+                Method = OrdersWrapper.GET_METOD,
+                ReturnType1 = LuaApi.TYPE_TABLE,
+                ReturnType2 = LuaApi.TYPE_NUMBER,
+                Callback = new()
+                {                    
+                    Arg = State,
+                    Invoke = Create,
+                    DefaultValue = null
                 }
             };
         }

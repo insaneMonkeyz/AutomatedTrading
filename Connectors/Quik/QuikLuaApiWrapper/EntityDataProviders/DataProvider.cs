@@ -17,7 +17,7 @@ namespace Quik.EntityDataProviders
     /// Type of container used to request dependent entities, 
     /// such as an Order for OrderExecution
     /// </typeparam>
-    internal abstract class DataProvider<TEntity, TRequestContainer> : IDataProvider 
+    internal abstract class DataProvider<TEntity, TRequestContainer> : IQuikDataSubscriber 
         where TRequestContainer : IRequestContainer<TEntity>, new()
         where TEntity : class
     {
@@ -29,14 +29,15 @@ namespace Quik.EntityDataProviders
 
         public EntityCreatedHandler<TEntity> NewEntity = delegate { };
 
-        public void SubscribeCallback(CallbackSubscriber subscribe)
+        public void SubscribeCallback(LuaState state)
         {
-            subscribe(OnNewData, QuikCallbackMethod);
+            state.RegisterCallback(OnNewData, QuikCallbackMethod);
         }
         public virtual List<TEntity> GetAllEntities()
         {
             return QuikProxy.ReadWholeTable(AllEntitiesTable, Create);
         }
+        public    abstract TEntity? Create(TRequestContainer request);
         protected abstract TEntity? Create(LuaState state);
 
         protected virtual int OnNewData(IntPtr state)

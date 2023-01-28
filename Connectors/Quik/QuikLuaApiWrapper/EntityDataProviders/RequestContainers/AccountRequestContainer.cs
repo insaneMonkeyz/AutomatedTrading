@@ -11,18 +11,18 @@ namespace Quik.EntityDataProviders.RequestContainers
     internal class AccountRequestContainer : IRequestContainer<DerivativesTradingAccount>
     {
         public string? FirmId;
-        public string? ClientCode;
+        public string? Account;
         public bool IsMoneyAccount;
 
         public bool HasData
         {
-            get => !(string.IsNullOrEmpty(FirmId) || string.IsNullOrEmpty(ClientCode));
+            get => !(string.IsNullOrEmpty(FirmId) || string.IsNullOrEmpty(Account));
         }
         public bool IsMatching(DerivativesTradingAccount entity)
         {
             return entity != null
                 && entity.FirmId == FirmId
-                && entity.AccountCode == ClientCode
+                && entity.AccountCode == Account
                 && entity.IsMoneyAccount == IsMoneyAccount;
         }
 
@@ -30,14 +30,14 @@ namespace Quik.EntityDataProviders.RequestContainers
         {
             return obj is AccountRequestContainer other
                 && FirmId == other.FirmId
-                && ClientCode == other.ClientCode
+                && Account == other.Account
                 && IsMoneyAccount == other.IsMoneyAccount;
         }
         public override int GetHashCode()
         {
             unchecked
             {
-                return HashCode.Combine(FirmId, ClientCode, IsMoneyAccount) * 10065; 
+                return HashCode.Combine(FirmId, Account, IsMoneyAccount) * 10065; 
             }
         }
     }
