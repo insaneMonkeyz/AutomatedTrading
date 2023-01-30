@@ -1,38 +1,41 @@
 ﻿using System.Reflection;
 using Quik.Entities;
-using Quik.EntityDataProviders.RequestContainers;
+using Quik.EntityProviders.RequestContainers;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
     internal static class EntityResolvers
     {
-        private static EntityResolver<SecurityBalanceRequestContainer, SecurityBalance>? _balanceResolver;
-        private static EntityResolver<SecurityRequestContainer, Security>? _securityResolver;
+        private static EntityResolver<OrderExecutionRequestContainer, OrderExecution>? _orderExecutionsResolver;
         private static EntityResolver<AccountRequestContainer, DerivativesTradingAccount>? _accountsResolver;
+        private static EntityResolver<SecurityBalanceRequestContainer, SecurityBalance>? _balanceResolver;
         private static EntityResolver<OrderbookRequestContainer, OrderBook>? _orderbooksResolver;
         private static EntityResolver<OrderRequestContainer, Order>? _ordersResolver;
-        private static EntityResolver<OrderExecutionRequestContainer, OrderExecution>? _orderExecutionsResolver;
+        private static SecurityResolver? _securityResolver;
 
         public static EntityResolver<SecurityBalanceRequestContainer, SecurityBalance> GetBalanceResolver()
         {
-            return _balanceResolver ??= new(20, DerivativesBalanceDataProvider.Instance.Create);
+            return _balanceResolver ??= new(20, DerivativesBalanceProvider.Instance.Create);
         }
-        public static EntityResolver<SecurityRequestContainer, Security> GetSecurityResolver()
+        public static SecurityResolver GetSecurityResolver()
         {
-            throw new NotImplementedException("Need to implement fetching from quik");
-            return _securityResolver ??= new(500, null);
+            return _securityResolver 
+                ??= new(SecuritiesProvider.GetSecurity, 
+                        new SecuritiesToClasscodesMap(
+                            SecuritiesProvider.GetAvailableClasses,
+                            SecuritiesProvider.GetAvailableSecuritiesOfType));
         }
         public static EntityResolver<AccountRequestContainer, DerivativesTradingAccount> GetAccountsResolver()
         {
-            return _accountsResolver ??= new(5, AccountDataProvider.Instance.Create);
+            return _accountsResolver ??= new(5, AccountsProvider.Instance.Create);
         }
         public static EntityResolver<OrderbookRequestContainer, OrderBook> GetOrderbooksResolver()
         {
-            return _orderbooksResolver ??= new(10, OrderbookDataProvider.Instance.Create);
+            return _orderbooksResolver ??= new(10, OrderbooksProvider.Instance.Create);
         }
         public static EntityResolver<OrderRequestContainer, Order> GetOrdersResolver()
         {
-            return _ordersResolver ??= new(10_000, OrderDataProvider.Instance.Create);
+            return _ordersResolver ??= new(10_000, OrdersProvider.Instance.Create);
         }
         public static EntityResolver<OrderExecutionRequestContainer, OrderExecution> GetOrderExecutionsResolver()
         {

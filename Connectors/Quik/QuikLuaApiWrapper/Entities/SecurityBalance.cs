@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
-using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityProviders.QuikApiWrappers;
 
 namespace Quik.Entities
 {

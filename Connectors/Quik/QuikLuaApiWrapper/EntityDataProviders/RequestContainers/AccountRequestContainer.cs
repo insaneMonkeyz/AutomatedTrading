@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using BasicConcepts;
 using Quik.Entities;
 
-namespace Quik.EntityDataProviders.RequestContainers
+namespace Quik.EntityProviders.RequestContainers
 {
     internal class AccountRequestContainer : IRequestContainer<DerivativesTradingAccount>
     {

@@ -1,6 +1,6 @@
 ﻿using Quik.Entities;
 
-namespace Quik.EntityDataProviders.RequestContainers
+namespace Quik.EntityProviders.RequestContainers
 {
     internal class OrderExecutionRequestContainer : IRequestContainer<OrderExecution>
     {

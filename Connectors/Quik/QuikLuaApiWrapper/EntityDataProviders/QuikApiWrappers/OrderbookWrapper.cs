@@ -2,7 +2,7 @@
 using BasicConcepts;
 using Quik;
 
-namespace Quik.EntityDataProviders.QuikApiWrappers
+namespace Quik.EntityProviders.QuikApiWrappers
 {
     internal static class OrderbookWrapper
     {

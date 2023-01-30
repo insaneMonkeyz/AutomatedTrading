@@ -7,7 +7,7 @@ using BasicConcepts;
 using Quik.QuikApi;
 using static Quik.QuikProxy;
 
-namespace Quik.EntityDataProviders.QuikApiWrappers
+namespace Quik.EntityProviders.QuikApiWrappers
 {
     /// <summary>
     /// Wrapper таблицы лимитов по клиентским счетам

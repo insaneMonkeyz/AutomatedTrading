@@ -1,18 +1,18 @@
 ﻿using BasicConcepts;
 using Quik.Entities;
-using Quik.EntityDataProviders.Attributes;
-using Quik.EntityDataProviders.QuikApiWrappers;
-using Quik.EntityDataProviders.RequestContainers;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.RequestContainers;
 
 using static Quik.QuikProxy;
 using UpdateParams = Quik.QuikProxy.VoidMethod4Params<Quik.Entities.SecurityBalance, Quik.LuaState>;
 using CreateParams = Quik.QuikProxy.Method4Params<Quik.LuaState, Quik.Entities.SecurityBalance?>;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
     internal delegate ISecurity? GetSecurityHandler(SecurityRequestContainer security);
     
-    internal class DerivativesBalanceDataProvider : UpdatesSupportingDataProvider<SecurityBalance, SecurityBalanceRequestContainer>
+    internal class DerivativesBalanceProvider : UpdatableEntitiesProvider<SecurityBalance, SecurityBalanceRequestContainer>
     {
         private static UpdateParams _updateParams;
         private static CreateParams _createParams;
@@ -93,8 +93,8 @@ namespace Quik.EntityDataProviders
 
         #region Singleton
         [SingletonInstance]
-        public static DerivativesBalanceDataProvider Instance { get; } = new();
-        private DerivativesBalanceDataProvider()
+        public static DerivativesBalanceProvider Instance { get; } = new();
+        private DerivativesBalanceProvider()
         {
             _updateParams = new()
             {

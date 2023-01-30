@@ -1,16 +1,16 @@
 ﻿using BasicConcepts;
-using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityProviders.QuikApiWrappers;
 using Quik;
 using Quik.Entities;
 
 using static Quik.QuikProxy;
-using Quik.EntityDataProviders.RequestContainers;
+using Quik.EntityProviders.RequestContainers;
 using BasicConcepts.SecuritySpecifics;
-using Quik.EntityDataProviders.Attributes;
+using Quik.EntityProviders.Attributes;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
-    internal sealed class OrderbookDataProvider : UpdatesSupportingDataProvider<OrderBook, OrderbookRequestContainer>
+    internal sealed class OrderbooksProvider : UpdatableEntitiesProvider<OrderBook, OrderbookRequestContainer>
     {
         private readonly object _securityRequestLock = new();
         private readonly SecurityRequestContainer _securityRequest = new();
@@ -73,8 +73,8 @@ namespace Quik.EntityDataProviders
 
         #region Singleton
         [SingletonInstance]
-        public static OrderbookDataProvider Instance { get; } = new();
-        private OrderbookDataProvider()
+        public static OrderbooksProvider Instance { get; } = new();
+        private OrderbooksProvider()
         {
             _securitiesResolver = EntityResolvers.GetSecurityResolver();
         }

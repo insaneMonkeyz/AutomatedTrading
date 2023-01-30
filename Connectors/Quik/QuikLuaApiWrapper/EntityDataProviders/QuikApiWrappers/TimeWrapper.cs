@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Quik.EntityDataProviders.QuikApiWrappers
+namespace Quik.EntityProviders.QuikApiWrappers
 {
     internal static class TimeWrapper
     {

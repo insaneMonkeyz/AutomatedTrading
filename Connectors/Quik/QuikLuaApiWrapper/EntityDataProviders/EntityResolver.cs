@@ -1,6 +1,6 @@
-﻿using Quik.EntityDataProviders.RequestContainers;
+﻿using Quik.EntityProviders.RequestContainers;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
     internal delegate TEntity? ResolveEntityHandler<TRequest, TEntity>(TRequest request);
 
@@ -8,13 +8,13 @@ namespace Quik.EntityDataProviders
         where TResult : class
         where TRequest : IRequestContainer<TResult>
     {
-        private readonly Dictionary<int, TResult> _pool;
+        private readonly Dictionary<int, TResult> _cache;
         private readonly ResolveEntityHandler<TRequest, TResult>? _fetchFromQuik;
 
-        public EntityResolver(int poolInitialSize, ResolveEntityHandler<TRequest, TResult>? fetcherFromQuik)
+        public EntityResolver(int initialCacheSize, ResolveEntityHandler<TRequest, TResult?> fetchFromQuik)
         {
-            _pool = new(poolInitialSize);
-            _fetchFromQuik = fetcherFromQuik;
+            _cache = new(initialCacheSize);
+            _fetchFromQuik = fetchFromQuik;
         }
 
         public virtual TResult? GetEntity(TRequest request)
@@ -24,11 +24,11 @@ namespace Quik.EntityDataProviders
                 throw new ArgumentException("Trying to use an empty request");
             }
 
-            if (_pool.TryGetValue(request.GetHashCode(), out TResult? entity))
+            if (_cache.TryGetValue(request.GetHashCode(), out TResult? entity))
             {
                 if (request.IsMatching(entity))
                 {
-                    return (TResult?)entity;
+                    return entity;
                 }
                 else
                 {

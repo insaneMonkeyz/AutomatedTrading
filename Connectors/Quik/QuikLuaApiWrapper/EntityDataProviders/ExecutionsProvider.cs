@@ -1,14 +1,14 @@
 ﻿using Quik.Entities;
-using Quik.EntityDataProviders.Attributes;
-using Quik.EntityDataProviders.RequestContainers;
-using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.RequestContainers;
+using Quik.EntityProviders.QuikApiWrappers;
 
 using static Quik.QuikProxy;
 using BasicConcepts;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
-    internal class ExecutionDataProvider : DataProvider<OrderExecution, OrderExecutionRequestContainer>
+    internal class ExecutionsProvider : DataProvider<OrderExecution, OrderExecutionRequestContainer>
     {
         protected readonly OrderRequestContainer _orderRequestContainer = new();
         protected readonly EntityResolver<OrderRequestContainer, Order> _orderResolver;
@@ -58,8 +58,8 @@ namespace Quik.EntityDataProviders
 
         #region Singleton
         [SingletonInstance]
-        public static ExecutionDataProvider Instance { get; } = new();
-        private ExecutionDataProvider() 
+        public static ExecutionsProvider Instance { get; } = new();
+        private ExecutionsProvider() 
         {
             _orderResolver = EntityResolvers.GetOrdersResolver();
         }

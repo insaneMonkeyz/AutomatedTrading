@@ -2,27 +2,27 @@
 using BasicConcepts.SecuritySpecifics;
 using BasicConcepts.SecuritySpecifics.Options;
 using Quik.Entities;
-using Quik.EntityDataProviders.QuikApiWrappers;
-using Quik.EntityDataProviders.RequestContainers;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.RequestContainers;
 using static Quik.QuikProxy;
 
 using GetCsv1Param = Quik.QuikProxy.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
 using GetCsvNoParams = Quik.QuikProxy.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
-using GetSecurityParams = Quik.QuikProxy.Method2Params<BasicConcepts.ISecurity?>;
-using SecurityResolver = Quik.EntityDataProviders.EntityResolver<Quik.EntityDataProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
+using GetSecurityParams = Quik.QuikProxy.Method2Params<Quik.Entities.Security?>;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
-    internal static class SecurityDataProvider
+    internal class SecuritiesProvider : IQuikDataSubscriber
     {
-        private static readonly Dictionary<Type, Func<ISecurity?>> _securityTypeToCreateMethod = new(4)
+        private static readonly Dictionary<Type, Func<Security?>> _securityTypeToCreateMethod = new(4)
         {
             { typeof(IStock), CreateStock },
             { typeof(IFutures), CreateFutures },
             { typeof(IOption), CreateOption },
             { typeof(ICalendarSpread), CreateCalendarSpread }
         };
-        private static readonly Dictionary<string, Func<ISecurity?>> _classcodeToCreateMethod = new(4)
+        private static readonly Dictionary<string, Func<Security?>> _classcodeToCreateMethod = new(4)
         {
             { SecurityWrapper.STOCK_CLASS_CODE, CreateStock },
             { SecurityWrapper.FUTURES_CLASS_CODE, CreateFutures },
@@ -86,6 +86,15 @@ namespace Quik.EntityDataProviders
             return GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
         }
 
+        public static IEnumerable<string> GetAvailableSecuritiesOfType(string classcode)
+        {
+            lock (_userRequestLock)
+            {
+                _securitiesCsvRequest.Arg0 = classcode;
+
+                return ReadSpecificEntry(ref _securitiesCsvRequest); 
+            }
+        }
         public static IEnumerable<string> GetAvailableSecuritiesOfType(Type type)
         {
             lock (_userRequestLock)
@@ -102,7 +111,7 @@ namespace Quik.EntityDataProviders
                 return ReadSpecificEntry(ref _classesCsvRequest); 
             }
         }
-        public static ISecurity? GetSecurity(Type securityType, string ticker)
+        public static Security? GetSecurity(Type securityType, string ticker)
         {
             lock (_userRequestLock)
             {
@@ -113,7 +122,7 @@ namespace Quik.EntityDataProviders
                 return ReadSpecificEntry(ref _getSecurityRequest); 
             }
         }
-        public static ISecurity? GetSecurity(SecurityRequestContainer request)
+        public static Security? GetSecurity(SecurityRequestContainer request)
         {
             if (!request.HasData)
             {
@@ -140,7 +149,7 @@ namespace Quik.EntityDataProviders
             }
         }
 
-        private static ISecurity? CreateCalendarSpread()
+        private static Security? CreateCalendarSpread()
         {
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -161,7 +170,7 @@ namespace Quik.EntityDataProviders
 
             return null;
         }
-        private static ISecurity? CreateOption()
+        private static Security? CreateOption()
         {
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -183,7 +192,7 @@ namespace Quik.EntityDataProviders
 
             return null;
         }
-        private static ISecurity? CreateFutures()
+        private static Security? CreateFutures()
         {
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -202,13 +211,13 @@ namespace Quik.EntityDataProviders
 
             return null;
         }
-        private static ISecurity? CreateStock()
+        private static Security? CreateStock()
         {
             return TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
                 ? new Stock(ref container)
                 : null;
         }
-
+        
         private static bool TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
         {
             container = new ()
@@ -240,7 +249,7 @@ namespace Quik.EntityDataProviders
                 ? Enumerable.Empty<string>()
                 : csv.Split(',', StringSplitOptions.RemoveEmptyEntries);
         }
-        private static ISecurity? ResolveUnderlying(string? classCode, string? secCode)
+        private static Security? ResolveUnderlying(string? classCode, string? secCode)
         {
             lock (_securityRequestLock)
             {
@@ -251,12 +260,18 @@ namespace Quik.EntityDataProviders
             }
         }
 
-        static SecurityDataProvider()
+        static SecuritiesProvider()
         {
             _securitiesCsvRequest.Action = GetCsvValues;
             _classesCsvRequest.Action = GetCsvValues;
 
             SecurityWrapper.Set(State);
+        }
+        [SingletonInstance]
+        public static SecuritiesProvider Instance { get; } = new SecuritiesProvider();
+        private SecuritiesProvider()
+        {
+
         }
     }
 }

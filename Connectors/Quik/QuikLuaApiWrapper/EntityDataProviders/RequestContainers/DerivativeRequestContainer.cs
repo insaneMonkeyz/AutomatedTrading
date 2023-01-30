@@ -1,7 +1,7 @@
 ﻿using Quik.Entities;
-using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityProviders.QuikApiWrappers;
 
-namespace Quik.EntityDataProviders.RequestContainers
+namespace Quik.EntityProviders.RequestContainers
 {
     internal class DerivativeRequestContainer : SecurityRequestContainer
     {

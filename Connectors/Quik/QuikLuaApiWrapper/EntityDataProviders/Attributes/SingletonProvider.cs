@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Quik.EntityDataProviders.Attributes
+namespace Quik.EntityProviders.Attributes
 {
     public static class SingletonProvider
     {

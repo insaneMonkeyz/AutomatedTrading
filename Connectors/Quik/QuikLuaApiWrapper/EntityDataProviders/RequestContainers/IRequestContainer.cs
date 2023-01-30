@@ -1,4 +1,4 @@
-﻿namespace Quik.EntityDataProviders.RequestContainers
+﻿namespace Quik.EntityProviders.RequestContainers
 {
     internal interface IRequestContainer<T> where T : class
     {

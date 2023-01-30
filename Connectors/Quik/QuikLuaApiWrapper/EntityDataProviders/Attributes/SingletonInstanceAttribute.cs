@@ -1,4 +1,4 @@
-﻿namespace Quik.EntityDataProviders.Attributes
+﻿namespace Quik.EntityProviders.Attributes
 {
     [AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = true)]
     public sealed class SingletonInstanceAttribute : Attribute

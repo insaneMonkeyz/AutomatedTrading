@@ -1,4 +1,4 @@
-﻿namespace Quik.EntityDataProviders.QuikApiWrappers
+﻿namespace Quik.EntityProviders.QuikApiWrappers
 {
     [Flags]
     internal enum OrderFlags : long

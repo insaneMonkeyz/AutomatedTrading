@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using BasicConcepts;
 using Quik.Entities;
-using Quik.EntityDataProviders;
+using Quik.EntityProviders;
 using Quik.QuikApi;
 
 namespace Quik

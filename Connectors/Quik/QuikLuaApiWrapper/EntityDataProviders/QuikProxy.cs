@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Linq;
 using Quik.Entities;
-using Quik.EntityDataProviders;
-using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityProviders;
+using Quik.EntityProviders.QuikApiWrappers;
 using BasicConcepts;
 using BasicConcepts.SecuritySpecifics;
 using BasicConcepts.SecuritySpecifics.Options;
 using System.Reflection;
-using Quik.EntityDataProviders.Attributes;
+using Quik.EntityProviders.Attributes;
 using System.Runtime.InteropServices.ComTypes;
 using KeraLua;
 
@@ -464,15 +464,15 @@ namespace Quik
 
                 System.Diagnostics.Debugger.Launch();
 
-                foreach (var provider in SingletonProvider.GetInstances<IQuikDataSubscriber>())
+                foreach (var subscriber in SingletonProvider.GetInstances<IQuikDataSubscriber>())
                 {
-                    provider.SubscribeCallback(_localState.RegisterCallback);
+                    subscriber.SubscribeCallback(_localState);
                 }
 
-                var posProvider = DerivativesBalanceDataProvider.Instance;
-                var secProvider = SecurityDataProvider.Instance;
+                var posProvider = DerivativesBalanceProvider.Instance;
+                var secProvider = SecuritiesProvider.Instance;
 
-                SecurityDataProvider.ResolveSecurity = secProvider.GetSecurity;
+                SecuritiesProvider.ResolveSecurity = secProvider.GetSecurity;
 
                 posProvider.GetSecurity = (dummy) =>
                 {
@@ -489,14 +489,14 @@ namespace Quik
                 var opt = secProvider.GetSecurity(typeof(IOption), availableOptions.First());
                 var spr = secProvider.GetSecurity(typeof(ICalendarSpread), availableSpreads.First());
 
-                var quotesProvider = OrderbookDataProvider.Instance;
+                var quotesProvider = OrderbooksProvider.Instance;
 
                 if (fut is Futures futures)
                 {
                     secProvider.UpdateSecurity(futures);
 
-                    var buyMargin = SecurityDataProvider.Instance.GetBuyMarginRequirements(futures);
-                    var sellMargin = SecurityDataProvider.Instance.GetSellMarginRequirements(futures);
+                    var buyMargin = SecuritiesProvider.Instance.GetBuyMarginRequirements(futures);
+                    var sellMargin = SecuritiesProvider.Instance.GetSellMarginRequirements(futures);
 
                     var book = quotesProvider.CreateOrderBook(futures);
 
@@ -511,7 +511,7 @@ namespace Quik
                     };
                 }
 
-                var accProvider = AccountDataProvider.Instance;
+                var accProvider = AccountsProvider.Instance;
                 var accounts = accProvider.GetAllEntities();
                 var account = accounts.FirstOrDefault();
 

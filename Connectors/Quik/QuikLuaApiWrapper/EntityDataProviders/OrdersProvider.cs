@@ -1,18 +1,18 @@
 ﻿using BasicConcepts;
 using Quik.Entities;
-using Quik.EntityDataProviders.Attributes;
-using Quik.EntityDataProviders.RequestContainers;
-using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.RequestContainers;
+using Quik.EntityProviders.QuikApiWrappers;
 
 using static Quik.QuikProxy;
 
 using UpdateParams = Quik.QuikProxy.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.LuaState>;
 using CreateParams = Quik.QuikProxy.MultiGetMethod2Params<Quik.LuaState, Quik.Entities.Order?>;
-using SecurityResolver = Quik.EntityDataProviders.EntityResolver<Quik.EntityDataProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
+using SecurityResolver = Quik.EntityProviders.EntityResolver<Quik.EntityProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
-    internal class OrderDataProvider : UpdatesSupportingDataProvider<Order, OrderRequestContainer>
+    internal class OrdersProvider : UpdatableEntitiesProvider<Order, OrderRequestContainer>
     {
         private readonly SecurityResolver _securityResolver;
         private readonly SecurityRequestContainer _securityRequest = new();
@@ -123,8 +123,8 @@ namespace Quik.EntityDataProviders
 
         #region Singleton
         [SingletonInstance]
-        public static OrderDataProvider Instance { get; } = new();
-        private OrderDataProvider()
+        public static OrdersProvider Instance { get; } = new();
+        private OrdersProvider()
         {
             _securityResolver = EntityResolvers.GetSecurityResolver();
             _updateParams = new()

@@ -1,4 +1,4 @@
-﻿namespace Quik.EntityDataProviders
+﻿namespace Quik.EntityProviders
 {
     internal interface IQuikDataSubscriber
     {

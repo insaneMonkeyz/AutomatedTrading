@@ -1,9 +1,9 @@
 ﻿using Quik.Entities;
-using Quik.EntityDataProviders.RequestContainers;
+using Quik.EntityProviders.RequestContainers;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
-    internal abstract class UpdatesSupportingDataProvider<TEntity, TRequestContainer>
+    internal abstract class UpdatableEntitiesProvider<TEntity, TRequestContainer>
         : DataProvider<TEntity, TRequestContainer>
             where TRequestContainer : IRequestContainer<TEntity>, new()
             where TEntity : class
@@ -39,7 +39,7 @@ namespace Quik.EntityDataProviders
             }
         }
 
-        public UpdatesSupportingDataProvider()
+        public UpdatableEntitiesProvider()
         {
             _entityResolver = EntityResolvers.GetResolver<TRequestContainer, TEntity>();
         } 

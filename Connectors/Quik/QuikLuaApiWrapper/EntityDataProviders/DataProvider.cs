@@ -1,9 +1,9 @@
 ﻿using Quik.Entities;
-using Quik.EntityDataProviders.Attributes;
-using Quik.EntityDataProviders.QuikApiWrappers;
-using Quik.EntityDataProviders.RequestContainers;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.RequestContainers;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
     internal delegate void EntityUpdatedHandler<T>(T entity);
     internal delegate void EntityCreatedHandler<T>(T entity);

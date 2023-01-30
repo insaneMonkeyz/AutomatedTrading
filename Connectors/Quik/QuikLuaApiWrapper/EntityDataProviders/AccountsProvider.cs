@@ -1,18 +1,18 @@
 ﻿using BasicConcepts;
 using Quik;
 using Quik.Entities;
-using Quik.EntityDataProviders;
-using Quik.EntityDataProviders.Attributes;
-using Quik.EntityDataProviders.RequestContainers;
-using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityProviders;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.RequestContainers;
+using Quik.EntityProviders.QuikApiWrappers;
 
 using static Quik.QuikProxy;
 using UpdateParams = Quik.QuikProxy.VoidMethod4Params<Quik.Entities.DerivativesTradingAccount, Quik.LuaState>;
 using CreateParams = Quik.QuikProxy.Method4Params<Quik.LuaState, Quik.Entities.DerivativesTradingAccount?>;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
-    internal sealed class AccountDataProvider : UpdatesSupportingDataProvider<DerivativesTradingAccount, AccountRequestContainer>
+    internal sealed class AccountsProvider : UpdatableEntitiesProvider<DerivativesTradingAccount, AccountRequestContainer>
     {
         private static UpdateParams _updateParams;
         private static CreateParams _createParams;
@@ -88,8 +88,8 @@ namespace Quik.EntityDataProviders
 
         #region Singleton
         [SingletonInstance]
-        public static AccountDataProvider Instance { get; } = new();
-        private AccountDataProvider()
+        public static AccountsProvider Instance { get; } = new();
+        private AccountsProvider()
         {
             _updateParams = new()
             {

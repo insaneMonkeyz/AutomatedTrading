@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using BasicConcepts;
 using Quik.QuikApi;
 
-namespace Quik.EntityDataProviders.QuikApiWrappers
+namespace Quik.EntityProviders.QuikApiWrappers
 {
     internal static class SecurityWrapper
     {

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
 
-namespace Quik.EntityDataProviders.QuikApiWrappers
+namespace Quik.EntityProviders.QuikApiWrappers
 {
     internal class DerivativesPositionsWrapper
     {
