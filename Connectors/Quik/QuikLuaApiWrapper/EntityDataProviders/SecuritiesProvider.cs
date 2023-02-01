@@ -13,7 +13,7 @@ using GetSecurityParams = Quik.QuikProxy.Method2Params<Quik.Entities.Security?>;
 
 namespace Quik.EntityProviders
 {
-    internal class SecuritiesProvider : IQuikDataSubscriber
+    internal static class SecuritiesProvider
     {
         private static readonly Dictionary<Type, Func<Security?>> _securityTypeToCreateMethod = new(4)
         {
@@ -72,10 +72,7 @@ namespace Quik.EntityProviders
         };
 
         private static readonly object _userRequestLock = new();
-        private static readonly object _securityRequestLock = new();
-        private static readonly SecurityRequestContainer _securityRequest = new();
-        private static readonly SecurityResolver _entityResolver
-            = EntityResolvers.GetSecurityResolver();
+        private static readonly SecurityResolver _entityResolver = EntityResolvers.GetSecurityResolver();
 
         public static Decimal5? GetBuyMarginRequirements(Security security)
         {
@@ -140,12 +137,15 @@ namespace Quik.EntityProviders
         }
         public static void UpdateSecurity(Security security)
         {
-            security.PriceStepValue = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
-
-            if (security is MoexDerivativeBase baseSec)
+            lock (_userRequestLock)
             {
-                baseSec.UpperPriceLimit = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_UPPER_PRICE_LIMIT);
-                baseSec.LowerPriceLimit = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_LOWER_PRICE_LIMIT);
+                security.PriceStepValue = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
+
+                if (security is MoexDerivativeBase baseSec)
+                {
+                    baseSec.UpperPriceLimit = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_UPPER_PRICE_LIMIT);
+                    baseSec.LowerPriceLimit = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_LOWER_PRICE_LIMIT);
+                } 
             }
         }
 
@@ -251,13 +251,11 @@ namespace Quik.EntityProviders
         }
         private static Security? ResolveUnderlying(string? classCode, string? secCode)
         {
-            lock (_securityRequestLock)
+            return _entityResolver.GetEntity(new SecurityRequestContainer
             {
-                _securityRequest.ClassCode = classCode;
-                _securityRequest.Ticker = secCode;
-
-                return _entityResolver.GetEntity(_securityRequest);
-            }
+                ClassCode = classCode,
+                Ticker = secCode
+            });
         }
 
         static SecuritiesProvider()
@@ -266,12 +264,6 @@ namespace Quik.EntityProviders
             _classesCsvRequest.Action = GetCsvValues;
 
             SecurityWrapper.Set(State);
-        }
-        [SingletonInstance]
-        public static SecuritiesProvider Instance { get; } = new SecuritiesProvider();
-        private SecuritiesProvider()
-        {
-
         }
     }
 }

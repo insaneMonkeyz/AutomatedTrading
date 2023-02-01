@@ -53,7 +53,7 @@ namespace Quik.EntityProviders
         {
             ExecutionWrapper.Set(state);
 
-            _orderRequestContainer.ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId;
+            _orderRequestContainer.ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId.ToString();
         }
 
         #region Singleton

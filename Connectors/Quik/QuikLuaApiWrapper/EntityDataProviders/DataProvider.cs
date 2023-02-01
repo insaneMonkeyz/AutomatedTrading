@@ -25,7 +25,7 @@ namespace Quik.EntityProviders
         protected abstract string AllEntitiesTable { get; }
 
         protected readonly object _callbackLock = new();
-        protected readonly object _userRequestLock = new();
+        protected readonly object _requestInProgressLock = new();
 
         public EntityCreatedHandler<TEntity> NewEntity = delegate { };
 
@@ -35,7 +35,10 @@ namespace Quik.EntityProviders
         }
         public virtual List<TEntity> GetAllEntities()
         {
-            return QuikProxy.ReadWholeTable(AllEntitiesTable, Create);
+            lock (_requestInProgressLock)
+            {
+                return QuikProxy.ReadWholeTable(AllEntitiesTable, Create); 
+            }
         }
         public    abstract TEntity? Create(TRequestContainer request);
         protected abstract TEntity? Create(LuaState state);

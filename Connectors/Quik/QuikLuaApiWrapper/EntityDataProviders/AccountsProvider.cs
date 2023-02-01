@@ -27,7 +27,7 @@ namespace Quik.EntityProviders
                 throw new ArgumentException($"{nameof(AccountRequestContainer)} request is missing essential parameters");
             }
 
-            lock (_userRequestLock)
+            lock (_requestInProgressLock)
             {
                 _createParams.Arg0 = request.FirmId;
                 _createParams.Arg1 = request.Account;
@@ -56,7 +56,7 @@ namespace Quik.EntityProviders
         }
         public    override void Update(DerivativesTradingAccount entity)
         {
-            lock (_userRequestLock)
+            lock (_requestInProgressLock)
             {
                 _updateParams.Arg0 = entity.FirmId;
                 _updateParams.Arg1 = entity.AccountCode;
@@ -77,7 +77,7 @@ namespace Quik.EntityProviders
                                    + FuturesLimitsWrapper.RecorderIncome;
         }
 
-        protected override void BuildEntityResolveRequest(LuaState state)
+        protected override void ParseNewDataParams(LuaState state)
         {
             FuturesLimitsWrapper.Set(state);
 

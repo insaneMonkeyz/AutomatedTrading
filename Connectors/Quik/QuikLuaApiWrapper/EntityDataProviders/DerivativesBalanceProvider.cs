@@ -32,7 +32,7 @@ namespace Quik.EntityProviders
                 throw new ArgumentException($"{nameof(SecurityBalanceRequestContainer)} request is missing essential parameters");
             }
 
-            lock (_userRequestLock)
+            lock (_requestInProgressLock)
             {
                 _createParams.Arg0 = request.FirmId;
                 _createParams.Arg1 = request.Account;
@@ -49,7 +49,7 @@ namespace Quik.EntityProviders
 
             if (_securitiesResolver.GetEntity(_securityRequest) is not ISecurity security)
             {
-                $"Coudn't create SecurityBalance entity. Failed to resolve security {_securityRequest.Ticker} it belongs to".DebugPrintWarning();
+                $"Coudn't create SecurityBalance entity. Failed to resolve security {_securityRequest.Ticker} belongs to".DebugPrintWarning();
                 return default;
             }
 
@@ -63,7 +63,7 @@ namespace Quik.EntityProviders
         }
         public override void Update(SecurityBalance entity)
         {
-            lock (_userRequestLock)
+            lock (_requestInProgressLock)
             {
                 _updateParams.Arg0 = entity.FirmId;
                 _updateParams.Arg1 = entity.Account;
@@ -81,7 +81,7 @@ namespace Quik.EntityProviders
             entity.Amount = DerivativesPositionsWrapper.CurrentPos.GetValueOrDefault();
         }
 
-        protected override void BuildEntityResolveRequest(LuaState state)
+        protected override void ParseNewDataParams(LuaState state)
         {
             DerivativesPositionsWrapper.Set(state);
 

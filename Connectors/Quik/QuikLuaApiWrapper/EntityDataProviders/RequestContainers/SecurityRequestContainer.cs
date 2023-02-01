@@ -1,12 +1,26 @@
-﻿using Quik.Entities;
+﻿using BasicConcepts;
+using Quik.Entities;
 
 namespace Quik.EntityProviders.RequestContainers
 {
-    internal class SecurityRequestContainer : SecurityBasedRequestContainer<Security>
+    internal struct SecurityRequestContainer : IRequestContainer<Security>
     {
-        public override bool IsMatching(Security? entity)
+        public string? ClassCode;
+        public string? Ticker;
+
+        /// <summary>
+        /// only returns true when both ClassCode and Ticker are provided
+        /// </summary>
+        public bool HasData
         {
-            return entity != null && SecuritiesMatch(entity);
+            get => !(string.IsNullOrEmpty(Ticker) || string.IsNullOrEmpty(ClassCode));
+        }
+
+        public bool IsMatching(Security? entity)
+        {
+            return entity != null 
+                && entity.ClassCode == ClassCode
+                && entity.Ticker == Ticker;
         }
 
         public override string? ToString()
@@ -19,6 +33,20 @@ namespace Quik.EntityProviders.RequestContainers
             return string.IsNullOrEmpty(ClassCode)
                     ? Ticker
                     : $"{ClassCode}:{Ticker}";
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is SecurityRequestContainer other
+                && ClassCode == other.ClassCode
+                && Ticker == other.Ticker;
+        }
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return HashCode.Combine(ClassCode, Ticker) * 932576;
+            }
         }
     }
 }

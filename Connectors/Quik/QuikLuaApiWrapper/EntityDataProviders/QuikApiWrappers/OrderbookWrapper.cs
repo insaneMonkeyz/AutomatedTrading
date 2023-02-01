@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using BasicConcepts;
 using Quik;
+using Quik.Entities;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -34,11 +35,11 @@ namespace Quik.EntityProviders.QuikApiWrappers
             _stack = stack;
         }
 
-        public static void UpdateOrderBook(string classcode, IOptimizedOrderBook book)
+        public static void UpdateOrderBook(OrderBook book)
         {
             lock (Quik.QuikProxy.SyncRoot)
             {
-                if (_stack.ExecFunction(GET_METOD, LuaApi.TYPE_TABLE, classcode, book.Security.Ticker))
+                if (_stack.ExecFunction(GET_METOD, LuaApi.TYPE_TABLE, book.Security.ClassCode, book.Security.Ticker))
                 {
                     if (_stack.ReadRowValueLong(BIDS_COUNT) > 0 &&
                         _stack.PushColumnValueTable(BIDS))

@@ -15,12 +15,15 @@ namespace Quik.EntityProviders
 
         public abstract void Update(TEntity entity);
         protected abstract void Update(TEntity entity, LuaState state);
-        protected abstract void BuildEntityResolveRequest(LuaState state);
+        protected abstract void ParseNewDataParams(LuaState state);
         protected override int OnNewData(IntPtr state)
         {
             lock (_callbackLock)
             {
-                BuildEntityResolveRequest(state);
+                ParseNewDataParams(state);
+
+                // TODO: at this point we need to signal that there are new updates and return from the method
+                // the rest must be invoked from an updates collector
 
                 var entity = _entityResolver.GetEntity(_resolveEntityRequest);
 

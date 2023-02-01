@@ -39,7 +39,7 @@ namespace Quik.EntityProviders
         }
         public static EntityResolver<OrderExecutionRequestContainer, OrderExecution> GetOrderExecutionsResolver()
         {
-            return _orderExecutionsResolver ??= new(1_000, null);
+            return _orderExecutionsResolver ??= new(1_000, default);
         }
 
         public static EntityResolver<TRequest, TEntity> GetResolver<TRequest, TEntity>()

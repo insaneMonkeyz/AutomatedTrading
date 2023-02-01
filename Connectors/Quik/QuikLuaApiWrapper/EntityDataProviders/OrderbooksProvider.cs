@@ -1,4 +1,5 @@
-﻿using Quik.Entities;
+﻿using System.Runtime.CompilerServices;
+using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
@@ -9,14 +10,12 @@ namespace Quik.EntityProviders
 {
     internal sealed class OrderbooksProvider : UpdatableEntitiesProvider<OrderBook, OrderbookRequestContainer>
     {
-        private readonly object _securityRequestLock = new();
-        private readonly SecurityRequestContainer _securityRequest = new();
         private readonly EntityResolver<SecurityRequestContainer, Security> _securitiesResolver;
 
         protected override string QuikCallbackMethod => OrderbookWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => string.Empty;
 
-        private static readonly List<OrderBook> _emptyList= new(0);
+        private static readonly List<OrderBook> _emptyList = new(0);
 
         public override List<OrderBook> GetAllEntities()
         {
@@ -25,14 +24,14 @@ namespace Quik.EntityProviders
 
         public override OrderBook? Create(OrderbookRequestContainer request)
         {
-            if (ResolveSecurity(request) is not Security security)
+            if (_securitiesResolver.GetEntity(request.SecurityContainer) is not Security security)
             {
                 return null;
             }
 
             var orderbook = new OrderBook(security);
-            
-            Update(orderbook);
+
+            Update(orderbook, State);
 
             return orderbook;
         }
@@ -43,29 +42,19 @@ namespace Quik.EntityProviders
         }
         public override void Update(OrderBook entity)
         {
-            BuildEntityResolveRequest(State);
             Update(entity, State);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Update(OrderBook book, LuaState state)
         {
-            OrderbookWrapper.UpdateOrderBook(_resolveEntityRequest.ClassCode, book);
+            OrderbookWrapper.UpdateOrderBook(book);
         }
-        protected override void BuildEntityResolveRequest(LuaState state)
+        protected override void ParseNewDataParams(LuaState state)
         {
             OrderbookWrapper.Set(state);
 
-            _resolveEntityRequest.Ticker = OrderbookWrapper.Ticker;
-            _resolveEntityRequest.ClassCode = OrderbookWrapper.ClassCode;
-        }
-
-        private Security? ResolveSecurity(OrderbookRequestContainer request)
-        {
-            lock (_securityRequestLock)
-            {
-                _securityRequest.Ticker = request.Ticker;
-                _securityRequest.ClassCode = request.ClassCode;
-                return _securitiesResolver.GetEntity(_securityRequest);
-            }
+            _resolveEntityRequest.SecurityContainer.Ticker = OrderbookWrapper.Ticker;
+            _resolveEntityRequest.SecurityContainer.ClassCode = OrderbookWrapper.ClassCode;
         }
 
         #region Singleton

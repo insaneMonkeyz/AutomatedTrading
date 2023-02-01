@@ -29,7 +29,7 @@ namespace Quik.EntityProviders
                 throw new ArgumentException($"{nameof(OrderRequestContainer)} request is missing essential parameters");
             }
 
-            lock (_userRequestLock)
+            lock (_requestInProgressLock)
             {
                 _createParams.Arg0 = request.ClassCode;
                 _createParams.Arg1 = request.ExchangeAssignedId;
@@ -39,9 +39,7 @@ namespace Quik.EntityProviders
         }
         protected override Order? Create(LuaState state)
         {
-            BuildSecurityResolveRequest(state);
-
-            if (_securityResolver.GetEntity(_securityRequest) is not Security sec)
+            if (ResolveSecurityOfOrder(state) is not Security sec)
             {
                 $"Coudn't resolve security {_securityRequest} to create an order."
                     .DebugPrintWarning();
@@ -74,7 +72,7 @@ namespace Quik.EntityProviders
         }
         public override void Update(Order entity)
         {
-            lock (_userRequestLock)
+            lock (_requestInProgressLock)
             {
                 _updateParams.Arg0 = entity.Security.ClassCode;
                 _updateParams.Arg1 = entity.ExchangeAssignedIdString;
@@ -95,20 +93,22 @@ namespace Quik.EntityProviders
                 : OrderStates.Done;
         }
 
-        protected void BuildSecurityResolveRequest(LuaState state)
-        {
-            OrdersWrapper.Set(state);
-
-            _securityRequest.Ticker = OrdersWrapper.Ticker;
-            _securityRequest.ClassCode = OrdersWrapper.ClassCode;
-        }
-        protected override void BuildEntityResolveRequest(LuaState state)
+        protected override void ParseNewDataParams(LuaState state)
         {
             OrdersWrapper.Set(state);
 
             _resolveEntityRequest.ExchangeAssignedId = OrdersWrapper.ExchangeOrderId.ToString();
         }
+        private Security? ResolveSecurityOfOrder(LuaState state)
+        {
+            OrdersWrapper.Set(state);
 
+            return _securityResolver.GetEntity(new SecurityRequestContainer
+            {
+                ClassCode = OrdersWrapper.ClassCode,
+                Ticker = OrdersWrapper.Ticker,
+            });
+        }
         private static OrderExecutionModes FromMoexExecutionMode(MoexOrderExecutionModes mode)
         {
             return mode switch
