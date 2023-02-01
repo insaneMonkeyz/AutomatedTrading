@@ -5,12 +5,12 @@ using Quik.EntityProviders.QuikApiWrappers;
 
 using static Quik.QuikProxy;
 using BasicConcepts;
+using System.Runtime.CompilerServices;
 
 namespace Quik.EntityProviders
 {
     internal class ExecutionsProvider : DataProvider<OrderExecution, OrderExecutionRequestContainer>
     {
-        protected readonly OrderRequestContainer _orderRequestContainer = new();
         protected readonly EntityResolver<OrderRequestContainer, Order> _orderResolver;
 
         protected override string QuikCallbackMethod => ExecutionWrapper.CALLBACK_METHOD;
@@ -23,37 +23,43 @@ namespace Quik.EntityProviders
         }
         protected override OrderExecution? Create(LuaState state)
         {
-            BuildOrderResolveRequest(state);
-
-            if (_orderResolver.GetEntity(_orderRequestContainer) is not Order order)
+            lock (ExecutionWrapper.Lock)
             {
-                $"Coudn't resolve order with id={_orderRequestContainer} to create an execution entity."
-                    .DebugPrintWarning();
+                ExecutionWrapper.Set(state);
 
-                return null;
-            }
-
-            var result = new OrderExecution(order)
-            {
-                TimeStamp = ExecutionWrapper.Timestamp,
-                TradeId = ExecutionWrapper.TradeId,
-                Quote = new Quote
+                if (ResolveOrderOfExecution(state) is not Order order)
                 {
-                    Operation = ExecutionWrapper.Operation,
-                    Price = ExecutionWrapper.Price,
-                    Size = ExecutionWrapper.Size
+                    $"Coudn't resolve order with id={ExecutionWrapper.ExchangeOrderId} to create an execution entity."
+                        .DebugPrintWarning();
+
+                    return null;
                 }
-            };
 
-            order.Executions.Add(result);
+                var result = new OrderExecution(order)
+                {
+                    TimeStamp = ExecutionWrapper.Timestamp,
+                    TradeId = ExecutionWrapper.TradeId,
+                    Quote = new Quote
+                    {
+                        Operation = ExecutionWrapper.Operation,
+                        Price = ExecutionWrapper.Price,
+                        Size = ExecutionWrapper.Size
+                    }
+                }; 
 
-            return result;
+                order.Executions.Add(result);
+
+                return result;
+            }
         }
-        protected void BuildOrderResolveRequest(LuaState state)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Order? ResolveOrderOfExecution(LuaState state)
         {
-            ExecutionWrapper.Set(state);
-
-            _orderRequestContainer.ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId.ToString();
+            return _orderResolver.GetEntity(new OrderRequestContainer
+            {
+                ClassCode = ExecutionWrapper.ClassCode, 
+                ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId.ToString()
+            });
         }
 
         #region Singleton

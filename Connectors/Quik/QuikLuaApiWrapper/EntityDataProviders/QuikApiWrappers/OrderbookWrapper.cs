@@ -21,6 +21,13 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
         private static LuaState _stack;
 
+        public static readonly object Lock = new();
+
+        public static void Set(LuaState stack)
+        {
+            _stack = stack;
+        }
+
         public static string? ClassCode
         {
             get => _stack.ReadRowValueString(CLASS_CODE);
@@ -28,11 +35,6 @@ namespace Quik.EntityProviders.QuikApiWrappers
         public static string? Ticker
         {
             get => _stack.ReadRowValueString(TICKER);
-        }
-
-        public static void Set(LuaState stack)
-        {
-            _stack = stack;
         }
 
         public static void UpdateOrderBook(OrderBook book)

@@ -8,21 +8,22 @@ namespace Quik.EntityProviders
             where TRequestContainer : IRequestContainer<TEntity>, new()
             where TEntity : class
     {
-        protected readonly TRequestContainer _resolveEntityRequest = new();
         protected readonly EntityResolver<TRequestContainer, TEntity> _entityResolver;
 
         public EntityEventHandler<TEntity> EntityChanged = delegate { };
 
         public abstract void Update(TEntity entity);
         protected abstract void Update(TEntity entity, LuaState state);
-        protected abstract void ParseNewDataParams(LuaState state);
+        protected abstract TRequestContainer CreateRequestFrom(LuaState state);
+
         protected override int OnNewData(IntPtr state)
         {
+            // TODO: warning! this will definetely include dependencies resolving.
+            // must find a way to do it asynchronously
+            
             lock (_callbackLock)
             {
-                ParseNewDataParams(state);
-
-                var entity = _entityResolver.GetEntity(_resolveEntityRequest);
+                var entity = _entityResolver.GetEntity(CreateRequestFrom(state));
 
                 if (entity != null)
                 {

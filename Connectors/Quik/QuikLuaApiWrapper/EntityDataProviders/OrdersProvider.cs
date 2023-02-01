@@ -9,13 +9,13 @@ using static Quik.QuikProxy;
 using UpdateParams = Quik.QuikProxy.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.LuaState>;
 using CreateParams = Quik.QuikProxy.MultiGetMethod2Params<Quik.LuaState, Quik.Entities.Order?>;
 using SecurityResolver = Quik.EntityProviders.EntityResolver<Quik.EntityProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
+using System.Runtime.CompilerServices;
 
 namespace Quik.EntityProviders
 {
     internal class OrdersProvider : UpdatableEntitiesProvider<Order, OrderRequestContainer>
     {
         private readonly SecurityResolver _securityResolver;
-        private readonly SecurityRequestContainer _securityRequest = new();
         private UpdateParams _updateParams;
         private CreateParams _createParams;
 
@@ -39,36 +39,39 @@ namespace Quik.EntityProviders
         }
         protected override Order? Create(LuaState state)
         {
-            if (ResolveSecurityOfOrder(state) is not Security sec)
+            lock (OrdersWrapper.Lock)
             {
-                $"Coudn't resolve security {_securityRequest} to create an order."
-                    .DebugPrintWarning();
+                OrdersWrapper.Set(state);
 
-                return null;
-            }
-
-            OrdersWrapper.Set(state);
-
-            var flags = OrdersWrapper.Flags;
-            var order = new Order()
-            {
-                Security = sec,
-                ExecutionMode = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
-                Expiry = OrdersWrapper.Expiry ?? default,
-                IsLimit = flags.HasFlag(OrderFlags.IsLimitOrder),
-                Quote = new OrderQuote
+                if (ResolveSecurityOfOrder(state) is not Security sec)
                 {
-                    Price = OrdersWrapper.Price,
-                    Size = OrdersWrapper.Size,
-                    Operation = flags.HasFlag(OrderFlags.IsSellOrder)
-                        ? Operations.Sell
-                        : Operations.Buy
+                    $"Coudn't resolve security {OrdersWrapper.Ticker} to create an order."
+                        .DebugPrintWarning();
+
+                    return null;
                 }
-            };
 
-            Update(order, state);
+                var flags = OrdersWrapper.Flags;
+                var order = new Order()
+                {
+                    Security = sec,
+                    ExecutionMode = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
+                    Expiry = OrdersWrapper.Expiry ?? default,
+                    IsLimit = flags.HasFlag(OrderFlags.IsLimitOrder),
+                    Quote = new OrderQuote
+                    {
+                        Price = OrdersWrapper.Price,
+                        Size = OrdersWrapper.Size,
+                        Operation = flags.HasFlag(OrderFlags.IsSellOrder)
+                            ? Operations.Sell
+                            : Operations.Buy
+                    }
+                };
 
-            return order;
+                Update(order, state);
+
+                return order; 
+            }
         }
         public override void Update(Order entity)
         {
@@ -83,32 +86,41 @@ namespace Quik.EntityProviders
         }
         protected override void Update(Order entity, LuaState state)
         {
-            OrdersWrapper.Set(state);
+            lock (OrderbookWrapper.Lock)
+            {
+                OrdersWrapper.Set(state);
 
-            var flags = OrdersWrapper.Flags;
+                var flags = OrdersWrapper.Flags;
 
-            entity.RemainingSize = OrdersWrapper.Rest;
-            entity.State = flags.HasFlag(OrderFlags.IsAlive)
-                ? OrderStates.Active
-                : OrderStates.Done;
+                entity.RemainingSize = OrdersWrapper.Rest;
+                entity.State = flags.HasFlag(OrderFlags.IsAlive)
+                    ? OrderStates.Active
+                    : OrderStates.Done; 
+            }
         }
 
-        protected override void ParseNewDataParams(LuaState state)
+        protected override OrderRequestContainer CreateRequestFrom(LuaState state)
         {
-            OrdersWrapper.Set(state);
+            lock (OrdersWrapper.Lock)
+            {
+                OrdersWrapper.Set(state);
 
-            _resolveEntityRequest.ExchangeAssignedId = OrdersWrapper.ExchangeOrderId.ToString();
+                return new()
+                {
+                    ExchangeAssignedId = OrdersWrapper.ExchangeOrderId.ToString()
+                }; 
+            }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Security? ResolveSecurityOfOrder(LuaState state)
         {
-            OrdersWrapper.Set(state);
-
             return _securityResolver.GetEntity(new SecurityRequestContainer
             {
                 ClassCode = OrdersWrapper.ClassCode,
                 Ticker = OrdersWrapper.Ticker,
             });
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static OrderExecutionModes FromMoexExecutionMode(MoexOrderExecutionModes mode)
         {
             return mode switch

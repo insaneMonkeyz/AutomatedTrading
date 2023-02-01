@@ -37,22 +37,25 @@ namespace Quik.EntityProviders
         }
         protected override DerivativesTradingAccount Create(LuaState state)
         {
-            FuturesLimitsWrapper.Set(state);
-
-            var currCode = FuturesLimitsWrapper.MoexCurrencyCode;
-
-            var result = new DerivativesTradingAccount()
+            lock (FuturesLimitsWrapper.Lock)
             {
-                AccountCode = FuturesLimitsWrapper.ClientCode,
-                FirmId = FuturesLimitsWrapper.FirmId,
-                IsMoneyAccount = FuturesLimitsWrapper.IsMainAccount,
-                AccountCurrency = currCode.CodeToCurrency(),
-                MoexCurrCode = currCode
-            };
+                FuturesLimitsWrapper.Set(state);
 
-            Update(result, state);
+                var currCode = FuturesLimitsWrapper.MoexCurrencyCode;
 
-            return result;
+                var result = new DerivativesTradingAccount()
+                {
+                    AccountCode = FuturesLimitsWrapper.ClientCode,
+                    FirmId = FuturesLimitsWrapper.FirmId,
+                    IsMoneyAccount = FuturesLimitsWrapper.IsMainAccount,
+                    AccountCurrency = currCode.CodeToCurrency(),
+                    MoexCurrCode = currCode
+                };
+
+                Update(result, state);
+
+                return result; 
+            }
         }
         public    override void Update(DerivativesTradingAccount entity)
         {
@@ -68,22 +71,31 @@ namespace Quik.EntityProviders
         }
         protected override void Update(DerivativesTradingAccount account, LuaState state)
         {
-            FuturesLimitsWrapper.Set(state);
+            lock (FuturesLimitsWrapper.Lock)
+            {
+                FuturesLimitsWrapper.Set(state);
 
-            account.TotalFunds = FuturesLimitsWrapper.TotalFunds;
-            account.UnusedFunds = FuturesLimitsWrapper.UnusedFunds;
-            account.CollateralMargin = FuturesLimitsWrapper.Collateral;
-            account.FloatingIncome = FuturesLimitsWrapper.FloatingIncome
-                                   + FuturesLimitsWrapper.RecorderIncome;
+                account.TotalFunds = FuturesLimitsWrapper.TotalFunds;
+                account.UnusedFunds = FuturesLimitsWrapper.UnusedFunds;
+                account.CollateralMargin = FuturesLimitsWrapper.Collateral;
+                account.FloatingIncome = FuturesLimitsWrapper.FloatingIncome
+                                       + FuturesLimitsWrapper.RecordedIncome; 
+            }
         }
 
-        protected override void ParseNewDataParams(LuaState state)
+        protected override AccountRequestContainer CreateRequestFrom(LuaState state)
         {
-            FuturesLimitsWrapper.Set(state);
+            lock (FuturesLimitsWrapper.Lock)
+            {
+                FuturesLimitsWrapper.Set(state);
 
-            _resolveEntityRequest.IsMoneyAccount = FuturesLimitsWrapper.IsMainAccount;
-            _resolveEntityRequest.FirmId = FuturesLimitsWrapper.FirmId;
-            _resolveEntityRequest.Account = FuturesLimitsWrapper.ClientCode;
+                return new()
+                {
+                    IsMoneyAccount = FuturesLimitsWrapper.IsMainAccount,
+                    Account = FuturesLimitsWrapper.ClientCode,
+                    FirmId = FuturesLimitsWrapper.FirmId,
+                }; 
+            }
         }
 
         #region Singleton

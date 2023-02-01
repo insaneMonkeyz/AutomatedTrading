@@ -35,6 +35,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
         private static LuaState _stack;
 
+        public static readonly object Lock = new();
+
         public static void Set(LuaState stack)
         {
             _stack = stack;
@@ -64,7 +66,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             get => _stack.ReadRowValueDecimal5(FLOATING_INCOME);
         }
-        public static Decimal5 RecorderIncome
+        public static Decimal5 RecordedIncome
         {
             get => _stack.ReadRowValueDecimal5(RECORDED_INCOME);
         }

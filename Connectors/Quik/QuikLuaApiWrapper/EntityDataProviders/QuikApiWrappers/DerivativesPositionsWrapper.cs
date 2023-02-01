@@ -28,6 +28,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
         private static LuaState _stack;
 
+        public static readonly object Lock = new();
+
         public static void Set(LuaState stack)
         {
             _stack = stack;

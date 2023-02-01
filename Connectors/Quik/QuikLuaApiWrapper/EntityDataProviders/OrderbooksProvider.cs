@@ -49,12 +49,18 @@ namespace Quik.EntityProviders
         {
             OrderbookWrapper.UpdateOrderBook(book);
         }
-        protected override void ParseNewDataParams(LuaState state)
+        protected override OrderbookRequestContainer CreateRequestFrom(LuaState state)
         {
             OrderbookWrapper.Set(state);
 
-            _resolveEntityRequest.SecurityContainer.Ticker = OrderbookWrapper.Ticker;
-            _resolveEntityRequest.SecurityContainer.ClassCode = OrderbookWrapper.ClassCode;
+            return new()
+            {
+                SecurityContainer = new()
+                {
+                    Ticker = OrderbookWrapper.Ticker,
+                    ClassCode = OrderbookWrapper.ClassCode,
+                }
+            };
         }
 
         #region Singleton

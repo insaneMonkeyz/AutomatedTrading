@@ -18,9 +18,7 @@ namespace Quik.EntityProviders
         private static CreateParams _createParams;
 
         private readonly object _securityRequestLock = new();
-        private readonly DerivativeRequestContainer _securityRequest = new();
-        private readonly EntityResolver<SecurityRequestContainer, Security> _securitiesResolver
-            = EntityResolvers.GetSecurityResolver();
+        private readonly SecurityResolver _securitiesResolver = EntityResolvers.GetSecurityResolver();
 
         protected override string QuikCallbackMethod => DerivativesPositionsWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => DerivativesPositionsWrapper.NAME;
@@ -43,23 +41,29 @@ namespace Quik.EntityProviders
         }
         protected override SecurityBalance? Create(LuaState state)
         {
-            DerivativesPositionsWrapper.Set(state);
-
-            _securityRequest.Ticker = DerivativesPositionsWrapper.Ticker;
-
-            if (_securitiesResolver.GetEntity(_securityRequest) is not ISecurity security)
+            lock (DerivativesPositionsWrapper.Lock)
             {
-                $"Coudn't create SecurityBalance entity. Failed to resolve security {_securityRequest.Ticker} belongs to".DebugPrintWarning();
-                return default;
+                DerivativesPositionsWrapper.Set(state);
+
+                var resolveSecurityRequest = new SecurityRequestContainer
+                {
+                    Ticker = DerivativesPositionsWrapper.Ticker
+                };
+
+                if (_securitiesResolver.GetEntity(resolveSecurityRequest) is not ISecurity security)
+                {
+                    $"Coudn't create SecurityBalance entity. Failed to resolve security {resolveSecurityRequest.Ticker} belongs to".DebugPrintWarning();
+                    return default;
+                }
+
+                return new SecurityBalance(security)
+                {
+                    FirmId = DerivativesPositionsWrapper.FirmId,
+                    Account = DerivativesPositionsWrapper.AccountId,
+                    Collateral = DerivativesPositionsWrapper.Collateral,
+                    Amount = DerivativesPositionsWrapper.CurrentPos.GetValueOrDefault()
+                }; 
             }
-
-            return new SecurityBalance(security)
-            {
-                FirmId = DerivativesPositionsWrapper.FirmId,
-                Account = DerivativesPositionsWrapper.AccountId,
-                Collateral = DerivativesPositionsWrapper.Collateral,
-                Amount = DerivativesPositionsWrapper.CurrentPos.GetValueOrDefault()
-            };
         }
         public override void Update(SecurityBalance entity)
         {
@@ -75,19 +79,28 @@ namespace Quik.EntityProviders
         }
         protected override void Update(SecurityBalance entity, LuaState state)
         {
-            DerivativesPositionsWrapper.Set(state);
+            lock (DerivativesPositionsWrapper.Lock)
+            {
+                DerivativesPositionsWrapper.Set(state);
 
-            entity.Collateral = DerivativesPositionsWrapper.Collateral;
-            entity.Amount = DerivativesPositionsWrapper.CurrentPos.GetValueOrDefault();
+                entity.Collateral = DerivativesPositionsWrapper.Collateral;
+                entity.Amount = DerivativesPositionsWrapper.CurrentPos.GetValueOrDefault(); 
+            }
         }
 
-        protected override void ParseNewDataParams(LuaState state)
+        protected override SecurityBalanceRequestContainer CreateRequestFrom(LuaState state)
         {
-            DerivativesPositionsWrapper.Set(state);
+            lock (DerivativesPositionsWrapper.Lock)
+            {
+                DerivativesPositionsWrapper.Set(state);
 
-            _resolveEntityRequest.Ticker = DerivativesPositionsWrapper.Ticker;
-            _resolveEntityRequest.FirmId = DerivativesPositionsWrapper.FirmId;
-            _resolveEntityRequest.Account = DerivativesPositionsWrapper.AccountId;
+                return new()
+                {
+                    Ticker = DerivativesPositionsWrapper.Ticker,
+                    FirmId = DerivativesPositionsWrapper.FirmId,
+                    Account = DerivativesPositionsWrapper.AccountId,
+                }; 
+            }
         }
 
 
