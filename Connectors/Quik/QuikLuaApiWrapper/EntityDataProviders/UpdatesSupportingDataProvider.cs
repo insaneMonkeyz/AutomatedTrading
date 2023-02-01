@@ -11,7 +11,7 @@ namespace Quik.EntityProviders
         protected readonly TRequestContainer _resolveEntityRequest = new();
         protected readonly EntityResolver<TRequestContainer, TEntity> _entityResolver;
 
-        public EntityUpdatedHandler<TEntity> EntityChanged = delegate { };
+        public EntityEventHandler<TEntity> EntityChanged = delegate { };
 
         public abstract void Update(TEntity entity);
         protected abstract void Update(TEntity entity, LuaState state);
@@ -22,16 +22,13 @@ namespace Quik.EntityProviders
             {
                 ParseNewDataParams(state);
 
-                // TODO: at this point we need to signal that there are new updates and return from the method
-                // the rest must be invoked from an updates collector
-
                 var entity = _entityResolver.GetEntity(_resolveEntityRequest);
 
                 if (entity != null)
                 {
                     Update(entity, state);
 
-                    EntityChanged(entity);
+                    _eventSignalizer.QueueEntity<EntityEventHandler<TEntity>>(EntityChanged, entity);
 
                     return 1;
                 }

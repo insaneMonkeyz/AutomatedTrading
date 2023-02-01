@@ -5,8 +5,7 @@ using Quik.EntityProviders.RequestContainers;
 
 namespace Quik.EntityProviders
 {
-    internal delegate void EntityUpdatedHandler<T>(T entity);
-    internal delegate void EntityCreatedHandler<T>(T entity);
+    internal delegate void EntityEventHandler<T>(T entity);
     internal delegate TEntity? GetChangingEntityHandler<TEntity, TRequestContainer>(TRequestContainer dummy);
 
     /// <summary>
@@ -17,7 +16,7 @@ namespace Quik.EntityProviders
     /// Type of container used to request dependent entities, 
     /// such as an Order for OrderExecution
     /// </typeparam>
-    internal abstract class DataProvider<TEntity, TRequestContainer> : IQuikDataSubscriber 
+    internal abstract class DataProvider<TEntity, TRequestContainer> : IQuikDataSubscriber, IDisposable
         where TRequestContainer : IRequestContainer<TEntity>, new()
         where TEntity : class
     {
@@ -27,10 +26,15 @@ namespace Quik.EntityProviders
         protected readonly object _callbackLock = new();
         protected readonly object _requestInProgressLock = new();
 
-        public EntityCreatedHandler<TEntity> NewEntity = delegate { };
+        private bool _disposed;
+
+        protected readonly EventSignalizer<TEntity> _eventSignalizer = new();
+
+        public EntityEventHandler<TEntity> NewEntity = delegate { };
 
         public void SubscribeCallback(LuaState state)
         {
+            _eventSignalizer.Start();
             state.RegisterCallback(OnNewData, QuikCallbackMethod);
         }
         public virtual List<TEntity> GetAllEntities()
@@ -47,10 +51,41 @@ namespace Quik.EntityProviders
         {
             if (Create(state) is TEntity entity)
             {
-                NewEntity(entity);
+                _eventSignalizer.QueueEntity<EntityEventHandler<TEntity>>(NewEntity, entity);
             }
 
             return 1;
         }
+
+        #region IDisposable
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _eventSignalizer.Stop();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                _disposed = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~DataProvider()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        } 
+        #endregion
     }
 }
