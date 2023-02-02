@@ -8,10 +8,15 @@ namespace Quik.EntityProviders
             where TRequestContainer : IRequestContainer<TEntity>, new()
             where TEntity : class
     {
-        protected readonly EntityResolver<TRequestContainer, TEntity> _entityResolver;
+        protected EntityResolver<TRequestContainer, TEntity> _entityResolver;
 
         public EntityEventHandler<TEntity> EntityChanged = delegate { };
 
+        public override void Initialize()
+        {
+            _entityResolver = EntityResolvers.GetResolver<TRequestContainer, TEntity>();
+            base.Initialize();
+        }
         public abstract void Update(TEntity entity);
         protected abstract void Update(TEntity entity, LuaState state);
         protected abstract TRequestContainer CreateRequestFrom(LuaState state);
@@ -19,11 +24,12 @@ namespace Quik.EntityProviders
         protected override int OnNewData(IntPtr state)
         {
             // TODO: warning! this will definetely include dependencies resolving.
-            // must find a way to do it asynchronously
+            // must find a way to do it asynchronously in order not to block quik's main thread
             
             lock (_callbackLock)
             {
-                var entity = _entityResolver.GetEntity(CreateRequestFrom(state));
+                var request = CreateRequestFrom(state);
+                var entity = _entityResolver.GetFromCache(request);
 
                 if (entity != null)
                 {
@@ -33,16 +39,17 @@ namespace Quik.EntityProviders
 
                     return 1;
                 }
-                else
+
+                entity = Create(state);
+
+                if (entity != null)
                 {
-                    return base.OnNewData(state);
+                    _entityResolver.CacheEntity(request, entity);
+                    _eventSignalizer.QueueEntity<EntityEventHandler<TEntity>>(NewEntity, entity);
                 }
+
+                return 1;
             }
         }
-
-        public UpdatableEntitiesProvider()
-        {
-            _entityResolver = EntityResolvers.GetResolver<TRequestContainer, TEntity>();
-        } 
     }
 }

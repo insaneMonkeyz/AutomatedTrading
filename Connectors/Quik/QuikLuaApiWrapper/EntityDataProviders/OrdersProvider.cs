@@ -114,7 +114,7 @@ namespace Quik.EntityProviders
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Security? ResolveSecurityOfOrder(LuaState state)
         {
-            return _securityResolver.GetEntity(new SecurityRequestContainer
+            return _securityResolver.Resolve(new SecurityRequestContainer
             {
                 ClassCode = OrdersWrapper.ClassCode,
                 Ticker = OrdersWrapper.Ticker,

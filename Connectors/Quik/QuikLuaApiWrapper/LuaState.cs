@@ -48,6 +48,7 @@ namespace Quik
         }
         internal void PrintStack(string comment = null)
         {
+            return;
             Debug.Print(comment != null
                 ? $"========= {comment} ========="
                 : "=====================================");

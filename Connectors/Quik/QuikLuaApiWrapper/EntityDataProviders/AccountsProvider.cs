@@ -47,7 +47,7 @@ namespace Quik.EntityProviders
                 {
                     AccountCode = FuturesLimitsWrapper.ClientCode,
                     FirmId = FuturesLimitsWrapper.FirmId,
-                    IsMoneyAccount = FuturesLimitsWrapper.IsMainAccount,
+                    LimitType = FuturesLimitsWrapper.LimitType,
                     AccountCurrency = currCode.CodeToCurrency(),
                     MoexCurrCode = currCode
                 };
@@ -91,7 +91,7 @@ namespace Quik.EntityProviders
 
                 return new()
                 {
-                    IsMoneyAccount = FuturesLimitsWrapper.IsMainAccount,
+                    LimitType = FuturesLimitsWrapper.LimitType,
                     Account = FuturesLimitsWrapper.ClientCode,
                     FirmId = FuturesLimitsWrapper.FirmId,
                 }; 

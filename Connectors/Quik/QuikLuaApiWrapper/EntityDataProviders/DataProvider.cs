@@ -7,7 +7,7 @@ namespace Quik.EntityProviders
 {
     internal delegate void EntityEventHandler<T>(T entity);
     internal delegate TEntity? GetChangingEntityHandler<TEntity, TRequestContainer>(TRequestContainer dummy);
-
+     
     /// <summary>
     /// Fetches business entity from quik
     /// </summary>
@@ -34,9 +34,13 @@ namespace Quik.EntityProviders
 
         public void SubscribeCallback(LuaState state)
         {
-            _eventSignalizer.Start();
             state.RegisterCallback(OnNewData, QuikCallbackMethod);
         }
+        public virtual void Initialize()
+        {
+            _eventSignalizer.Start();
+        }
+
         public virtual List<TEntity> GetAllEntities()
         {
             lock (_requestInProgressLock)

@@ -40,8 +40,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="E:\Work\FFIN QUIK\AutomatedTrading.lua">
-      <Filter>Resource Files</Filter>
-    </None>
+    <None Include="E:\Work\FFIN QUIK\AutomatedTrading.lua" />
   </ItemGroup>
 </Project>

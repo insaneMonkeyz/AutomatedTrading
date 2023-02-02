@@ -82,5 +82,9 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             get => _stack.ReadRowValueLong(LIMIT_TYPE) == MONEY_LIMIT_TYPE;
         }
+        public static long LimitType
+        {
+            get => _stack.ReadRowValueLong(LIMIT_TYPE);
+        }
     }
 }

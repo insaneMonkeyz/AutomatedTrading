@@ -1,15 +1,9 @@
 ﻿using System.Diagnostics;
-using System.Linq;
+using BasicConcepts;
 using Quik.Entities;
 using Quik.EntityProviders;
 using Quik.EntityProviders.QuikApiWrappers;
-using BasicConcepts;
-using BasicConcepts.SecuritySpecifics;
-using BasicConcepts.SecuritySpecifics.Options;
-using System.Reflection;
-using Quik.EntityProviders.Attributes;
-using System.Runtime.InteropServices.ComTypes;
-using KeraLua;
+using Quik.EntityProviders.RequestContainers;
 
 namespace Quik
 {
@@ -442,6 +436,11 @@ namespace Quik
             {
                 lua.TieProxyLibrary("NativeToManagedProxy");
                 lua.RegisterCallback(Main, "main");
+
+                //AccountsProvider.Instance.Initialize();
+                //AccountsProvider.Instance.SubscribeCallback(lua);
+                DerivativesBalanceProvider.Instance.Initialize();
+                DerivativesBalanceProvider.Instance.SubscribeCallback(lua);
             }
             catch (Exception ex)
             {
@@ -462,74 +461,47 @@ namespace Quik
                 LuaApi.lua_pushstring(_localState, "two");
                 LuaApi.lua_pushstring(_localState, "three");
 
+                SecurityWrapper.Set(State);
+
                 System.Diagnostics.Debugger.Launch();
 
-                foreach (var subscriber in SingletonProvider.GetInstances<IQuikDataSubscriber>())
+                //foreach (var subscriber in SingletonProvider.GetInstances<IQuikDataSubscriber>())
+                //{
+                //    subscriber.SubscribeCallback(_localState);
+                //}
+
+                // PASSED
+                //var accResolver = EntityResolvers.GetAccountsResolver();
+
+                //var account = AccountsProvider.Instance.GetAllEntities().FirstOrDefault(acc => acc.IsMoneyAccount);
+
+                //if (account != null)
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} {account}");
+                //}
+
+                //AccountsProvider.Instance.EntityChanged = (acc) =>
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} ENTITY CHANGED: {acc}");
+                //};
+
+                // FAILED
+
+                var pos = DerivativesBalanceProvider.Instance.GetAllEntities();
+
+                foreach (var p in pos)
                 {
-                    subscriber.SubscribeCallback(_localState);
+                    Debug.Print($"-- {DateTime.Now:T} {p}");
                 }
 
-                var posProvider = DerivativesBalanceProvider.Instance;
-                var secProvider = SecuritiesProvider.Instance;
-
-                SecuritiesProvider.ResolveSecurity = secProvider.GetSecurity;
-
-                posProvider.GetSecurity = (dummy) =>
+                DerivativesBalanceProvider.Instance.EntityChanged = (balance) =>
                 {
-                    return secProvider.GetSecurity(typeof(IFutures), dummy.Ticker);
+                    Debug.Print($"-- {DateTime.Now:T} ENTITY CHANGED: {balance}");
                 };
-                var positions = posProvider.GetAllPositions();
-
-                var availableClasses = secProvider.GetAvailableClasses();
-                var availableFutures = secProvider.GetAvailableSecuritiesOfType(typeof(IFutures));
-                var availableOptions = secProvider.GetAvailableSecuritiesOfType(typeof(IOption));
-                var availableSpreads = secProvider.GetAvailableSecuritiesOfType(typeof(ICalendarSpread));
-
-                var fut = secProvider.GetSecurity(typeof(IFutures), availableFutures.First());
-                var opt = secProvider.GetSecurity(typeof(IOption), availableOptions.First());
-                var spr = secProvider.GetSecurity(typeof(ICalendarSpread), availableSpreads.First());
-
-                var quotesProvider = OrderbooksProvider.Instance;
-
-                if (fut is Futures futures)
+                DerivativesBalanceProvider.Instance.NewEntity = (balance) =>
                 {
-                    secProvider.UpdateSecurity(futures);
-
-                    var buyMargin = SecuritiesProvider.Instance.GetBuyMarginRequirements(futures);
-                    var sellMargin = SecuritiesProvider.Instance.GetSellMarginRequirements(futures);
-
-                    var book = quotesProvider.CreateOrderBook(futures);
-
-                    quotesProvider.GetChangingEntity = (sec) =>
-                    {
-                        return sec.Ticker == futures.Ticker && sec.ClassCode == futures.ClassCode
-                            ? book : null;
-                    };
-                    quotesProvider.EntityChanged = (ob) =>
-                    {
-                        var kek = ob;
-                    };
-                }
-
-                var accProvider = AccountsProvider.Instance;
-                var accounts = accProvider.GetAllEntities();
-                var account = accounts.FirstOrDefault();
-
-                accProvider.GetChangingEntity = (dummy) => 
-                {
-                    return dummy.IsMoneyAccount
-                        ? accounts.FirstOrDefault(acc => acc.AccountCode == dummy.ClientCode && acc.FirmId == dummy.FirmId)
-                        : null;
+                    Debug.Print($"-- {DateTime.Now:T} NEW ENTITY: {balance}");
                 };
-                accProvider.EntityChanged = (acc) => 
-                {
-                    Debug.Print(acc.ToString());
-                };
-
-                if (account is DerivativesTradingAccount acc)
-                {
-                    accProvider.Update(acc); 
-                }
 
                 while (true)
                 {

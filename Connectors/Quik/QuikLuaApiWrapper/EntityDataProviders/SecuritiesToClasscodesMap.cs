@@ -14,6 +14,7 @@ namespace Quik.EntityProviders
         public SecuritiesToClasscodesMap(ClassGetter getClasses, SecuritiesByClassGetter getSecuritiesOfClass)
         {
             _securitiesByClasscode = getClasses()
+                .Where(c => MoexSpecifics.AllowedClassCodes.Contains(c))
                 .ToDictionary(classcode => classcode, 
                               classcode => getSecuritiesOfClass(classcode));
 

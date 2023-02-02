@@ -24,7 +24,7 @@ namespace Quik.EntityProviders
 
         public override OrderBook? Create(OrderbookRequestContainer request)
         {
-            if (_securitiesResolver.GetEntity(request.SecurityContainer) is not Security security)
+            if (_securitiesResolver.Resolve(request.SecurityContainer) is not Security security)
             {
                 return null;
             }

@@ -18,11 +18,17 @@ namespace Quik.EntityProviders
         private static CreateParams _createParams;
 
         private readonly object _securityRequestLock = new();
-        private readonly SecurityResolver _securitiesResolver = EntityResolvers.GetSecurityResolver();
+        private SecurityResolver _securitiesResolver;
 
         protected override string QuikCallbackMethod => DerivativesPositionsWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => DerivativesPositionsWrapper.NAME;
 
+        public override void Initialize()
+        {
+            _securitiesResolver = EntityResolvers.GetSecurityResolver();
+
+            base.Initialize();
+        }
         public override SecurityBalance? Create(SecurityBalanceRequestContainer request)
         {
             if (!request.HasData)
@@ -50,7 +56,7 @@ namespace Quik.EntityProviders
                     Ticker = DerivativesPositionsWrapper.Ticker
                 };
 
-                if (_securitiesResolver.GetEntity(resolveSecurityRequest) is not ISecurity security)
+                if (_securitiesResolver.Resolve(resolveSecurityRequest) is not ISecurity security)
                 {
                     $"Coudn't create SecurityBalance entity. Failed to resolve security {resolveSecurityRequest.Ticker} belongs to".DebugPrintWarning();
                     return default;

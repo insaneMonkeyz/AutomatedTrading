@@ -55,7 +55,7 @@ namespace Quik.EntityProviders
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Order? ResolveOrderOfExecution(LuaState state)
         {
-            return _orderResolver.GetEntity(new OrderRequestContainer
+            return _orderResolver.Resolve(new OrderRequestContainer
             {
                 ClassCode = ExecutionWrapper.ClassCode, 
                 ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId.ToString()

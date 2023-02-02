@@ -15,6 +15,7 @@ namespace Quik.Entities
         private int? _uniqueId;
 
         public bool IsMoneyAccount { get; init; }
+        public long LimitType { get; init; }
         public string AccountCode
         {
             get => _code;

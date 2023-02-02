@@ -46,6 +46,7 @@ namespace Quik.EntityProviders
 
         private static GetCsv1Param _securitiesCsvRequest = new()
         {
+            Action = GetCsvValues,
             Method = SecurityWrapper.GET_SECURITIES_OF_A_CLASS_METHOD,
             ReturnType = LuaApi.TYPE_STRING,
             Arg0 = string.Empty,
@@ -53,6 +54,7 @@ namespace Quik.EntityProviders
         };
         private static GetCsvNoParams _classesCsvRequest = new()
         {
+            Action = GetCsvValues,
             Method = SecurityWrapper.GET_CLASSES_LIST_METHOD,
             ReturnType = LuaApi.TYPE_STRING,
             DefaultValue = Enumerable.Empty<string>()
@@ -251,7 +253,7 @@ namespace Quik.EntityProviders
         }
         private static Security? ResolveUnderlying(string? classCode, string? secCode)
         {
-            return _entityResolver.GetEntity(new SecurityRequestContainer
+            return _entityResolver.Resolve(new SecurityRequestContainer
             {
                 ClassCode = classCode,
                 Ticker = secCode
@@ -260,9 +262,6 @@ namespace Quik.EntityProviders
 
         static SecuritiesProvider()
         {
-            _securitiesCsvRequest.Action = GetCsvValues;
-            _classesCsvRequest.Action = GetCsvValues;
-
             SecurityWrapper.Set(State);
         }
     }
