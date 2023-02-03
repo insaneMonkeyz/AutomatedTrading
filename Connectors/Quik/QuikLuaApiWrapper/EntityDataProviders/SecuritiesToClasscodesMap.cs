@@ -5,24 +5,32 @@ namespace Quik.EntityProviders
 {
     internal class SecuritiesToClasscodesMap
     {
-        private readonly Dictionary<string, IEnumerable<string>> _securitiesByClasscode;
-        private readonly Dictionary<string, string> _classcodeBySecurity;
-        private readonly IEnumerable<string> _emptyResult;
+        private ClassGetter _getClasses;
+        private SecuritiesByClassGetter _getSecuritiesOfClass;
+        private Dictionary<string, IEnumerable<string>> _securitiesByClasscode;
+        private Dictionary<string, string> _classcodeBySecurity;
+        private static readonly IEnumerable<string> _emptyResult = Enumerable.Empty<string>();
 
         public int TotalSecuritiesCount { get; private set; }
 
         public SecuritiesToClasscodesMap(ClassGetter getClasses, SecuritiesByClassGetter getSecuritiesOfClass)
         {
-            _securitiesByClasscode = getClasses()
+            _getClasses = getClasses;
+            _getSecuritiesOfClass = getSecuritiesOfClass;
+        }
+
+        public void Initialize()
+        {
+            _securitiesByClasscode = _getClasses()
                 .Where(c => MoexSpecifics.AllowedClassCodes.Contains(c))
-                .ToDictionary(classcode => classcode, 
-                              classcode => getSecuritiesOfClass(classcode));
+                .ToDictionary(classcode => classcode,
+                              classcode => _getSecuritiesOfClass(classcode));
 
             TotalSecuritiesCount = _securitiesByClasscode.Values.Count;
 
             _classcodeBySecurity = new(TotalSecuritiesCount);
 
-            _emptyResult = Enumerable.Empty<string>();
+            GC.Collect(3, GCCollectionMode.Forced, blocking: true, compacting: true);
         }
 
         public string? GetClassCode(string ticker)

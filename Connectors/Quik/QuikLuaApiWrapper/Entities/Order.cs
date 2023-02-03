@@ -17,7 +17,7 @@ namespace Quik.Entities
             get => _security;
             init => _security = value ?? throw new ArgumentNullException(nameof(value));
         }
-        public OrderQuote Quote { get; init; }
+        public Quote Quote { get; init; }
         public List<IOrderExecution> Executions { get; }
 
         public OrderStates State { get; set; }
@@ -37,5 +37,10 @@ namespace Quik.Entities
         IQuote IOrder.Quote => Quote;
         ISecurity IOrder.Security => _security;
         IEnumerable<IOrderExecution> IOrder.Executions => Executions;
+
+        public override string ToString()
+        {
+            return $"{State} {ExecutionMode} {Security} {Quote} Executed={ExecutedSize} Remainder={RemainingSize}";
+        }
     }
 }

@@ -25,6 +25,11 @@ namespace Quik.EntityProviders.QuikApiWrappers
         private const string SIZE = "qty";
         private const string TIME = "datetime";
 
+        private const string ORDER_EXCHANGE_CODE = "order_exchange_code"; // STRING Биржевой номер заявки 
+        private const string CANCELED_DATETIME = "canceled_datetime"; // TABLE Дата и время снятия сделки 
+
+         
+
         private const long SELL_OPERATION_BIT = 0x4;
 
         private static LuaState _stack;
@@ -55,9 +60,13 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             get => _stack.ReadRowValueString(CLASS_CODE);
         }
-        public static long ExchangeOrderId
+        public static string ExchangeOrderId
         {
-            get => _stack.ReadRowValueLong(EXCHANGE_ORDER_ID);
+            get => _stack.ReadRowValueNumber(EXCHANGE_ORDER_ID);
+        }
+        public static string? ExchangeOrderCode
+        {
+            get => _stack.ReadRowValueString(ORDER_EXCHANGE_CODE);
         }
         public static long TransactionId
         {
@@ -84,6 +93,10 @@ namespace Quik.EntityProviders.QuikApiWrappers
         public static DateTimeOffset Timestamp
         {
             get => TimeWrapper.GetTime(_stack, TIME).GetValueOrDefault();
+        }
+        public static DateTimeOffset CancelledTimestamp
+        {
+            get => TimeWrapper.GetTime(_stack, CANCELED_DATETIME).GetValueOrDefault();
         }
     }
 }

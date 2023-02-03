@@ -17,18 +17,18 @@ namespace Quik.EntityProviders
 
         public override Security? GetFromCache(SecurityRequestContainer request)
         {
-            CompleteRequest(request);
+            CompleteRequest(ref request);
             return base.GetFromCache(request);
         }
 
         public override Security? Resolve(SecurityRequestContainer request)
         {
-            CompleteRequest(request);
+            CompleteRequest(ref request);
             return base.Resolve(request);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CompleteRequest(SecurityRequestContainer request)
+        private void CompleteRequest(ref SecurityRequestContainer request)
         {
             if (!string.IsNullOrWhiteSpace(request.Ticker) && string.IsNullOrWhiteSpace(request.ClassCode))
             {

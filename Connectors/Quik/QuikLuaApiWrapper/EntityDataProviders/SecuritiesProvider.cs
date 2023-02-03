@@ -74,7 +74,13 @@ namespace Quik.EntityProviders
         };
 
         private static readonly object _userRequestLock = new();
-        private static readonly SecurityResolver _entityResolver = EntityResolvers.GetSecurityResolver();
+        private static SecurityResolver _entityResolver;
+
+        public static void Initialize()
+        {
+            SecurityWrapper.Set(State);
+            _entityResolver = EntityResolvers.GetSecurityResolver();
+        }
 
         public static Decimal5? GetBuyMarginRequirements(Security security)
         {

@@ -7,6 +7,7 @@ using Quik.EntityProviders.RequestContainers;
 using static Quik.QuikProxy;
 using UpdateParams = Quik.QuikProxy.VoidMethod4Params<Quik.Entities.SecurityBalance, Quik.LuaState>;
 using CreateParams = Quik.QuikProxy.Method4Params<Quik.LuaState, Quik.Entities.SecurityBalance?>;
+using System.Diagnostics;
 
 namespace Quik.EntityProviders
 {
@@ -25,6 +26,8 @@ namespace Quik.EntityProviders
 
         public override void Initialize()
         {
+            Debugger.Launch();
+
             _securitiesResolver = EntityResolvers.GetSecurityResolver();
 
             base.Initialize();

@@ -27,5 +27,10 @@ namespace Quik.Entities
             Security = order.Security;
             OrderId = order.ExchangeAssignedId;
         }
+
+        public override string ToString()
+        {
+            return $"{TimeStamp:O} {Security} {Quote} OrderId:{OrderId}";
+        }
     }
 }

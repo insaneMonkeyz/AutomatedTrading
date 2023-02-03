@@ -58,7 +58,7 @@ namespace Quik.EntityProviders
                     ExecutionMode = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
                     Expiry = OrdersWrapper.Expiry ?? default,
                     IsLimit = flags.HasFlag(OrderFlags.IsLimitOrder),
-                    Quote = new OrderQuote
+                    Quote = new Quote
                     {
                         Price = OrdersWrapper.Price,
                         Size = OrdersWrapper.Size,
@@ -107,7 +107,8 @@ namespace Quik.EntityProviders
 
                 return new()
                 {
-                    ExchangeAssignedId = OrdersWrapper.ExchangeOrderId.ToString()
+                    ExchangeAssignedId = OrdersWrapper.ExchangeOrderId,
+                    ClassCode = OrdersWrapper.ClassCode
                 }; 
             }
         }

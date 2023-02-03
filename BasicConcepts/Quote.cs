@@ -65,5 +65,9 @@ namespace BasicConcepts
         {
             return HashCode.Combine(_operation,_price, _size);
         }
+        public override string ToString()
+        {
+            return $"{Operation} {Size}x{Price}";
+        }
     }
 }

@@ -50,8 +50,8 @@ namespace Quik
         {
             return;
             Debug.Print(comment != null
-                ? $"========= {comment} ========="
-                : "=====================================");
+                ? $"========= {_state} {comment} ========="
+                : $"========= {_state} ===========================");
 
 
             for (int i = -1; i > -4; i--)
@@ -64,7 +64,7 @@ namespace Quik
                     LuaTypes.Number => $"Number {ReadValueSafe(type, _state, i)}",
                     LuaTypes.String => $"String {ReadValueSafe(type, _state, i)}",
                     LuaTypes.Table => $"Table Size:{ReadValueSafe(type, _state, i)}",
-                    _ => type.ToString()
+                    _ => type.ToString()        //возможно баг связан с попаданием сюда, когда наверху лежит nil
                 };
                 
                 Debug.Print($"[{-i}] [{value}]");
@@ -86,12 +86,12 @@ namespace Quik
 
             if (TryPopDecimal(out result))
             {
-                PrintStack("Completed TryFetchDecimalFromTable success" + columnName);
+                PrintStack("Completed TryFetchDecimalFromTable success " + columnName);
                 return true;
             }
             else
             {
-                PrintStack("Completed TryFetchDecimalFromTable fail" + columnName);
+                PrintStack("Completed TryFetchDecimalFromTable fail " + columnName);
                 PopFromStack();
                 return false;
             }
@@ -425,6 +425,8 @@ namespace Quik
         /// <exception cref="QuikApiException"/>
         internal long ReadRowValueLong(string columnName)
         {
+            PrintStack("ReadRowValueLong " + columnName);
+
             LuaApi.lua_pushstring(_state, columnName);
             LuaApi.lua_rawget(_state, SECOND_ITEM);
 
@@ -440,6 +442,7 @@ namespace Quik
                 PopFromStack();
                 throw QuikApiException.ParseExceptionMsg(columnName, "number");
             }
+            PrintStack("ReadRowValueLong completed. " + columnName);
 
             return result;
         }
@@ -447,8 +450,42 @@ namespace Quik
         /// Reads value of a field of the table on top of the stack
         /// </summary>
         /// <exception cref="QuikApiException"/>
+        internal string? ReadRowValueNumber(string columnName)
+        {
+            PrintStack("ReadRowValueNumber " + columnName);
+
+            LuaApi.lua_pushstring(_state, columnName);
+            LuaApi.lua_rawget(_state, SECOND_ITEM);
+
+            if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
+            {
+                var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+
+                var result = len > 0
+                    ? Marshal.PtrToStringAnsi(pstr, (int)len)
+                    : string.Empty;
+
+                PopFromStack();
+
+                return result;
+            }
+            else
+            {
+                PopFromStack();
+                throw QuikApiException.ParseExceptionMsg(columnName, "number");
+            }
+            PrintStack("ReadRowValueNumber completed. " + columnName);
+
+            return null;
+        }
+        /// <summary>
+        /// Reads value of a field of the table on top of the stack
+        /// </summary>
+        /// <exception cref="QuikApiException"/>
         internal Decimal5 ReadRowValueDecimal5(string columnName)
         {
+            PrintStack("ReadRowValueDecimal5 " + columnName);
+
             LuaApi.lua_pushstring(_state, columnName);
             LuaApi.lua_rawget(_state, SECOND_ITEM);
 
@@ -464,6 +501,7 @@ namespace Quik
                 PopFromStack();
                 throw QuikApiException.ParseExceptionMsg(columnName, "decimal5");
             }
+            PrintStack("ReadRowValueDecimal5 completed. " + columnName);
 
             return result;
         }
@@ -472,11 +510,11 @@ namespace Quik
         {
             LuaApi.lua_getglobal(_state, name);
             LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushstring(_state, arg1);
+            LuaApi.lua_pushnumber(_state, double.Parse(arg1));
 
-            return LuaApi.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM)   == returnType1
-                && LuaApi.lua_type(_state, SECOND_ITEM) == returnType2;
+            return LuaApi.lua_pcallk(_state, 2, 2, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
+                && LuaApi.lua_type(_state, LAST_ITEM)   == returnType2
+                && LuaApi.lua_type(_state, SECOND_ITEM) == returnType1;
         }
         internal bool ExecFunction(string name, int returnType)
         {

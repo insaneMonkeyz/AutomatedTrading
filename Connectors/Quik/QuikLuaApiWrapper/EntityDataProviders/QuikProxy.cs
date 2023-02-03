@@ -349,6 +349,8 @@ namespace Quik
             {
                 var result = param.Callback.DefaultValue;
 
+                _localState.PrintStack("entered ReadSpecificEntry MultiGetMethod2Params");
+
                 if (_localState.ExecDoubleReturnFunction(param.Method, 
                     param.ReturnType1, param.ReturnType2, 
                     param.Arg0, param.Arg1))
@@ -357,6 +359,8 @@ namespace Quik
                 }
 
                 _localState.PopTwoFromStack();
+
+                _localState.PrintStack("completed ReadSpecificEntry MultiGetMethod2Params");
 
                 return result;
             }
@@ -431,6 +435,7 @@ namespace Quik
         public unsafe int Initialize(void* L)
         {
             LuaState lua = L;
+            _localState = lua;
 
             try
             {
@@ -439,8 +444,14 @@ namespace Quik
 
                 //AccountsProvider.Instance.Initialize();
                 //AccountsProvider.Instance.SubscribeCallback(lua);
-                DerivativesBalanceProvider.Instance.Initialize();
-                DerivativesBalanceProvider.Instance.SubscribeCallback(lua);
+                Debugger.Launch();
+                SecuritiesProvider.Initialize();
+                //DerivativesBalanceProvider.Instance.Initialize();
+                //DerivativesBalanceProvider.Instance.SubscribeCallback(lua);
+                OrdersProvider.Instance.Initialize();
+                OrdersProvider.Instance.SubscribeCallback(lua);
+                ExecutionsProvider.Instance.Initialize();
+                ExecutionsProvider.Instance.SubscribeCallback(lua);
             }
             catch (Exception ex)
             {
@@ -457,11 +468,11 @@ namespace Quik
 
             try
             {
+                SecuritiesProvider.Initialize();
+
                 LuaApi.lua_pushstring(_localState, "one");
                 LuaApi.lua_pushstring(_localState, "two");
                 LuaApi.lua_pushstring(_localState, "three");
-
-                SecurityWrapper.Set(State);
 
                 System.Diagnostics.Debugger.Launch();
 
@@ -470,6 +481,7 @@ namespace Quik
                 //    subscriber.SubscribeCallback(_localState);
                 //}
 
+                //-------------------------------------------------------------------------
                 // PASSED
                 //var accResolver = EntityResolvers.GetAccountsResolver();
 
@@ -484,24 +496,65 @@ namespace Quik
                 //{
                 //    Debug.Print($"-- {DateTime.Now:T} ENTITY CHANGED: {acc}");
                 //};
+                //-------------------------------------------------------------------------
 
-                // FAILED
+                //-------------------------------------------------------------------------
+                // PASSED
+                //var pos = DerivativesBalanceProvider.Instance.GetAllEntities();
 
-                var pos = DerivativesBalanceProvider.Instance.GetAllEntities();
+                //foreach (var p in pos)
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} {p}");
+                //}
 
-                foreach (var p in pos)
+                //DerivativesBalanceProvider.Instance.EntityChanged = (balance) =>
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} ENTITY CHANGED: {balance}");
+                //};
+                //DerivativesBalanceProvider.Instance.NewEntity = (balance) =>
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} NEW ENTITY: {balance}");
+                //};
+                //-------------------------------------------------------------------------
+
+                var orders = OrdersProvider.Instance.GetAllEntities();
+                var ordersResolver = EntityResolvers.GetOrdersResolver();
+
+                foreach (var order in orders)
                 {
-                    Debug.Print($"-- {DateTime.Now:T} {p}");
+                    Debug.Print($"-- {DateTime.Now:O} LOADED {order}");
                 }
 
-                DerivativesBalanceProvider.Instance.EntityChanged = (balance) =>
+                OrdersProvider.Instance.NewEntity = (order) =>
                 {
-                    Debug.Print($"-- {DateTime.Now:T} ENTITY CHANGED: {balance}");
+                    Debug.Print($"-- {DateTime.Now:O} NEW ORDER {order}");
                 };
-                DerivativesBalanceProvider.Instance.NewEntity = (balance) =>
+                OrdersProvider.Instance.EntityChanged = (order) =>
                 {
-                    Debug.Print($"-- {DateTime.Now:T} NEW ENTITY: {balance}");
+                    Debug.Print($"-- {DateTime.Now:O} ORDER CHANGED {order}");
                 };
+
+                var execs = ExecutionsProvider.Instance.GetAllEntities();
+
+                foreach (var exec in execs)
+                {
+                    Debug.Print($"-- {DateTime.Now:O} LOADED {exec}");
+                }
+                ExecutionsProvider.Instance.NewEntity = (exec) =>
+                {
+                    Debug.Print($"-- {DateTime.Now:O} NEW ENTITY {exec}");
+                };
+
+                //==========================================================================
+                //
+                //  WARNING! It turns out that quik rounds long numbers of type 'number'
+                //           when reading them as Int64.
+                //           The only way to get precise values is to read them as strings.
+                //
+                //  TODO: Check all API calls that return type 'number' and make sure
+                //        they are being treated as strings!
+                //
+                //==========================================================================
 
                 while (true)
                 {

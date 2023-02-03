@@ -36,9 +36,9 @@ namespace Quik.EntityProviders.QuikApiWrappers
             _stack = stack;
         }
 
-        public static long ExchangeOrderId
+        public static string? ExchangeOrderId
         {
-            get => _stack.ReadRowValueLong(EXCHANGE_ORDER_ID);
+            get => _stack.ReadRowValueNumber(EXCHANGE_ORDER_ID);
         }
         public static long TransactionId
         {

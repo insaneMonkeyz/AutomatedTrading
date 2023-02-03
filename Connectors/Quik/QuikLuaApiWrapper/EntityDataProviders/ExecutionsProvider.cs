@@ -58,7 +58,7 @@ namespace Quik.EntityProviders
             return _orderResolver.Resolve(new OrderRequestContainer
             {
                 ClassCode = ExecutionWrapper.ClassCode, 
-                ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId.ToString()
+                ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId
             });
         }
 

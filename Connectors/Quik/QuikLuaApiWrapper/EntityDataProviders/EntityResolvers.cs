@@ -13,17 +13,30 @@ namespace Quik.EntityProviders
         private static EntityResolver<OrderRequestContainer, Order>? _ordersResolver;
         private static SecurityResolver? _securityResolver;
 
+        private static readonly object _securityResolverInitLock = new();
+
         public static EntityResolver<SecurityBalanceRequestContainer, SecurityBalance> GetBalanceResolver()
         {
             return _balanceResolver ??= new(20, DerivativesBalanceProvider.Instance.Create);
         }
         public static SecurityResolver GetSecurityResolver()
         {
-            return _securityResolver 
-                ??= new(SecuritiesProvider.GetSecurity, 
-                        new SecuritiesToClasscodesMap(
-                            SecuritiesProvider.GetAvailableClasses,
-                            SecuritiesProvider.GetAvailableSecuritiesOfType));
+            lock (_securityResolverInitLock)
+            {
+                if (_securityResolver == null)
+                {
+                    var map = new SecuritiesToClasscodesMap(
+                        SecuritiesProvider.GetAvailableClasses,
+                        SecuritiesProvider.GetAvailableSecuritiesOfType);
+
+                    _securityResolver = new SecurityResolver(SecuritiesProvider.GetSecurity, map);
+
+                    // TODO: make sure it is invoked every time after the clearing
+                    map.Initialize();
+                }
+
+                return _securityResolver;
+            } 
         }
         public static EntityResolver<AccountRequestContainer, DerivativesTradingAccount> GetAccountsResolver()
         {
