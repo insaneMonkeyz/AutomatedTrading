@@ -8,7 +8,7 @@ using Quik.Entities;
 
 namespace Quik.EntityProviders.RequestContainers
 {
-    internal class AccountRequestContainer : IRequestContainer<DerivativesTradingAccount>
+    internal struct AccountRequestContainer : IRequestContainer<DerivativesTradingAccount>, IEquatable<AccountRequestContainer>
     {
         public string? FirmId;
         public string? Account;
@@ -25,7 +25,12 @@ namespace Quik.EntityProviders.RequestContainers
                 && entity.AccountCode == Account
                 && entity.LimitType == LimitType;
         }
-
+        public bool Equals(AccountRequestContainer other)
+        {
+            return other.FirmId == FirmId
+                && other.Account == Account
+                && other.LimitType == LimitType;
+        }
         public override bool Equals(object? obj)
         {
             return obj is AccountRequestContainer other
@@ -35,10 +40,7 @@ namespace Quik.EntityProviders.RequestContainers
         }
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return HashCode.Combine(FirmId, Account, LimitType) * 10065; 
-            }
+            return HashCode.Combine(FirmId, Account, LimitType);
         }
     }
 }

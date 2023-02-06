@@ -2,7 +2,7 @@
 
 namespace Quik.EntityProviders.RequestContainers
 {
-    internal class OrderRequestContainer : IRequestContainer<Order>
+    internal struct OrderRequestContainer : IRequestContainer<Order>, IEquatable<OrderRequestContainer>
     {
         public string ExchangeAssignedId;
         public string ClassCode;
@@ -17,6 +17,12 @@ namespace Quik.EntityProviders.RequestContainers
                 && entity.Security.ClassCode == ClassCode;
         }
 
+        public bool Equals(OrderRequestContainer other)
+        {
+            return ClassCode == other.ClassCode
+                && ExchangeAssignedId == other.ExchangeAssignedId;
+        }
+
         public override bool Equals(object? obj)
         {
             return obj is OrderRequestContainer container
@@ -26,7 +32,10 @@ namespace Quik.EntityProviders.RequestContainers
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(ExchangeAssignedId, ClassCode);
+            unchecked
+            {
+                return HashCode.Combine(ExchangeAssignedId, ClassCode) * 2281488; 
+            }
         }
 
         public override string ToString()

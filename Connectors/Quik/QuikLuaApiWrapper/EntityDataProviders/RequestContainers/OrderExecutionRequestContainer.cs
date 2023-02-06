@@ -2,7 +2,7 @@
 
 namespace Quik.EntityProviders.RequestContainers
 {
-    internal class OrderExecutionRequestContainer : IRequestContainer<OrderExecution>
+    internal struct OrderExecutionRequestContainer : IRequestContainer<OrderExecution>, IEquatable<OrderExecutionRequestContainer>
     {
         public long TradeId;
         public long ExchangeAssignedOrderId;
@@ -19,6 +19,11 @@ namespace Quik.EntityProviders.RequestContainers
                 && ExchangeAssignedOrderId == orderExecution.Order.ExchangeAssignedId;
         }
 
+        public bool Equals(OrderExecutionRequestContainer obj)
+        {
+            return TradeId == obj.TradeId
+                && ExchangeAssignedOrderId == obj.ExchangeAssignedOrderId;
+        }
         public override bool Equals(object? obj)
         {
             return obj is OrderExecutionRequestContainer container &&

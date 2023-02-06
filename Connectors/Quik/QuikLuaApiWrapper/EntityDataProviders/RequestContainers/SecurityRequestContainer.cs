@@ -3,7 +3,7 @@ using Quik.Entities;
 
 namespace Quik.EntityProviders.RequestContainers
 {
-    internal struct SecurityRequestContainer : IRequestContainer<Security>
+    internal struct SecurityRequestContainer : IRequestContainer<Security>, IEquatable<SecurityRequestContainer>
     {
         public string? ClassCode;
         public string? Ticker;
@@ -15,12 +15,23 @@ namespace Quik.EntityProviders.RequestContainers
         {
             get => !(string.IsNullOrEmpty(Ticker) || string.IsNullOrEmpty(ClassCode));
         }
-
         public bool IsMatching(Security? entity)
         {
             return entity != null 
                 && entity.ClassCode == ClassCode
                 && entity.Ticker == Ticker;
+        }
+
+        public bool Equals(SecurityRequestContainer other)
+        {
+            return other.ClassCode == ClassCode
+                && other.Ticker == Ticker;
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is SecurityRequestContainer other
+                && ClassCode == other.ClassCode
+                && Ticker == other.Ticker;
         }
 
         public override string? ToString()
@@ -33,13 +44,6 @@ namespace Quik.EntityProviders.RequestContainers
             return string.IsNullOrEmpty(ClassCode)
                     ? Ticker
                     : $"{ClassCode}:{Ticker}";
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is SecurityRequestContainer other
-                && ClassCode == other.ClassCode
-                && Ticker == other.Ticker;
         }
         public override int GetHashCode()
         {

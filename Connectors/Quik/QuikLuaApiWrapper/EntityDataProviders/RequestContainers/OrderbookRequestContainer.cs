@@ -2,11 +2,31 @@
 
 namespace Quik.EntityProviders.RequestContainers
 {
-    internal class OrderbookRequestContainer : SecurityBasedRequestContainer<OrderBook>
+    internal struct OrderbookRequestContainer : IRequestContainer<OrderBook>, IEquatable<OrderbookRequestContainer>
     {
-        public override bool IsMatching(OrderBook? entity)
+        public SecurityRequestContainer SecurityRequest;
+
+        public bool HasData => SecurityRequest.HasData;
+        public bool IsMatching(OrderBook? entity)
         {
-            return entity != null && SecuritiesMatch(entity.Security);
+            return entity != null && SecurityRequest.IsMatching(entity.Security);
+        }
+
+        public bool Equals(OrderbookRequestContainer other)
+        {
+            return SecurityRequest.Equals(other.SecurityRequest);
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is OrderbookRequestContainer other
+                && SecurityRequest.Equals(other.SecurityRequest);
+        }
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return SecurityRequest.GetHashCode() * 808852;
+            }
         }
     }
 }

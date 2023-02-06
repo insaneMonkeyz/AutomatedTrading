@@ -7,7 +7,7 @@ namespace Quik.EntityProviders
 
     internal class EntityResolver<TRequest, TEntity>
         where TEntity : class
-        where TRequest : IRequestContainer<TEntity>
+        where TRequest : struct, IRequestContainer<TEntity>
     {
         private readonly Dictionary<int, TEntity> _cache;
         private readonly ResolveEntityHandler<TRequest, TEntity>? _fetchFromQuik;

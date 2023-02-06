@@ -35,7 +35,7 @@ namespace Quik.EntityProviders
 
                 if (ResolveOrderOfExecution(state) is not Order order)
                 {
-                    $"Coudn't resolve order with id={ExecutionWrapper.ExchangeOrderId} to create an execution entity."
+                    $"Coudn't resolve order with id={ExecutionWrapper.ExchangeOrderId ?? "null"} to create an execution entity."
                         .DebugPrintWarning();
 
                     return null;

@@ -61,7 +61,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             get => _stack.ReadRowValueString(CLASS_CODE);
         }
-        public static string ExchangeOrderId
+        public static string? ExchangeOrderId
         {
             get => _stack.ReadRowValueNumber(EXCHANGE_ORDER_ID);
         }

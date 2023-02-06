@@ -22,7 +22,7 @@ namespace Quik.EntityProviders
     /// such as an Order for OrderExecution
     /// </typeparam>
     internal abstract class DataProvider<TEntity, TRequestContainer> : IDisposable
-        where TRequestContainer : IRequestContainer<TEntity>, new()
+        where TRequestContainer : struct, IRequestContainer<TEntity>
         where TEntity : class
     {
         protected abstract string QuikCallbackMethod { get; }

@@ -2,7 +2,7 @@
 
 namespace Quik.EntityProviders.RequestContainers
 {
-    internal class SecurityBalanceRequestContainer : IRequestContainer<SecurityBalance>
+    internal struct SecurityBalanceRequestContainer : IRequestContainer<SecurityBalance>, IEquatable<SecurityBalanceRequestContainer>
     {
         public string? FirmId;
         public string? Account;
@@ -21,16 +21,19 @@ namespace Quik.EntityProviders.RequestContainers
             }
         }
 
-        public bool IsMatching(SecurityBalance balance)
+        public bool IsMatching(SecurityBalance? balance)
         {
-            if (balance == null)
-            {
-                return false;
-            }
-
-            return balance.FirmId == FirmId
+            return balance != null
+                && balance.FirmId == FirmId
                 && balance.Account == Account
                 && balance.Security.Ticker == Ticker;
+        }
+
+        public bool Equals(SecurityBalanceRequestContainer other)
+        {
+            return Ticker == other.Ticker
+                && FirmId == other.FirmId
+                && Account == other.Account;
         }
 
         public override bool Equals(object? obj)
@@ -42,10 +45,7 @@ namespace Quik.EntityProviders.RequestContainers
         }
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return HashCode.Combine(FirmId, Account, Ticker) * 345756; 
-            }
+            return HashCode.Combine(FirmId, Account, Ticker);
         }
     }
 }

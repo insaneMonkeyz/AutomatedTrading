@@ -57,7 +57,7 @@ namespace Quik.EntityProviders
 
         public static EntityResolver<TRequest, TEntity> GetResolver<TRequest, TEntity>()
             where TEntity : class
-            where TRequest : IRequestContainer<TEntity>
+            where TRequest : struct, IRequestContainer<TEntity>
         {
 #pragma warning disable CS8603
 

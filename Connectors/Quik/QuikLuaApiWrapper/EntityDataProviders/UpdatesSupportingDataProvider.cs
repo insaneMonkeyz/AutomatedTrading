@@ -7,7 +7,7 @@ namespace Quik.EntityProviders
 {
     internal abstract class UpdatableEntitiesProvider<TEntity, TRequestContainer>
         : DataProvider<TEntity, TRequestContainer>
-            where TRequestContainer : IRequestContainer<TEntity>, new()
+            where TRequestContainer : struct, IRequestContainer<TEntity>
             where TEntity : class, INotifyEntityUpdated
     {
         protected EntityResolver<TRequestContainer, TEntity> _entityResolver;
