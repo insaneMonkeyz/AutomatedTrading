@@ -7,7 +7,7 @@ using BasicConcepts;
 
 namespace Quik.Entities
 {
-    internal class Order : IOrder
+    internal class Order : IOrder, INotifyEntityUpdated
     {
         private Security _security;
         private string _exchangeAssignedId;
@@ -37,6 +37,8 @@ namespace Quik.Entities
         IQuote IOrder.Quote => Quote;
         ISecurity IOrder.Security => _security;
         IEnumerable<IOrderExecution> IOrder.Executions => Executions;
+
+        public event Action Updated = delegate { };
 
         public override string ToString()
         {

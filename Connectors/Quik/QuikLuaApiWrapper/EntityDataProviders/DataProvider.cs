@@ -1,7 +1,12 @@
-﻿using Quik.Entities;
+﻿using BasicConcepts;
+using Quik.Entities;
+using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
+using Quik.Lua;
+
+using static Quik.Quik;
 
 namespace Quik.EntityProviders
 {
@@ -16,7 +21,7 @@ namespace Quik.EntityProviders
     /// Type of container used to request dependent entities, 
     /// such as an Order for OrderExecution
     /// </typeparam>
-    internal abstract class DataProvider<TEntity, TRequestContainer> : IQuikDataSubscriber, IDisposable
+    internal abstract class DataProvider<TEntity, TRequestContainer> : IDisposable
         where TRequestContainer : IRequestContainer<TEntity>, new()
         where TEntity : class
     {
@@ -32,9 +37,9 @@ namespace Quik.EntityProviders
 
         public EntityEventHandler<TEntity> NewEntity = delegate { };
 
-        public void SubscribeCallback(LuaState state)
+        public void SubscribeCallback()
         {
-            state.RegisterCallback(OnNewData, QuikCallbackMethod);
+            Quik.Lua.RegisterCallback(OnNewData, QuikCallbackMethod);
         }
         public virtual void Initialize()
         {
@@ -45,11 +50,11 @@ namespace Quik.EntityProviders
         {
             lock (_requestInProgressLock)
             {
-                return QuikProxy.ReadWholeTable(AllEntitiesTable, Create); 
+                return TableWrapper.ReadWholeTable(AllEntitiesTable, Create); 
             }
         }
         public    abstract TEntity? Create(TRequestContainer request);
-        protected abstract TEntity? Create(LuaState state);
+        protected abstract TEntity? Create(LuaWrap state);
 
         protected virtual int OnNewData(IntPtr state)
         {

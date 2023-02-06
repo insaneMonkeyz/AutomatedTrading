@@ -1,68 +1,160 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Diagnostics;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
-//using BasicConcepts;
-//using BasicConcepts.SecuritySpecifics;
-//using BasicConcepts.SecuritySpecifics.Options;
-//using Core.AppComponents.BusinessLogicConcepts;
-//using Quik.EntityDataProviders;
-//using Quik.Entities;
-//using Quik.EntityDataProviders.QuikApiWrappers;
+﻿using System.Diagnostics;
 
-//namespace QuikLua
-//{
-//    public class QuikGate
-//    {
-//        private List<DerivativesTradingAccount> _accounts;
+using Quik.EntityProviders;
+using Quik.Lua;
 
-//        public static QuikGate Instance { get; } = new QuikGate();
+namespace Quik
+{
+    public delegate void CallbackSubscriber(LuaFunction handler, string quikTableName);
 
-//        public IEnumerable<ITradingAccount> Accounts => _accounts;
+    public class Quik
+    {
+        internal static readonly object SyncRoot = new();
+#if DEBUG
+        internal static LuaWrap Lua { get; private set; }
+#else
+        internal static LuaWrap Lua;
+#endif
 
-//        private QuikGate()
-//        {
-//            AccountDataProvider.Instance.ApproveChangingAccount = OnDerivativesAccountChanging;
-//            AccountDataProvider.Instance.EntityChanged = OnDerivativesAccountChanged;
-//            _accounts = AccountDataProvider.Instance.GetAllEntities();
-//            _accounts.RemoveAll(acc => !acc.IsMoneyAccount);
+        /// <summary>
+        /// Entry Point. This method gets called from the lua wrapper of the Quik trading terminal
+        /// </summary>
+        /// <param name="L">Pointer to the Lua state object</param>
+        /// <returns></returns>
+        public int Initialize(IntPtr luaState)
+        {
+            Lua = new(luaState, "Initializing thread");
 
-//            foreach (var acc in _accounts)
-//            {
-//                Debug.Print("Account added: " + acc.ToString());
-//            }
-//        }
+            try
+            {
+                Lua.TieProxyLibrary("NativeToManagedProxy");
+                Lua.RegisterCallback(Main, "main");
 
-//        private DerivativesTradingAccount? OnDerivativesAccountChanging(bool isMoneyAcc, string clientCode, string firmId)
-//        {
-//            if (!isMoneyAcc)
-//            {
-//                return null;
-//            }
+                //AccountsProvider.Instance.Initialize();
+                //AccountsProvider.Instance.SubscribeCallback(lua);
+                Debugger.Launch();
+                SecuritiesProvider.Initialize();
+                //DerivativesBalanceProvider.Instance.Initialize();
+                //DerivativesBalanceProvider.Instance.SubscribeCallback(lua);
+                OrdersProvider.Instance.Initialize();
+                OrdersProvider.Instance.SubscribeCallback();
+                ExecutionsProvider.Instance.Initialize();
+                ExecutionsProvider.Instance.SubscribeCallback();
+            }
+            catch (Exception ex)
+            {
+                ex.Message.DebugPrintWarning();
+                return -1;
+            }
 
-//            // not using linq to avoid creating closures in hot paths
-//            for (int i = 0; i < _accounts.Count; i++)
-//            {
-//                var acc = _accounts[i];
+            return 0;
+        }
 
-//                if (acc.AccountCode == clientCode && firmId == acc.FirmId)
-//                {
-//                    return acc;
-//                }
-//            }
+        private static int Main(IntPtr state)
+        {
+            Lua = new(state, "Main thread");
 
-//            if (AccountDataProvider.Instance.CreateFromCallback() is DerivativesTradingAccount newacc)
-//            {
-//                _accounts.Add(newacc);
-//            }
+            try
+            {
+                SecuritiesProvider.Initialize();
 
-//            return null;
-//        }
-//        private void OnDerivativesAccountChanged(DerivativesTradingAccount account)
-//        {
-//            Debug.Print("Account updated! " + account.ToString());
-//        }
-//    }
-//}
+                Api.lua_pushstring(Lua, "one");
+                Api.lua_pushstring(Lua, "two");
+                Api.lua_pushstring(Lua, "three");
+
+                System.Diagnostics.Debugger.Launch();
+
+                //foreach (var subscriber in SingletonProvider.GetInstances<IQuikDataSubscriber>())
+                //{
+                //    subscriber.SubscribeCallback(_localState);
+                //}
+
+                //-------------------------------------------------------------------------
+                // PASSED
+                //var accResolver = EntityResolvers.GetAccountsResolver();
+
+                //var account = AccountsProvider.Instance.GetAllEntities().FirstOrDefault(acc => acc.IsMoneyAccount);
+
+                //if (account != null)
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} {account}");
+                //}
+
+                //AccountsProvider.Instance.EntityChanged = (acc) =>
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} ENTITY CHANGED: {acc}");
+                //};
+                //-------------------------------------------------------------------------
+
+                //-------------------------------------------------------------------------
+                // PASSED
+                //var pos = DerivativesBalanceProvider.Instance.GetAllEntities();
+
+                //foreach (var p in pos)
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} {p}");
+                //}
+
+                //DerivativesBalanceProvider.Instance.EntityChanged = (balance) =>
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} ENTITY CHANGED: {balance}");
+                //};
+                //DerivativesBalanceProvider.Instance.NewEntity = (balance) =>
+                //{
+                //    Debug.Print($"-- {DateTime.Now:T} NEW ENTITY: {balance}");
+                //};
+                //-------------------------------------------------------------------------
+
+                var orders = OrdersProvider.Instance.GetAllEntities();
+                var ordersResolver = EntityResolvers.GetOrdersResolver();
+
+                foreach (var order in orders)
+                {
+                    Debug.Print($"-- {DateTime.Now:O} LOADED {order}");
+                }
+
+                OrdersProvider.Instance.NewEntity = (order) =>
+                {
+                    Debug.Print($"-- {DateTime.Now:O} NEW ORDER {order}");
+                };
+                OrdersProvider.Instance.EntityChanged = (order) =>
+                {
+                    Debug.Print($"-- {DateTime.Now:O} ORDER CHANGED {order}");
+                };
+
+                var execs = ExecutionsProvider.Instance.GetAllEntities();
+
+                foreach (var exec in execs)
+                {
+                    Debug.Print($"-- {DateTime.Now:O} LOADED {exec}");
+                }
+                ExecutionsProvider.Instance.NewEntity = (exec) =>
+                {
+                    Debug.Print($"-- {DateTime.Now:O} NEW ENTITY {exec}");
+                };
+
+                //==========================================================================
+                //
+                //  WARNING! It turns out that quik rounds long numbers of type 'number'
+                //           when reading them as Int64.
+                //           The only way to get precise values is to read them as strings.
+                //
+                //  TODO: Check all API calls that return type 'number' and make sure
+                //        they are being treated as strings!
+                //
+                //==========================================================================
+
+                while (true)
+                {
+                    Thread.Sleep(10);
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.Message.DebugPrintWarning();
+                return -1;
+            }
+            return 1;
+        }
+    }
+}

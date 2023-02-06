@@ -1,14 +1,12 @@
-﻿using BasicConcepts;
-using Quik;
-using Quik.Entities;
-using Quik.EntityProviders;
-using Quik.EntityProviders.Attributes;
-using Quik.EntityProviders.RequestContainers;
+﻿using Quik.Entities;
 using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.RequestContainers;
+using Quik.Lua;
 
-using static Quik.QuikProxy;
-using UpdateParams = Quik.QuikProxy.VoidMethod4Params<Quik.Entities.DerivativesTradingAccount, Quik.LuaState>;
-using CreateParams = Quik.QuikProxy.Method4Params<Quik.LuaState, Quik.Entities.DerivativesTradingAccount?>;
+using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method4Params<Quik.Lua.LuaWrap, Quik.Entities.DerivativesTradingAccount?>;
+using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMethod4Params<Quik.Entities.DerivativesTradingAccount, Quik.Lua.LuaWrap>;
 
 namespace Quik.EntityProviders
 {
@@ -32,10 +30,10 @@ namespace Quik.EntityProviders
                 _createParams.Arg0 = request.FirmId;
                 _createParams.Arg1 = request.Account;
 
-                return ReadSpecificEntry(ref _createParams);
+                return FunctionsWrappers.ReadSpecificEntry(ref _createParams);
             }
         }
-        protected override DerivativesTradingAccount Create(LuaState state)
+        protected override DerivativesTradingAccount Create(LuaWrap state)
         {
             lock (FuturesLimitsWrapper.Lock)
             {
@@ -66,10 +64,10 @@ namespace Quik.EntityProviders
                 _updateParams.Arg3 = entity.MoexCurrCode ?? string.Empty;
                 _updateParams.Callback.Arg0 = entity;
 
-                ReadSpecificEntry(ref _updateParams);
+                FunctionsWrappers.ReadSpecificEntry(ref _updateParams);
             }
         }
-        protected override void Update(DerivativesTradingAccount account, LuaState state)
+        protected override void Update(DerivativesTradingAccount account, LuaWrap state)
         {
             lock (FuturesLimitsWrapper.Lock)
             {
@@ -83,7 +81,7 @@ namespace Quik.EntityProviders
             }
         }
 
-        protected override AccountRequestContainer CreateRequestFrom(LuaState state)
+        protected override AccountRequestContainer CreateRequestFrom(LuaWrap state)
         {
             lock (FuturesLimitsWrapper.Lock)
             {
@@ -107,10 +105,10 @@ namespace Quik.EntityProviders
             {
                 Arg2 = FuturesLimitsWrapper.MONEY_LIMIT_TYPE.ToString(),
                 Method = FuturesLimitsWrapper.GET_METOD,
-                ReturnType = LuaApi.TYPE_TABLE,
+                ReturnType = Api.TYPE_TABLE,
                 Callback = new()
                 {
-                    Arg1 = State,
+                    Arg1 = Quik.Lua,
                     Invoke = Update
                 },
             };
@@ -119,10 +117,10 @@ namespace Quik.EntityProviders
                 Arg2 = FuturesLimitsWrapper.MONEY_LIMIT_TYPE.ToString(),
                 Arg3 = string.Empty,
                 Method = FuturesLimitsWrapper.GET_METOD,
-                ReturnType = LuaApi.TYPE_TABLE,
+                ReturnType = Api.TYPE_TABLE,
                 Callback = new()
                 {
-                    Arg = State,
+                    Arg = Quik.Lua,
                     Invoke = Create,
                     DefaultValue = null
                 }

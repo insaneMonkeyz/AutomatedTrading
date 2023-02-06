@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using BasicConcepts;
 using Quik.Entities;
 using Quik.EntityProviders;
-using Quik.QuikApi;
 
 namespace Quik
 {
@@ -16,11 +15,19 @@ namespace Quik
 
             if (uint.TryParse(date, out uint value))
             {
-                result = new DateTimeOffset(
-                   dateTime: MoexDate.GetDateTime(value) + MoexSpecifics.CommonExpiryTime,
-                     offset: MoexSpecifics.MoscowUtcOffset);
+                try
+                {
+                    result = new DateTimeOffset(
+                               dateTime: MoexDate.GetDateTime(value) + MoexSpecifics.CommonExpiryTime,
+                                 offset: MoexSpecifics.MoscowUtcOffset);
 
-                return true;
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    $"Exception while trying to convert a string representation of a Date '{date}'. {e}"
+                        .DebugPrintWarning();
+                }
             }
 
             return false;
@@ -29,9 +36,9 @@ namespace Quik
         {
             return code switch
             {
-                Account.USD_CURRENCY => Currencies.USD,
-                Account.SUR_CURRENCY => Currencies.RUB,
-                Account.RUB_CURRENCY => Currencies.RUB,
+                MoexSpecifics.USD_CURRENCY => Currencies.USD,
+                MoexSpecifics.SUR_CURRENCY => Currencies.RUB,
+                MoexSpecifics.RUB_CURRENCY => Currencies.RUB,
                 null => Currencies.Unknown,
                 "" => Currencies.Unknown,
                 _ => throw new NotImplementedException($"Currency '{code}' is not supported.")

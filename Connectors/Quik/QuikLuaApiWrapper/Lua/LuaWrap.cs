@@ -1,48 +1,47 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using BasicConcepts;
-using KeraLua;
 
-namespace Quik
+namespace Quik.Lua
 {
-    internal class LuaState
+    internal struct LuaWrap
     {
+        public readonly string ThreadName = "Callback Thread"; 
+
         private const int LAST_ITEM = -1;
         private const int SECOND_ITEM = -2;
-        private readonly IntPtr _state;
 
         #region Initialization
-        private unsafe LuaState(void* ptr)
+        private readonly IntPtr _state;
+        public LuaWrap(IntPtr lua, string threadName)
         {
-            _state = new IntPtr(ptr);
+            ThreadName = threadName;
+            _state = lua;
         }
-        private LuaState(IntPtr ptr)
+        private LuaWrap(IntPtr ptr)
         {
             _state = ptr;
         }
 
-        public static implicit operator IntPtr(LuaState state) => state._state;
-        public static implicit operator LuaState(IntPtr pointer) => new(pointer);
-        public static bool operator ==(LuaState state1, LuaState state2) => state1 == state2;
-        public static bool operator !=(LuaState state1, LuaState state2) => state1 != state2;
-        public static unsafe implicit operator LuaState(void* pointer) => new(pointer); 
+        public static implicit operator IntPtr(LuaWrap state) => state._state;
+        public static implicit operator LuaWrap(IntPtr pointer) => new(pointer);
         #endregion
 
         internal string ReadValueSafe(LuaTypes type, IntPtr pStack, int i)
         {
-            LuaApi.lua_pushnil(pStack);
-            LuaApi.lua_copy(pStack, i - 1, LAST_ITEM);
+            Api.lua_pushnil(pStack);
+            Api.lua_copy(pStack, i - 1, LAST_ITEM);
 
             var value = type switch
             {
-                LuaTypes.Boolean => (LuaApi.lua_toboolean(pStack, LAST_ITEM) == 1).ToString(),
-                LuaTypes.Number => LuaApi.lua_tonumberx(pStack, LAST_ITEM, IntPtr.Zero).ToString(),
-                LuaTypes.String => Marshal.PtrToStringAnsi(LuaApi.lua_tolstring(pStack, LAST_ITEM, out ulong strlen)),
-                LuaTypes.Table => LuaApi.lua_rawlen(pStack, LAST_ITEM).ToString(),
+                LuaTypes.Boolean => (Api.lua_toboolean(pStack, LAST_ITEM) == 1).ToString(),
+                LuaTypes.Number => Api.lua_tonumberx(pStack, LAST_ITEM, IntPtr.Zero).ToString(),
+                LuaTypes.String => Marshal.PtrToStringAnsi(Api.lua_tolstring(pStack, LAST_ITEM, out ulong strlen)),
+                LuaTypes.Table => Api.lua_rawlen(pStack, LAST_ITEM).ToString(),
                 _ => throw new NotSupportedException(),
             };
 
-            LuaApi.lua_settop(pStack, SECOND_ITEM);
+            Api.lua_settop(pStack, SECOND_ITEM);
 
             return value;
         }
@@ -50,13 +49,13 @@ namespace Quik
         {
             return;
             Debug.Print(comment != null
-                ? $"========= {_state} {comment} ========="
-                : $"========= {_state} ===========================");
+                ? $"========= {ThreadName} {comment} ========="
+                : $"========= {ThreadName} =========");
 
 
             for (int i = -1; i > -4; i--)
             {
-                var type = (LuaTypes)LuaApi.lua_type(_state, i);
+                var type = (LuaTypes)Api.lua_type(_state, i);
 
                 var value = type switch
                 {
@@ -66,7 +65,7 @@ namespace Quik
                     LuaTypes.Table => $"Table Size:{ReadValueSafe(type, _state, i)}",
                     _ => type.ToString()        //возможно баг связан с попаданием сюда, когда наверху лежит nil
                 };
-                
+
                 Debug.Print($"[{-i}] [{value}]");
             }
         }
@@ -81,8 +80,8 @@ namespace Quik
 
             // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
             // 2 строчки создадут только 1 ячейку памяти
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
             if (TryPopDecimal(out result))
             {
@@ -105,8 +104,8 @@ namespace Quik
         {
             // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
             // 2 строчки создадут только 1 ячейку памяти
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
             if (TryPopLong(out result))
             {
@@ -127,8 +126,8 @@ namespace Quik
         {
             // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
             // 2 строчки создадут только 1 ячейку памяти
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
             if (TryPopChar(out result))
             {
@@ -149,8 +148,8 @@ namespace Quik
         {
             // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
             // 2 строчки создадут только 1 ячейку памяти
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
             if (TryPopString(out result))
             {
@@ -169,8 +168,8 @@ namespace Quik
         /// <returns></returns>
         internal bool PushColumnValueTable(string columnName)
         {
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
             if (LastItemIsTable())
             {
@@ -187,11 +186,11 @@ namespace Quik
         {
             value = 0L;
 
-            if (LuaApi.lua_isnumber(_state, LAST_ITEM) > 0)
+            if (Api.lua_isnumber(_state, LAST_ITEM) > 0)
             {
-                value = LuaApi.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero);
-                LuaApi.lua_settop(_state, SECOND_ITEM);
-                return true; 
+                value = Api.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero);
+                Api.lua_settop(_state, SECOND_ITEM);
+                return true;
             }
 
             return false;
@@ -200,11 +199,11 @@ namespace Quik
         {
             value = 0L;
 
-            if (LuaApi.lua_isnumber(_state, LAST_ITEM) > 0)
+            if (Api.lua_isnumber(_state, LAST_ITEM) > 0)
             {
-                value = LuaApi.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
-                LuaApi.lua_settop(_state, -2);
-                return true; 
+                value = Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
+                Api.lua_settop(_state, -2);
+                return true;
             }
 
             return false;
@@ -213,9 +212,9 @@ namespace Quik
         {
             value = default;
 
-            if (LuaApi.lua_isstring(_state, LAST_ITEM) > 0)
+            if (Api.lua_isstring(_state, LAST_ITEM) > 0)
             {
-                var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+                var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
                 if (len > 0)
                 {
@@ -225,7 +224,7 @@ namespace Quik
                     }
                 }
 
-                LuaApi.lua_settop(_state, SECOND_ITEM);
+                Api.lua_settop(_state, SECOND_ITEM);
                 return true;
             }
 
@@ -235,9 +234,9 @@ namespace Quik
         {
             value = null;
 
-            if (LuaApi.lua_isstring(_state, LAST_ITEM) > 0)
+            if (Api.lua_isstring(_state, LAST_ITEM) > 0)
             {
-                var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+                var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
                 if (len > 0)
                 {
@@ -248,7 +247,7 @@ namespace Quik
                     value = string.Empty;
                 }
 
-                LuaApi.lua_settop(_state, SECOND_ITEM);
+                Api.lua_settop(_state, SECOND_ITEM);
                 return true;
             }
 
@@ -258,9 +257,9 @@ namespace Quik
         {
             value = null;
 
-            if (LuaApi.lua_isstring(_state, i) > 0)
+            if (Api.lua_isstring(_state, i) > 0)
             {
-                var pstr = LuaApi.lua_tolstring(_state, i, out ulong len);
+                var pstr = Api.lua_tolstring(_state, i, out ulong len);
 
                 value = len > 0 ? Marshal.PtrToStringAnsi(pstr, (int)len) : string.Empty;
 
@@ -272,13 +271,13 @@ namespace Quik
 
         internal string PopString()
         {
-            var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+            var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
-            var value = len > 0 
-                ? Marshal.PtrToStringAnsi(pstr, (int)len) 
+            var value = len > 0
+                ? Marshal.PtrToStringAnsi(pstr, (int)len)
                 : string.Empty;
 
-            LuaApi.lua_settop(_state, SECOND_ITEM);
+            Api.lua_settop(_state, SECOND_ITEM);
 
             return value;
         }
@@ -288,22 +287,19 @@ namespace Quik
 
             PrintStack();
 
-            if (LuaApi.lua_isnumber(_state, LAST_ITEM) > 0)
+            if (Api.lua_isnumber(_state, LAST_ITEM) > 0)
             {
-                value = LuaApi.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero);
+                value = Api.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero);
 
                 PrintStack();
             }
 
-            LuaApi.lua_settop(_state, SECOND_ITEM);
+            Api.lua_settop(_state, SECOND_ITEM);
 
             PrintStack();
 
             return value;
         }
-
-
-        #region Tested
         internal void TieProxyLibrary(string dllname)
         {
             var reg = new LuaRegister[]
@@ -311,33 +307,33 @@ namespace Quik
                 new()
             };
 
-            LuaApi.lua_createtable(_state, 0, 0);
-            LuaApi.luaL_setfuncs(_state, reg, 0);
-            LuaApi.lua_pushvalue(_state, LAST_ITEM);
-            LuaApi.lua_setglobal(_state, dllname);
+            Api.lua_createtable(_state, 0, 0);
+            Api.luaL_setfuncs(_state, reg, 0);
+            Api.lua_pushvalue(_state, LAST_ITEM);
+            Api.lua_setglobal(_state, dllname);
         }
         internal void RegisterCallback(LuaFunction function, string alias)
         {
-            LuaApi.lua_pushcclosure(_state, function, 0);
-            LuaApi.lua_setglobal(_state, alias);
+            Api.lua_pushcclosure(_state, function, 0);
+            Api.lua_setglobal(_state, alias);
         }
 
         internal long ReadAsNumber()
         {
-            return LuaApi.lua_isnumber(_state, LAST_ITEM) > 0
-                 ? LuaApi.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero)
+            return Api.lua_isnumber(_state, LAST_ITEM) > 0
+                 ? Api.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero)
                  : 0;
         }
         internal bool ReadAsBool()
         {
-            return LuaApi.lua_isnumber(_state, LAST_ITEM) > 0 &&
-                   LuaApi.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero) == LuaApi.TRUE;
+            return Api.lua_isnumber(_state, LAST_ITEM) > 0 &&
+                   Api.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero) == Api.TRUE;
         }
         internal string? ReadAsString()
         {
-            if (LuaApi.lua_isstring(_state, LAST_ITEM) > 0)
+            if (Api.lua_isstring(_state, LAST_ITEM) > 0)
             {
-                var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+                var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
                 return len > 0 ? Marshal.PtrToStringAnsi(pstr, (int)len) : string.Empty;
             }
@@ -351,14 +347,14 @@ namespace Quik
         /// <exception cref="QuikApiException"/>
         internal char ReadRowValueChar(string columnName)
         {
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
-            switch (LuaApi.lua_type(_state, LAST_ITEM))
+            switch (Api.lua_type(_state, LAST_ITEM))
             {
-                case LuaApi.TYPE_STRING:
+                case Api.TYPE_STRING:
                     {
-                        var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+                        var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
                         char result = default;
 
@@ -372,7 +368,7 @@ namespace Quik
                         return result;
 
                     }
-                case LuaApi.TYPE_NULL:
+                case Api.TYPE_NULL:
                     {
                         PopFromStack();
                         return default;
@@ -389,14 +385,14 @@ namespace Quik
         {
             PrintStack("Beginning ReadRowValueString " + columnName);
 
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
-            switch (LuaApi.lua_type(_state, LAST_ITEM))
+            switch (Api.lua_type(_state, LAST_ITEM))
             {
-                case LuaApi.TYPE_STRING:
+                case Api.TYPE_STRING:
                     {
-                        var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+                        var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
                         var result = len > 0
                             ? Marshal.PtrToStringAnsi(pstr, (int)len)
@@ -409,7 +405,7 @@ namespace Quik
                         return result;
 
                     }
-                case LuaApi.TYPE_NULL:
+                case Api.TYPE_NULL:
                     {
                         PrintStack("Completed ReadRowValueString null" + columnName);
 
@@ -427,14 +423,14 @@ namespace Quik
         {
             PrintStack("ReadRowValueLong " + columnName);
 
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
             long result;
 
-            if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
+            if (Api.lua_isnumber(_state, LAST_ITEM) == Api.TRUE)
             {
-                result = (long)LuaApi.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
+                result = (long)Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
                 PopFromStack();
             }
             else
@@ -454,12 +450,12 @@ namespace Quik
         {
             PrintStack("ReadRowValueNumber " + columnName);
 
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
-            if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
+            if (Api.lua_isnumber(_state, LAST_ITEM) == Api.TRUE)
             {
-                var pstr = LuaApi.lua_tolstring(_state, LAST_ITEM, out ulong len);
+                var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
 
                 var result = len > 0
                     ? Marshal.PtrToStringAnsi(pstr, (int)len)
@@ -486,14 +482,14 @@ namespace Quik
         {
             PrintStack("ReadRowValueDecimal5 " + columnName);
 
-            LuaApi.lua_pushstring(_state, columnName);
-            LuaApi.lua_rawget(_state, SECOND_ITEM);
+            Api.lua_pushstring(_state, columnName);
+            Api.lua_rawget(_state, SECOND_ITEM);
 
             Decimal5 result;
 
-            if (LuaApi.lua_isnumber(_state, LAST_ITEM) == LuaApi.TRUE)
+            if (Api.lua_isnumber(_state, LAST_ITEM) == Api.TRUE)
             {
-                result = LuaApi.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
+                result = Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
                 PopFromStack();
             }
             else
@@ -506,151 +502,151 @@ namespace Quik
             return result;
         }
 
-        internal bool ExecDoubleReturnFunction(string name, int returnType1, int returnType2, string arg0, string arg1)
+        internal bool ExecMultyReturnFunction(string name, int returnType1, int returnType2, string arg0, string arg1)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushnumber(_state, double.Parse(arg1));
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
+            Api.lua_pushnumber(_state, double.Parse(arg1));
 
-            return LuaApi.lua_pcallk(_state, 2, 2, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM)   == returnType2
-                && LuaApi.lua_type(_state, SECOND_ITEM) == returnType1;
+            return Api.lua_pcallk(_state, 2, 2, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType2
+                && Api.lua_type(_state, SECOND_ITEM) == returnType1;
         }
         internal bool ExecFunction(string name, int returnType)
         {
-            LuaApi.lua_getglobal(_state, name);
+            Api.lua_getglobal(_state, name);
 
-            return LuaApi.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM) == returnType;
+            return Api.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType;
         }
         internal bool ExecFunction(string name, int returnType, string arg0)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
 
-            return LuaApi.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM) == returnType;
+            return Api.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType;
         }
         internal bool ExecFunction(string name, int returnType, string arg0, string arg1)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushstring(_state, arg1);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
+            Api.lua_pushstring(_state, arg1);
 
-            return LuaApi.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
+            return Api.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType; ;
         }
         internal bool ExecFunction(string name, int returnType, string arg0, long arg1)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushinteger(_state, arg1);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
+            Api.lua_pushinteger(_state, arg1);
 
-            return LuaApi.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
+            return Api.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType; ;
         }
         internal bool ExecFunction(string name, int returnType, string arg0, string arg1, string arg2)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushstring(_state, arg1);
-            LuaApi.lua_pushstring(_state, arg2);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
+            Api.lua_pushstring(_state, arg1);
+            Api.lua_pushstring(_state, arg2);
 
-            return LuaApi.lua_pcallk(_state, 3, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
+            return Api.lua_pcallk(_state, 3, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType; ;
         }
         internal bool ExecFunction(string name, int returnType, string arg0, string arg1, string arg2, string arg3)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushstring(_state, arg1);
-            LuaApi.lua_pushstring(_state, arg2);
-            LuaApi.lua_pushstring(_state, arg3);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
+            Api.lua_pushstring(_state, arg1);
+            Api.lua_pushstring(_state, arg2);
+            Api.lua_pushstring(_state, arg3);
 
-            return LuaApi.lua_pcallk(_state, 4, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
+            return Api.lua_pcallk(_state, 4, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType; ;
         }
         internal bool ExecFunction(string name, int returnType, string arg0, string arg1, long arg2, string arg3)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushstring(_state, arg1);
-            LuaApi.lua_pushnumber(_state, arg2);
-            LuaApi.lua_pushstring(_state, arg3);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
+            Api.lua_pushstring(_state, arg1);
+            Api.lua_pushnumber(_state, arg2);
+            Api.lua_pushstring(_state, arg3);
 
-            return LuaApi.lua_pcallk(_state, 4, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT
-                && LuaApi.lua_type(_state, LAST_ITEM) == returnType; ;
+            return Api.lua_pcallk(_state, 4, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType; ;
         }
 
         internal T ExecFunction<T>(string name, int returnType, Func<T> callback)
         {
-            LuaApi.lua_getglobal(_state, name);
+            Api.lua_getglobal(_state, name);
 
             T result = default;
 
-            if (LuaApi.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
-                LuaApi.lua_type(_state, LAST_ITEM) == returnType)
+            if (Api.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT &&
+                Api.lua_type(_state, LAST_ITEM) == returnType)
             {
                 result = callback();
             }
 
-            LuaApi.lua_settop(_state, SECOND_ITEM);
+            Api.lua_settop(_state, SECOND_ITEM);
 
             return result;
         }
         internal T ExecFunction<T>(string name, int returnType, Func<T> callback, string arg0)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
 
             T result = default;
 
             // pcallk заменит все аргументы которые потребовались для его вызова на результат или nil
-            if (LuaApi.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
-                LuaApi.lua_type(_state, LAST_ITEM) == returnType)
+            if (Api.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT &&
+                Api.lua_type(_state, LAST_ITEM) == returnType)
             {
                 result = callback();
             }
 
-            LuaApi.lua_settop(_state, SECOND_ITEM);
+            Api.lua_settop(_state, SECOND_ITEM);
 
             return result;
         }
         internal T ExecFunction<T>(string name, int returnType, Func<T> callback, string arg0, string arg1)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushstring(_state, arg1);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
+            Api.lua_pushstring(_state, arg1);
 
             T result = default;
 
             // pcallk заменит все аргументы которые потребовались для его вызова на результат или nil
-            if (LuaApi.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
-                LuaApi.lua_type(_state, LAST_ITEM) == returnType)
+            if (Api.lua_pcallk(_state, 2, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT &&
+                Api.lua_type(_state, LAST_ITEM) == returnType)
             {
                 result = callback();
             }
 
-            LuaApi.lua_settop(_state, SECOND_ITEM);
+            Api.lua_settop(_state, SECOND_ITEM);
 
             return result;
         }
         internal T ExecFunction<T>(string name, int returnType, Func<T> callback, string arg0, string arg1, string arg2)
         {
-            LuaApi.lua_getglobal(_state, name);
-            LuaApi.lua_pushstring(_state, arg0);
-            LuaApi.lua_pushstring(_state, arg1);
-            LuaApi.lua_pushstring(_state, arg2);
+            Api.lua_getglobal(_state, name);
+            Api.lua_pushstring(_state, arg0);
+            Api.lua_pushstring(_state, arg1);
+            Api.lua_pushstring(_state, arg2);
 
             T result = default;
 
-            if (LuaApi.lua_pcallk(_state, 3, 1, 0, IntPtr.Zero, LuaApi.EmptyKFunction) == LuaApi.OK_RESULT &&
-                LuaApi.lua_type(_state, LAST_ITEM) == returnType)
+            if (Api.lua_pcallk(_state, 3, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT &&
+                Api.lua_type(_state, LAST_ITEM) == returnType)
             {
                 result = callback();
             }
 
-            LuaApi.lua_settop(_state, SECOND_ITEM);
+            Api.lua_settop(_state, SECOND_ITEM);
 
             return result;
         }
@@ -660,31 +656,30 @@ namespace Quik
         /// </summary>
         internal void PopFromStack()
         {
-            LuaApi.lua_settop(_state, SECOND_ITEM);
+            Api.lua_settop(_state, SECOND_ITEM);
         }
         /// <summary>
         /// Pops last two items from the stack
         /// </summary>
         internal void PopTwoFromStack()
         {
-            LuaApi.lua_settop(_state, -3);
+            Api.lua_settop(_state, -3);
         }
         /// <summary>
         /// Pops n items from the stack
         /// </summary>
         internal void PopFromStack(int numItems)
         {
-            LuaApi.lua_settop(_state, -numItems - 1);
+            Api.lua_settop(_state, -numItems - 1);
         }
 
         internal bool LastItemIsTable()
         {
-            return LuaApi.lua_type(_state, LAST_ITEM) == LuaApi.TYPE_TABLE;
+            return Api.lua_type(_state, LAST_ITEM) == Api.TYPE_TABLE;
         }
         internal bool LastItemIsString()
         {
-            return LuaApi.lua_type(_state, LAST_ITEM) == LuaApi.TYPE_STRING;
+            return Api.lua_type(_state, LAST_ITEM) == Api.TYPE_STRING;
         }
-        #endregion
     }
 }

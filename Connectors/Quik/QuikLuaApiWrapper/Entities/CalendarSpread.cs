@@ -5,7 +5,7 @@ namespace Quik.Entities
 {
     internal class CalendarSpread : MoexDerivativeBase, ICalendarSpread
     {
-        public override string ClassCode => QuikApi.QuikApi.CALENDAR_SPREADS_CLASS_CODE;
+        public override string ClassCode => MoexSpecifics.CALENDAR_SPREADS_CLASS_CODE;
         public TimeSpan? ExpiryTimeDelta { get; }
         public IExpiring? NearTermLeg { get; }
         public IExpiring? LongTermLeg { get; }

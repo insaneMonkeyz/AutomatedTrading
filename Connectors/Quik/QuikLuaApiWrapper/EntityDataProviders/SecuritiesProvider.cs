@@ -2,14 +2,14 @@
 using BasicConcepts.SecuritySpecifics;
 using BasicConcepts.SecuritySpecifics.Options;
 using Quik.Entities;
-using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
-using static Quik.QuikProxy;
+using Quik.Lua;
 
-using GetCsv1Param = Quik.QuikProxy.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
-using GetCsvNoParams = Quik.QuikProxy.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
-using GetSecurityParams = Quik.QuikProxy.Method2Params<Quik.Entities.Security?>;
+using GetItemParams = Quik.EntityProviders.QuikApiWrappers.TableWrapper.GetParamExParams;
+using GetCsv1Param = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
+using GetCsvNoParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
+using GetSecurityParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method2Params<Quik.Entities.Security?>;
 
 namespace Quik.EntityProviders
 {
@@ -48,7 +48,7 @@ namespace Quik.EntityProviders
         {
             Action = GetCsvValues,
             Method = SecurityWrapper.GET_SECURITIES_OF_A_CLASS_METHOD,
-            ReturnType = LuaApi.TYPE_STRING,
+            ReturnType = Api.TYPE_STRING,
             Arg0 = string.Empty,
             DefaultValue = Enumerable.Empty<string>()
         };
@@ -56,13 +56,13 @@ namespace Quik.EntityProviders
         {
             Action = GetCsvValues,
             Method = SecurityWrapper.GET_CLASSES_LIST_METHOD,
-            ReturnType = LuaApi.TYPE_STRING,
+            ReturnType = Api.TYPE_STRING,
             DefaultValue = Enumerable.Empty<string>()
         };
         private static GetSecurityParams _getSecurityRequest = new()
         {
             Method = SecurityWrapper.GET_METOD,
-            ReturnType = LuaApi.TYPE_TABLE,
+            ReturnType = Api.TYPE_TABLE,
             Arg0 = string.Empty,
             Arg1 = string.Empty
         };
@@ -78,17 +78,17 @@ namespace Quik.EntityProviders
 
         public static void Initialize()
         {
-            SecurityWrapper.Set(State);
+            SecurityWrapper.Set(Quik.Lua);
             _entityResolver = EntityResolvers.GetSecurityResolver();
         }
 
         public static Decimal5? GetBuyMarginRequirements(Security security)
         {
-            return GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_BUY_MARGIN_REQUIREMENTS);
+            return TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_BUY_MARGIN_REQUIREMENTS);
         }
         public static Decimal5? GetSellMarginRequirements(Security security)
         {
-            return GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
+            return TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
         }
 
         public static IEnumerable<string> GetAvailableSecuritiesOfType(string classcode)
@@ -97,7 +97,7 @@ namespace Quik.EntityProviders
             {
                 _securitiesCsvRequest.Arg0 = classcode;
 
-                return ReadSpecificEntry(ref _securitiesCsvRequest); 
+                return FunctionsWrappers.ReadSpecificEntry(ref _securitiesCsvRequest); 
             }
         }
         public static IEnumerable<string> GetAvailableSecuritiesOfType(Type type)
@@ -106,14 +106,14 @@ namespace Quik.EntityProviders
             {
                 _securitiesCsvRequest.Arg0 = _securityTypeToClassCode[type];
 
-                return ReadSpecificEntry(ref _securitiesCsvRequest); 
+                return FunctionsWrappers.ReadSpecificEntry(ref _securitiesCsvRequest); 
             }
         }
         public static IEnumerable<string> GetAvailableClasses()
         {
             lock (_userRequestLock)
             {
-                return ReadSpecificEntry(ref _classesCsvRequest); 
+                return FunctionsWrappers.ReadSpecificEntry(ref _classesCsvRequest); 
             }
         }
         public static Security? GetSecurity(Type securityType, string ticker)
@@ -124,7 +124,7 @@ namespace Quik.EntityProviders
                 _getSecurityRequest.Arg0 = _securityTypeToClassCode[securityType];
                 _getSecurityRequest.Arg1 = ticker;
 
-                return ReadSpecificEntry(ref _getSecurityRequest); 
+                return FunctionsWrappers.ReadSpecificEntry(ref _getSecurityRequest); 
             }
         }
         public static Security? GetSecurity(SecurityRequestContainer request)
@@ -140,19 +140,19 @@ namespace Quik.EntityProviders
                 _getSecurityRequest.Arg0 = request.ClassCode;
                 _getSecurityRequest.Arg1 = request.Ticker;
 
-                return ReadSpecificEntry(ref _getSecurityRequest);
+                return FunctionsWrappers.ReadSpecificEntry(ref _getSecurityRequest);
             }
         }
         public static void UpdateSecurity(Security security)
         {
             lock (_userRequestLock)
             {
-                security.PriceStepValue = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
+                security.PriceStepValue = TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
 
                 if (security is MoexDerivativeBase baseSec)
                 {
-                    baseSec.UpperPriceLimit = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_UPPER_PRICE_LIMIT);
-                    baseSec.LowerPriceLimit = GetDecimal5From_getParamEx(security, SecurityWrapper.PARAM_LOWER_PRICE_LIMIT);
+                    baseSec.UpperPriceLimit = TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_UPPER_PRICE_LIMIT);
+                    baseSec.LowerPriceLimit = TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_LOWER_PRICE_LIMIT);
                 } 
             }
         }
@@ -251,7 +251,7 @@ namespace Quik.EntityProviders
         }
         private static IEnumerable<string> GetCsvValues()
         {
-            var csv = State.ReadAsString();
+            var csv = Quik.Lua.ReadAsString();
 
             return string.IsNullOrWhiteSpace(csv)
                 ? Enumerable.Empty<string>()
@@ -268,7 +268,7 @@ namespace Quik.EntityProviders
 
         static SecuritiesProvider()
         {
-            SecurityWrapper.Set(State);
+            SecurityWrapper.Set(Quik.Lua);
         }
     }
 }

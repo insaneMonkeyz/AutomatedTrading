@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using BasicConcepts;
-using Quik;
 using Quik.Entities;
+using Quik.Lua;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -19,11 +19,11 @@ namespace Quik.EntityProviders.QuikApiWrappers
         private const string CLASS_CODE = "class_code";
         private const string TICKER = "sec_code";
 
-        private static LuaState _stack;
+        private static LuaWrap _stack;
 
         public static readonly object Lock = new();
 
-        public static void Set(LuaState stack)
+        public static void Set(LuaWrap stack)
         {
             _stack = stack;
         }
@@ -39,9 +39,9 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
         public static void UpdateOrderBook(OrderBook book)
         {
-            lock (Quik.QuikProxy.SyncRoot)
+            lock (global::Quik.Quik.SyncRoot)
             {
-                if (_stack.ExecFunction(GET_METOD, LuaApi.TYPE_TABLE, book.Security.ClassCode, book.Security.Ticker))
+                if (_stack.ExecFunction(GET_METOD, Api.TYPE_TABLE, book.Security.ClassCode, book.Security.Ticker))
                 {
                     if (_stack.ReadRowValueLong(BIDS_COUNT) > 0 &&
                         _stack.PushColumnValueTable(BIDS))
@@ -67,7 +67,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             const int LAST_ITEM = -1;
 
-            var dataLen = (long)LuaApi.lua_rawlen(_stack, LAST_ITEM);
+            var dataLen = (long)Api.lua_rawlen(_stack, LAST_ITEM);
             var quotesSize = Math.Min(dataLen, marketDepth);
 
             if (quotesSize > 0)
@@ -86,7 +86,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
                 while (passed < quotesSize)
                 {
-                    if (LuaApi.lua_rawgeti(_stack, LAST_ITEM, luaIndex++) != LuaApi.TYPE_TABLE)
+                    if (Api.lua_rawgeti(_stack, LAST_ITEM, luaIndex++) != Api.TYPE_TABLE)
                     {
                         _stack.PopFromStack();
                         throw new QuikApiException("Array of quotes ended prior than expected. ");

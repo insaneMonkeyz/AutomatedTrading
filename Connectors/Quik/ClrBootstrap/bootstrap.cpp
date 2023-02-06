@@ -1,12 +1,13 @@
 #include "pch.h"
 #include "bootstrap.h"
+using namespace System;
 
 namespace NativeToManagedProxy
 {
     #pragma managed
     int Initialize(void* luaStack)
     {
-        Quik::QuikProxy^ apiWrapper = gcnew Quik::QuikProxy();
-        return apiWrapper->Initialize(luaStack);
+        auto quik = gcnew Quik::Quik();
+        return quik->Initialize((IntPtr)luaStack);
     }
 }

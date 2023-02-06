@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
-using Quik.QuikApi;
-using static Quik.QuikProxy;
+using Quik.Lua;
+using static Quik.Quik;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -33,11 +33,11 @@ namespace Quik.EntityProviders.QuikApiWrappers
         private const string ACCOUNT_ID = "trdaccid";
         private const string FIRM_ID = "firmid";
 
-        private static LuaState _stack;
+        private static LuaWrap _stack;
 
         public static readonly object Lock = new();
 
-        public static void Set(LuaState stack)
+        public static void Set(LuaWrap stack)
         {
             _stack = stack;
         }

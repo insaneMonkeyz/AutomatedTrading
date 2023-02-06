@@ -8,7 +8,7 @@ using Quik.EntityProviders.QuikApiWrappers;
 
 namespace Quik.Entities
 {
-    internal class SecurityBalance : ISecurityBalance
+    internal class SecurityBalance : ISecurityBalance, INotifyEntityUpdated
     {
         private string _firmId;
         private string _accountId;
@@ -24,8 +24,10 @@ namespace Quik.Entities
         public string Account 
         { 
             get => _accountId; 
-            init => _accountId = value ?? throw new ArgumentNullException(nameof(value)); 
+            init => _accountId = value ?? throw new ArgumentNullException(nameof(value));
         }
+
+        public event Action Updated = delegate { };
 
         public SecurityBalance(ISecurity security)
         {

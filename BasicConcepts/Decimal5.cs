@@ -5,12 +5,8 @@ namespace BasicConcepts
 {
     public struct Decimal5 : IComparable
     {
-        public static readonly Decimal5 MAX_VALUE =
-                           new Decimal5(MANTISSA_MAX_VALUE);
-
-        public static readonly Decimal5 MIN_VALUE =
-                           new Decimal5(MANTISSA_MIN_VALUE);
-
+        public static readonly Decimal5 MAX_VALUE = new (MANTISSA_MAX_VALUE);
+        public static readonly Decimal5 MIN_VALUE = new (MANTISSA_MIN_VALUE);
 
         private const long EXPONENT = 5;
         private const long DECIMAL_EXPONENT = EXPONENT << 16;
@@ -682,7 +678,7 @@ namespace BasicConcepts
 
             if(mantissa > MANTISSA_MAX_VALUE || mantissa < MANTISSA_MIN_VALUE)
             {
-                throw new FormatException("Input string was not in a correct format.");;
+                throw new FormatException(EXCEPTION_MSG);;
             }
 
             return new Decimal5() { mantissa = mantissa * sign };

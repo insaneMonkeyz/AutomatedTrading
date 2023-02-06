@@ -2,10 +2,10 @@
 
 namespace Quik.Entities
 {
-    internal abstract class Security : ISecurity, IUniquelyIdentifiable
+    internal abstract class Security : ISecurity, IUniquelyIdentifiable, INotifyEntityUpdated
     {
-        public Decimal5 MinTradingSize => QuikApi.QuikApi.DEFAULT_TRADING_SIZE;
-        public Guid ExchangeId => QuikApi.QuikApi.MoexExchangeId;
+        public Decimal5 MinTradingSize => MoexSpecifics.DefaultTradingSize;
+        public Guid ExchangeId => MoexSpecifics.MoexExchangeId;
         public abstract string ClassCode { get; }
         public string Ticker { get; init; }
         public string? Description { get; init; }
@@ -20,6 +20,8 @@ namespace Quik.Entities
                 HashCode.Combine(nameof(Security), ClassCode, Ticker);
         }
         private int? _uniqueId;
+
+        public event Action Updated = delegate { };
 
         public Security(ref SecurityParamsContainer container)
         {

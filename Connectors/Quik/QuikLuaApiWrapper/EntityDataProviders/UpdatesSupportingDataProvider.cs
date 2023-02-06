@@ -1,12 +1,14 @@
-﻿using Quik.Entities;
+﻿using BasicConcepts;
+using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
+using Quik.Lua;
 
 namespace Quik.EntityProviders
 {
     internal abstract class UpdatableEntitiesProvider<TEntity, TRequestContainer>
         : DataProvider<TEntity, TRequestContainer>
             where TRequestContainer : IRequestContainer<TEntity>, new()
-            where TEntity : class
+            where TEntity : class, INotifyEntityUpdated
     {
         protected EntityResolver<TRequestContainer, TEntity> _entityResolver;
 
@@ -18,8 +20,8 @@ namespace Quik.EntityProviders
             base.Initialize();
         }
         public abstract void Update(TEntity entity);
-        protected abstract void Update(TEntity entity, LuaState state);
-        protected abstract TRequestContainer CreateRequestFrom(LuaState state);
+        protected abstract void Update(TEntity entity, LuaWrap state);
+        protected abstract TRequestContainer CreateRequestFrom(LuaWrap state);
 
         protected override int OnNewData(IntPtr state)
         {

@@ -4,7 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
-using Quik.QuikApi;
+using Quik.Entities;
+using Quik.EntityProviders.QuikApiWrappers;
+using Quik.Lua;
+using static Quik.Quik;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -50,9 +53,9 @@ namespace Quik.EntityProviders.QuikApiWrappers
         private const string QUOTE_CURRENCY = "step_price_currency";
         private const string TRADE_CURRENCY = "trade_currency";
 
-        private static LuaState _stack;
+        private static LuaWrap _stack;
 
-        public static void Set(LuaState stack)
+        public static void Set(LuaWrap stack)
         {
             _stack = stack;
         }

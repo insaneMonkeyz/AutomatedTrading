@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Quik.Lua;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -19,7 +20,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
         private static readonly TimeSpan MoscowUtcOffset = TimeSpan.FromHours(3);
 
-        public static DateTimeOffset? GetTime(LuaState state, string column)
+        public static DateTimeOffset? GetTime(LuaWrap state, string column)
         {
             if (state.PushColumnValueTable(column))
             {

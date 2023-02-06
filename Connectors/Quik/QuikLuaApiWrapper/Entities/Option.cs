@@ -6,7 +6,7 @@ namespace Quik.Entities
 {
     internal class Option : MoexDerivativeBase, IOption
     {
-        public override string ClassCode => QuikApi.QuikApi.OPTIONS_CLASS_CODE;
+        public override string ClassCode => MoexSpecifics.OPTIONS_CLASS_CODE;
         public Decimal5 Strike { get; init; }
         public OptionTypes OptionType { get; }
         public ISecurity? Underlying { get; init; }

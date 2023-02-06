@@ -2,7 +2,7 @@
 
 namespace Quik.Entities
 {
-    public struct MoexDate
+    public readonly struct MoexDate
     {
         public readonly int Day;
         public readonly int Month;

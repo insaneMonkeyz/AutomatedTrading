@@ -3,9 +3,10 @@ using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.QuikApiWrappers;
 
-using static Quik.QuikProxy;
+using static Quik.Quik;
 using BasicConcepts;
 using System.Runtime.CompilerServices;
+using Quik.Lua;
 
 namespace Quik.EntityProviders
 {
@@ -21,7 +22,7 @@ namespace Quik.EntityProviders
             throw new NotImplementedException("Need to implement 'SearchItems' from quik API in order " +
                 "to be able to fetch random order executions from server.");
         }
-        protected override OrderExecution? Create(LuaState state)
+        protected override OrderExecution? Create(LuaWrap state)
         {
             lock (ExecutionWrapper.Lock)
             {
@@ -53,7 +54,7 @@ namespace Quik.EntityProviders
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Order? ResolveOrderOfExecution(LuaState state)
+        private Order? ResolveOrderOfExecution(LuaWrap state)
         {
             return _orderResolver.Resolve(new OrderRequestContainer
             {

@@ -3,8 +3,8 @@ using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
-
-using static Quik.QuikProxy;
+using Quik.Lua;
+using static Quik.Quik;
 
 namespace Quik.EntityProviders
 {
@@ -31,25 +31,25 @@ namespace Quik.EntityProviders
 
             var orderbook = new OrderBook(security);
 
-            Update(orderbook, State);
+            Update(orderbook, Quik.Lua);
 
             return orderbook;
         }
-        protected override OrderBook? Create(LuaState state)
+        protected override OrderBook? Create(LuaWrap state)
         {
             throw new InvalidOperationException("Automatic creation of orderbooks is not allowed. " +
                 "Must manually create one and then use Update() method to fill it with values.");
         }
         public override void Update(OrderBook entity)
         {
-            Update(entity, State);
+            Update(entity, Quik.Lua);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override void Update(OrderBook book, LuaState state)
+        protected override void Update(OrderBook book, LuaWrap state)
         {
             OrderbookWrapper.UpdateOrderBook(book);
         }
-        protected override OrderbookRequestContainer CreateRequestFrom(LuaState state)
+        protected override OrderbookRequestContainer CreateRequestFrom(LuaWrap state)
         {
             OrderbookWrapper.Set(state);
 

@@ -4,12 +4,14 @@ using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.QuikApiWrappers;
 
-using static Quik.QuikProxy;
+using static Quik.Quik;
 
-using UpdateParams = Quik.QuikProxy.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.LuaState>;
-using CreateParams = Quik.QuikProxy.MultiGetMethod2Params<Quik.LuaState, Quik.Entities.Order?>;
+using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.Lua.LuaWrap>;
+using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MultiGetMethod2Params<Quik.Lua.LuaWrap, Quik.Entities.Order?>;
 using SecurityResolver = Quik.EntityProviders.EntityResolver<Quik.EntityProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
 using System.Runtime.CompilerServices;
+using Quik.Lua;
+using Quik.EntityProviders.QuikApiWrappers;
 
 namespace Quik.EntityProviders
 {
@@ -34,10 +36,10 @@ namespace Quik.EntityProviders
                 _createParams.Arg0 = request.ClassCode;
                 _createParams.Arg1 = request.ExchangeAssignedId;
 
-                return ReadSpecificEntry(ref _createParams);
+                return FunctionsWrappers.ReadSpecificEntry(ref _createParams);
             }
         }
-        protected override Order? Create(LuaState state)
+        protected override Order? Create(LuaWrap state)
         {
             lock (OrdersWrapper.Lock)
             {
@@ -81,10 +83,10 @@ namespace Quik.EntityProviders
                 _updateParams.Arg1 = entity.ExchangeAssignedIdString;
                 _updateParams.Callback.Arg0 = entity;
 
-                ReadSpecificEntry(ref _updateParams);
+                FunctionsWrappers.ReadSpecificEntry(ref _updateParams);
             }
         }
-        protected override void Update(Order entity, LuaState state)
+        protected override void Update(Order entity, LuaWrap state)
         {
             lock (OrderbookWrapper.Lock)
             {
@@ -99,7 +101,7 @@ namespace Quik.EntityProviders
             }
         }
 
-        protected override OrderRequestContainer CreateRequestFrom(LuaState state)
+        protected override OrderRequestContainer CreateRequestFrom(LuaWrap state)
         {
             lock (OrdersWrapper.Lock)
             {
@@ -113,7 +115,7 @@ namespace Quik.EntityProviders
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Security? ResolveSecurityOfOrder(LuaState state)
+        private Security? ResolveSecurityOfOrder(LuaWrap state)
         {
             return _securityResolver.Resolve(new SecurityRequestContainer
             {
@@ -143,22 +145,22 @@ namespace Quik.EntityProviders
             _updateParams = new()
             {
                 Method = OrdersWrapper.GET_METOD,
-                ReturnType1 = LuaApi.TYPE_TABLE,
-                ReturnType2 = LuaApi.TYPE_NUMBER,
+                ReturnType1 = Api.TYPE_TABLE,
+                ReturnType2 = Api.TYPE_NUMBER,
                 Callback = new()
                 {                    
-                    Arg1 = State,
+                    Arg1 = Quik.Lua,
                     Invoke = Update
                 }
             };
             _createParams = new()
             {
                 Method = OrdersWrapper.GET_METOD,
-                ReturnType1 = LuaApi.TYPE_TABLE,
-                ReturnType2 = LuaApi.TYPE_NUMBER,
+                ReturnType1 = Api.TYPE_TABLE,
+                ReturnType2 = Api.TYPE_NUMBER,
                 Callback = new()
                 {                    
-                    Arg = State,
+                    Arg = Quik.Lua,
                     Invoke = Create,
                     DefaultValue = null
                 }

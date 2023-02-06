@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BasicConcepts;
+using Quik.Lua;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -26,11 +27,11 @@ namespace Quik.EntityProviders.QuikApiWrappers
         private const string AVG_PRICE = "avrposnprice";
         private const string COLLATERAL = "varmargin";
 
-        private static LuaState _stack;
+        private static LuaWrap _stack;
 
         public static readonly object Lock = new();
 
-        public static void Set(LuaState stack)
+        public static void Set(LuaWrap stack)
         {
             _stack = stack;
         }

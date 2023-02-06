@@ -8,7 +8,7 @@ using BasicConcepts;
 
 namespace Quik.Entities
 {
-    internal class OrderBook : IOptimizedOrderBook
+    internal class OrderBook : IOptimizedOrderBook, INotifyEntityUpdated
     {
         private const long DEFAULT_MARKET_DEPTH = 10;
         private const long MAX_MARKET_DEPTH = 50;
@@ -78,6 +78,8 @@ namespace Quik.Entities
                 }
             }
         }
+
+        public event Action Updated = delegate { };
 
         public OrderBook(Security security)
         {

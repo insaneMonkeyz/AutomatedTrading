@@ -8,7 +8,7 @@ using BasicConcepts;
 
 namespace Quik.Entities
 {
-    internal class DerivativesTradingAccount : ITradingAccount, IUniquelyIdentifiable
+    internal class DerivativesTradingAccount : ITradingAccount, IUniquelyIdentifiable, INotifyEntityUpdated
     {
         private string _code;
         private string _firmId;
@@ -43,6 +43,8 @@ namespace Quik.Entities
 
 
         public List<ISecurityBalance> SecuritiesBalance { get; init; } = new(10);
+
+        public event Action Updated = delegate { };
 
         public override string ToString()
         {

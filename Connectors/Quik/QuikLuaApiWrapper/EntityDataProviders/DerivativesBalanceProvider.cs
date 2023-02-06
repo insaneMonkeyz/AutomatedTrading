@@ -4,10 +4,12 @@ using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 
-using static Quik.QuikProxy;
-using UpdateParams = Quik.QuikProxy.VoidMethod4Params<Quik.Entities.SecurityBalance, Quik.LuaState>;
-using CreateParams = Quik.QuikProxy.Method4Params<Quik.LuaState, Quik.Entities.SecurityBalance?>;
+using static Quik.Quik;
+using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMethod4Params<Quik.Entities.SecurityBalance, Quik.Lua.LuaWrap>;
+using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method4Params<Quik.Lua.LuaWrap, Quik.Entities.SecurityBalance?>;
 using System.Diagnostics;
+using Quik.Lua;
+using Quik.EntityProviders.QuikApiWrappers;
 
 namespace Quik.EntityProviders
 {
@@ -45,10 +47,10 @@ namespace Quik.EntityProviders
                 _createParams.Arg1 = request.Account;
                 _createParams.Arg2 = request.Ticker;
 
-                return ReadSpecificEntry(ref _createParams);
+                return FunctionsWrappers.ReadSpecificEntry(ref _createParams);
             }
         }
-        protected override SecurityBalance? Create(LuaState state)
+        protected override SecurityBalance? Create(LuaWrap state)
         {
             lock (DerivativesPositionsWrapper.Lock)
             {
@@ -83,10 +85,10 @@ namespace Quik.EntityProviders
                 _updateParams.Arg2 = entity.Security.Ticker;
                 _updateParams.Callback.Arg0 = entity;
 
-                ReadSpecificEntry(ref _updateParams); 
+                FunctionsWrappers.ReadSpecificEntry(ref _updateParams); 
             }
         }
-        protected override void Update(SecurityBalance entity, LuaState state)
+        protected override void Update(SecurityBalance entity, LuaWrap state)
         {
             lock (DerivativesPositionsWrapper.Lock)
             {
@@ -97,7 +99,7 @@ namespace Quik.EntityProviders
             }
         }
 
-        protected override SecurityBalanceRequestContainer CreateRequestFrom(LuaState state)
+        protected override SecurityBalanceRequestContainer CreateRequestFrom(LuaWrap state)
         {
             lock (DerivativesPositionsWrapper.Lock)
             {
@@ -122,10 +124,10 @@ namespace Quik.EntityProviders
             {
                 Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
                 Method = DerivativesPositionsWrapper.GET_METOD,
-                ReturnType = LuaApi.TYPE_TABLE,
+                ReturnType = Api.TYPE_TABLE,
                 Callback = new() 
                 { 
-                    Arg1 = State,
+                    Arg1 = Quik.Lua,
                     Invoke = Update
                 },
             };
@@ -133,10 +135,10 @@ namespace Quik.EntityProviders
             {
                 Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
                 Method = DerivativesPositionsWrapper.GET_METOD,
-                ReturnType = LuaApi.TYPE_TABLE,
+                ReturnType = Api.TYPE_TABLE,
                 Callback = new() 
                 { 
-                    Arg = State,
+                    Arg = Quik.Lua,
                     Invoke = Create,
                     DefaultValue = null
                 },

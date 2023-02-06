@@ -1,7 +1,9 @@
-﻿namespace Quik.EntityProviders
+﻿using Quik.Lua;
+
+namespace Quik.EntityProviders
 {
     internal interface IQuikDataSubscriber
     {
-        void SubscribeCallback(LuaState state);
+        void SubscribeCallback(LuaWrap state);
     }
 }
