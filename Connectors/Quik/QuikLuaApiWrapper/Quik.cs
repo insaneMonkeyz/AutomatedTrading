@@ -30,15 +30,9 @@ namespace Quik
                 Lua.TieProxyLibrary("NativeToManagedProxy");
                 Lua.RegisterCallback(Main, "main");
 
-                //AccountsProvider.Instance.Initialize();
                 //AccountsProvider.Instance.SubscribeCallback(lua);
-                Debugger.Launch();
-                SecuritiesProvider.Initialize();
-                //DerivativesBalanceProvider.Instance.Initialize();
-                //DerivativesBalanceProvider.Instance.SubscribeCallback(lua);
-                OrdersProvider.Instance.Initialize();
+                //DerivativesBalanceProvider.Instance.SubscribeCallback();
                 OrdersProvider.Instance.SubscribeCallback();
-                ExecutionsProvider.Instance.Initialize();
                 ExecutionsProvider.Instance.SubscribeCallback();
             }
             catch (Exception ex)
@@ -57,12 +51,12 @@ namespace Quik
             try
             {
                 SecuritiesProvider.Initialize();
+                OrdersProvider.Instance.Initialize();
+                ExecutionsProvider.Instance.Initialize();
 
                 Api.lua_pushstring(Lua, "one");
                 Api.lua_pushstring(Lua, "two");
                 Api.lua_pushstring(Lua, "three");
-
-                System.Diagnostics.Debugger.Launch();
 
                 //foreach (var subscriber in SingletonProvider.GetInstances<IQuikDataSubscriber>())
                 //{
@@ -121,6 +115,8 @@ namespace Quik
                 {
                     Debug.Print($"-- {DateTime.Now:O} ORDER CHANGED {order}");
                 };
+
+                Debugger.Launch();
 
                 var execs = ExecutionsProvider.Instance.GetAllEntities();
 

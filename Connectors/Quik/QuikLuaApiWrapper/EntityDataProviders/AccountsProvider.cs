@@ -1,5 +1,4 @@
 ﻿using Quik.Entities;
-using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
@@ -17,6 +16,37 @@ namespace Quik.EntityProviders
 
         protected override string QuikCallbackMethod => FuturesLimitsWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => FuturesLimitsWrapper.NAME;
+        protected override Action<LuaWrap> SetWrapper => FuturesLimitsWrapper.Set;
+
+        public override void Initialize()
+        {
+            _updateParams = new()
+            {
+                Arg2 = FuturesLimitsWrapper.MONEY_LIMIT_TYPE.ToString(),
+                Method = FuturesLimitsWrapper.GET_METOD,
+                ReturnType = Api.TYPE_TABLE,
+                Callback = new()
+                {
+                    Arg1 = Quik.Lua,
+                    Invoke = Update
+                },
+            };
+            _createParams = new()
+            {
+                Arg2 = FuturesLimitsWrapper.MONEY_LIMIT_TYPE.ToString(),
+                Arg3 = string.Empty,
+                Method = FuturesLimitsWrapper.GET_METOD,
+                ReturnType = Api.TYPE_TABLE,
+                Callback = new()
+                {
+                    Arg = Quik.Lua,
+                    Invoke = Create,
+                    DefaultValue = null
+                }
+            };
+
+            base.Initialize();
+        }
 
         public override DerivativesTradingAccount? Create(AccountRequestContainer request)
         {
@@ -101,30 +131,6 @@ namespace Quik.EntityProviders
         public static AccountsProvider Instance { get; } = new();
         private AccountsProvider()
         {
-            _updateParams = new()
-            {
-                Arg2 = FuturesLimitsWrapper.MONEY_LIMIT_TYPE.ToString(),
-                Method = FuturesLimitsWrapper.GET_METOD,
-                ReturnType = Api.TYPE_TABLE,
-                Callback = new()
-                {
-                    Arg1 = Quik.Lua,
-                    Invoke = Update
-                },
-            };
-            _createParams = new()
-            {
-                Arg2 = FuturesLimitsWrapper.MONEY_LIMIT_TYPE.ToString(),
-                Arg3 = string.Empty,
-                Method = FuturesLimitsWrapper.GET_METOD,
-                ReturnType = Api.TYPE_TABLE,
-                Callback = new()
-                {
-                    Arg = Quik.Lua,
-                    Invoke = Create,
-                    DefaultValue = null
-                }
-            };
         } 
         #endregion
     }

@@ -149,10 +149,20 @@ namespace Quik.EntityProviders.QuikApiWrappers
                     param.ReturnType1, param.ReturnType2,
                     param.Arg0, param.Arg1))
                 {
+                    Quik.Lua.PopFromStack();
+                    Quik.Lua.PrintStack("calling callback from MultiGetMethod2Params");
+
                     result = param.Callback.Invoke(param.Callback.Arg);
+
+                    Quik.Lua.PrintStack("completed callback in MultiGetMethod2Params");
+                }
+                else
+                {
+                    Quik.Lua.PopFromStack();
+                    Quik.Lua.PrintStack("calling callback from MultiGetMethod2Params");
                 }
 
-                Quik.Lua.PopTwoFromStack();
+                Quik.Lua.PopFromStack();
 
                 Quik.Lua.PrintStack("completed ReadSpecificEntry MultiGetMethod2Params");
 

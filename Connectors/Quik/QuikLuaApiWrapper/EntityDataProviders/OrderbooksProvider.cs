@@ -12,6 +12,7 @@ namespace Quik.EntityProviders
     {
         private readonly EntityResolver<SecurityRequestContainer, Security> _securitiesResolver;
 
+        protected override Action<LuaWrap> SetWrapper => OrderbookWrapper.Set;
         protected override string QuikCallbackMethod => OrderbookWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => string.Empty;
 

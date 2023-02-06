@@ -25,10 +25,33 @@ namespace Quik.EntityProviders
 
         protected override string QuikCallbackMethod => DerivativesPositionsWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => DerivativesPositionsWrapper.NAME;
+        protected override Action<LuaWrap> SetWrapper => DerivativesPositionsWrapper.Set;
 
         public override void Initialize()
         {
-            Debugger.Launch();
+            _updateParams = new()
+            {
+                Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
+                Method = DerivativesPositionsWrapper.GET_METOD,
+                ReturnType = Api.TYPE_TABLE,
+                Callback = new()
+                {
+                    Arg1 = Quik.Lua,
+                    Invoke = Update
+                },
+            };
+            _createParams = new()
+            {
+                Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
+                Method = DerivativesPositionsWrapper.GET_METOD,
+                ReturnType = Api.TYPE_TABLE,
+                Callback = new()
+                {
+                    Arg = Quik.Lua,
+                    Invoke = Create,
+                    DefaultValue = null
+                },
+            };
 
             _securitiesResolver = EntityResolvers.GetSecurityResolver();
 
@@ -120,29 +143,6 @@ namespace Quik.EntityProviders
         public static DerivativesBalanceProvider Instance { get; } = new();
         private DerivativesBalanceProvider()
         {
-            _updateParams = new()
-            {
-                Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
-                Method = DerivativesPositionsWrapper.GET_METOD,
-                ReturnType = Api.TYPE_TABLE,
-                Callback = new() 
-                { 
-                    Arg1 = Quik.Lua,
-                    Invoke = Update
-                },
-            };
-            _createParams = new()
-            {
-                Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
-                Method = DerivativesPositionsWrapper.GET_METOD,
-                ReturnType = Api.TYPE_TABLE,
-                Callback = new() 
-                { 
-                    Arg = Quik.Lua,
-                    Invoke = Create,
-                    DefaultValue = null
-                },
-            };
         }
         #endregion
     }

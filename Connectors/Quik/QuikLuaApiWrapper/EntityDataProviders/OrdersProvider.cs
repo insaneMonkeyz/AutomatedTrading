@@ -17,12 +17,42 @@ namespace Quik.EntityProviders
 {
     internal class OrdersProvider : UpdatableEntitiesProvider<Order, OrderRequestContainer>
     {
-        private readonly SecurityResolver _securityResolver;
+        private readonly SecurityResolver _securityResolver = EntityResolvers.GetSecurityResolver();
         private UpdateParams _updateParams;
         private CreateParams _createParams;
 
         protected override string QuikCallbackMethod => OrdersWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => OrdersWrapper.NAME;
+        protected override Action<LuaWrap> SetWrapper => OrdersWrapper.Set;
+
+        public override void Initialize()
+        {
+            _updateParams = new()
+            {
+                Method = OrdersWrapper.GET_METOD,
+                ReturnType1 = Api.TYPE_TABLE,
+                ReturnType2 = Api.TYPE_NUMBER,
+                Callback = new()
+                {
+                    Arg1 = Quik.Lua,
+                    Invoke = Update
+                }
+            };
+            _createParams = new()
+            {
+                Method = OrdersWrapper.GET_METOD,
+                ReturnType1 = Api.TYPE_TABLE,
+                ReturnType2 = Api.TYPE_NUMBER,
+                Callback = new()
+                {
+                    Arg = Quik.Lua,
+                    Invoke = Create,
+                    DefaultValue = null
+                }
+            };
+
+            base.Initialize();
+        }
 
         public override Order? Create(OrderRequestContainer request)
         {
@@ -141,30 +171,6 @@ namespace Quik.EntityProviders
         public static OrdersProvider Instance { get; } = new();
         private OrdersProvider()
         {
-            _securityResolver = EntityResolvers.GetSecurityResolver();
-            _updateParams = new()
-            {
-                Method = OrdersWrapper.GET_METOD,
-                ReturnType1 = Api.TYPE_TABLE,
-                ReturnType2 = Api.TYPE_NUMBER,
-                Callback = new()
-                {                    
-                    Arg1 = Quik.Lua,
-                    Invoke = Update
-                }
-            };
-            _createParams = new()
-            {
-                Method = OrdersWrapper.GET_METOD,
-                ReturnType1 = Api.TYPE_TABLE,
-                ReturnType2 = Api.TYPE_NUMBER,
-                Callback = new()
-                {                    
-                    Arg = Quik.Lua,
-                    Invoke = Create,
-                    DefaultValue = null
-                }
-            };
         }
         #endregion
     }

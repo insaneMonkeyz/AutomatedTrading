@@ -27,6 +27,7 @@ namespace Quik.EntityProviders
     {
         protected abstract string QuikCallbackMethod { get; }
         protected abstract string AllEntitiesTable { get; }
+        protected abstract Action<LuaWrap> SetWrapper { get; }
 
         protected readonly object _callbackLock = new();
         protected readonly object _requestInProgressLock = new();
@@ -43,6 +44,7 @@ namespace Quik.EntityProviders
         }
         public virtual void Initialize()
         {
+            SetWrapper(Quik.Lua);
             _eventSignalizer.Start();
         }
 

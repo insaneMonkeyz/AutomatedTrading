@@ -9,6 +9,8 @@ namespace Quik.Entities
 {
     internal class Order : IOrder, INotifyEntityUpdated
     {
+        private const int DEFAULT_EXECUTIONS_LIST_SIZE = 10;
+
         private Security _security;
         private string _exchangeAssignedId;
 
@@ -18,7 +20,7 @@ namespace Quik.Entities
             init => _security = value ?? throw new ArgumentNullException(nameof(value));
         }
         public Quote Quote { get; init; }
-        public List<IOrderExecution> Executions { get; }
+        public List<OrderExecution> Executions { get; } = new(DEFAULT_EXECUTIONS_LIST_SIZE);
 
         public OrderStates State { get; set; }
         public string ExchangeAssignedIdString
