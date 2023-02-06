@@ -127,7 +127,7 @@ namespace Quik.EntityProviders
                 return FunctionsWrappers.ReadSpecificEntry(ref _getSecurityRequest); 
             }
         }
-        public static Security? GetSecurity(SecurityRequestContainer request)
+        public static Security? GetSecurity(ref SecurityRequestContainer request)
         {
             if (!request.HasData)
             {
@@ -259,11 +259,12 @@ namespace Quik.EntityProviders
         }
         private static Security? ResolveUnderlying(string? classCode, string? secCode)
         {
-            return _entityResolver.Resolve(new SecurityRequestContainer
+            var request = new SecurityRequestContainer
             {
                 ClassCode = classCode,
                 Ticker = secCode
-            });
+            };
+            return _entityResolver.Resolve(ref request);
         }
 
         static SecuritiesProvider()

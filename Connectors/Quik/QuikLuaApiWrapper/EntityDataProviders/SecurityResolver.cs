@@ -15,16 +15,16 @@ namespace Quik.EntityProviders
             _classcodesMap = classcodesMap;
         }
 
-        public override Security? GetFromCache(SecurityRequestContainer request)
+        public override Security? GetFromCache(ref SecurityRequestContainer request)
         {
             CompleteRequest(ref request);
-            return base.GetFromCache(request);
+            return base.GetFromCache(ref request);
         }
 
-        public override Security? Resolve(SecurityRequestContainer request)
+        public override Security? Resolve(ref SecurityRequestContainer request)
         {
             CompleteRequest(ref request);
-            return base.Resolve(request);
+            return base.Resolve(ref request);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

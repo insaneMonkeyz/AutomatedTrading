@@ -22,7 +22,7 @@ namespace Quik.EntityProviders
         {
             base.Initialize();
         }
-        public override OrderExecution? Create(OrderExecutionRequestContainer request)
+        public override OrderExecution? Create(ref OrderExecutionRequestContainer request)
         {
             throw new NotImplementedException("Need to implement 'SearchItems' from quik API in order " +
                 "to be able to fetch random order executions from server.");
@@ -61,11 +61,12 @@ namespace Quik.EntityProviders
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Order? ResolveOrderOfExecution(LuaWrap state)
         {
-            return _orderResolver.Resolve(new OrderRequestContainer
+            var request = new OrderRequestContainer
             {
-                ClassCode = ExecutionWrapper.ClassCode, 
+                ClassCode = ExecutionWrapper.ClassCode,
                 ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId
-            });
+            };
+            return _orderResolver.Resolve(ref request);
         }
 
         #region Singleton

@@ -3,7 +3,7 @@ using Quik.EntityProviders.RequestContainers;
 
 namespace Quik.EntityProviders
 {
-    internal delegate TEntity? ResolveEntityHandler<TRequest, TEntity>(TRequest request);
+    internal delegate TEntity? ResolveEntityHandler<TRequest, TEntity>(ref TRequest request);
 
     internal class EntityResolver<TRequest, TEntity>
         where TEntity : class
@@ -18,11 +18,11 @@ namespace Quik.EntityProviders
             _fetchFromQuik = fetchFromQuik;
         }
 
-        public void CacheEntity(TRequest request, TEntity entity)
+        public void CacheEntity(ref TRequest request, TEntity entity)
         {
             _cache[request.GetHashCode()] = entity;
         }
-        public virtual TEntity? GetFromCache(TRequest request)
+        public virtual TEntity? GetFromCache(ref TRequest request)
         {
             if (!request.HasData)
             {
@@ -30,9 +30,9 @@ namespace Quik.EntityProviders
                 return default;
             }
 
-            return GetFromCacheInternal(request);
+            return GetFromCacheInternal(ref request);
         }
-        public virtual TEntity? Resolve(TRequest request)
+        public virtual TEntity? Resolve(ref TRequest request)
         {
             if (!request.HasData)
             {
@@ -40,12 +40,12 @@ namespace Quik.EntityProviders
                 return default;
             }
 
-            if (GetFromCacheInternal(request) is TEntity entity)
+            if (GetFromCacheInternal(ref request) is TEntity entity)
             {
                 return entity;
             }
 
-            entity = _fetchFromQuik?.Invoke(request);
+            entity = _fetchFromQuik?.Invoke(ref request);
 
             if(entity != null)
             {
@@ -56,7 +56,7 @@ namespace Quik.EntityProviders
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private TEntity? GetFromCacheInternal(TRequest request)
+        private TEntity? GetFromCacheInternal(ref TRequest request)
         {
             if (_cache.TryGetValue(request.GetHashCode(), out TEntity? entity))
             {

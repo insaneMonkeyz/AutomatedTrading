@@ -54,11 +54,11 @@ namespace Quik.EntityProviders
             base.Initialize();
         }
 
-        public override Order? Create(OrderRequestContainer request)
+        public override Order? Create(ref OrderRequestContainer request)
         {
             if (!request.HasData)
             {
-                throw new ArgumentException($"{nameof(OrderRequestContainer)} request is missing essential parameters");
+                $"{nameof(OrderRequestContainer)} request is missing essential parameters".DebugPrintWarning();
             }
 
             lock (_requestInProgressLock)
@@ -147,11 +147,12 @@ namespace Quik.EntityProviders
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Security? ResolveSecurityOfOrder(LuaWrap state)
         {
-            return _securityResolver.Resolve(new SecurityRequestContainer
+            var request = new SecurityRequestContainer
             {
                 ClassCode = OrdersWrapper.ClassCode,
                 Ticker = OrdersWrapper.Ticker,
-            });
+            };
+            return _securityResolver.Resolve(ref request);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static OrderExecutionModes FromMoexExecutionMode(MoexOrderExecutionModes mode)

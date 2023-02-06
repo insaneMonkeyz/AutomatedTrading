@@ -48,11 +48,11 @@ namespace Quik.EntityProviders
             base.Initialize();
         }
 
-        public override DerivativesTradingAccount? Create(AccountRequestContainer request)
+        public override DerivativesTradingAccount? Create(ref AccountRequestContainer request)
         {
             if (!request.HasData)
             {
-                throw new ArgumentException($"{nameof(AccountRequestContainer)} request is missing essential parameters");
+                $"{nameof(AccountRequestContainer)} request is missing essential parameters".DebugPrintWarning();
             }
 
             lock (_requestInProgressLock)

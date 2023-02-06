@@ -25,16 +25,14 @@ namespace Quik.EntityProviders
         where TRequestContainer : struct, IRequestContainer<TEntity>
         where TEntity : class
     {
+        protected readonly EventSignalizer<TEntity> _eventSignalizer = new();
+        protected readonly object _requestInProgressLock = new();
+        protected readonly object _callbackLock = new();
+        private bool _disposed;
+
         protected abstract string QuikCallbackMethod { get; }
         protected abstract string AllEntitiesTable { get; }
         protected abstract Action<LuaWrap> SetWrapper { get; }
-
-        protected readonly object _callbackLock = new();
-        protected readonly object _requestInProgressLock = new();
-
-        private bool _disposed;
-
-        protected readonly EventSignalizer<TEntity> _eventSignalizer = new();
 
         public EntityEventHandler<TEntity> NewEntity = delegate { };
 
@@ -55,7 +53,7 @@ namespace Quik.EntityProviders
                 return TableWrapper.ReadWholeTable(AllEntitiesTable, Create); 
             }
         }
-        public    abstract TEntity? Create(TRequestContainer request);
+        public    abstract TEntity? Create(ref TRequestContainer request);
         protected abstract TEntity? Create(LuaWrap state);
 
         protected virtual int OnNewData(IntPtr state)

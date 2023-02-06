@@ -31,7 +31,7 @@ namespace Quik.EntityProviders
             lock (_callbackLock)
             {
                 var request = CreateRequestFrom(state);
-                var entity = _entityResolver.GetFromCache(request);
+                var entity = _entityResolver.GetFromCache(ref request);
 
                 if (entity != null)
                 {
@@ -46,7 +46,7 @@ namespace Quik.EntityProviders
 
                 if (entity != null)
                 {
-                    _entityResolver.CacheEntity(request, entity);
+                    _entityResolver.CacheEntity(ref request, entity);
                     _eventSignalizer.QueueEntity<EntityEventHandler<TEntity>>(NewEntity, entity);
                 }
 

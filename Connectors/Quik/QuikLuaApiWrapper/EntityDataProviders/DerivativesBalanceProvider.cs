@@ -57,11 +57,11 @@ namespace Quik.EntityProviders
 
             base.Initialize();
         }
-        public override SecurityBalance? Create(SecurityBalanceRequestContainer request)
+        public override SecurityBalance? Create(ref SecurityBalanceRequestContainer request)
         {
             if (!request.HasData)
             {
-                throw new ArgumentException($"{nameof(SecurityBalanceRequestContainer)} request is missing essential parameters");
+                $"{nameof(SecurityBalanceRequestContainer)} request is missing essential parameters".DebugPrintWarning();
             }
 
             lock (_requestInProgressLock)
@@ -84,7 +84,7 @@ namespace Quik.EntityProviders
                     Ticker = DerivativesPositionsWrapper.Ticker
                 };
 
-                if (_securitiesResolver.Resolve(resolveSecurityRequest) is not ISecurity security)
+                if (_securitiesResolver.Resolve(ref resolveSecurityRequest) is not ISecurity security)
                 {
                     $"Coudn't create SecurityBalance entity. Failed to resolve security {resolveSecurityRequest.Ticker} belongs to".DebugPrintWarning();
                     return default;
