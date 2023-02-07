@@ -2,7 +2,7 @@
 {
     internal enum MoexOrderExecutionModes
     {
-        Undefined = 0,
+        Normal = 0,
         FillOrKill,
         Queue,
         CancelRest,

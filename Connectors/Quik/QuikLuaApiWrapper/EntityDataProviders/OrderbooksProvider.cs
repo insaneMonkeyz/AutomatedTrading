@@ -1,67 +1,83 @@
-﻿using System.Runtime.CompilerServices;
-using Quik.Entities;
+﻿using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
-using Quik.Lua;
-using static Quik.Quik;
+
+using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string, string, Quik.EntityProviders.RequestContainers.OrderbookRequestContainer>;
 
 namespace Quik.EntityProviders
 {
-    internal sealed class OrderbooksProvider : UpdatableEntitiesProvider<OrderBook, OrderbookRequestContainer>
+    internal sealed class OrderbooksProvider : IDisposable
     {
-        private readonly EntityResolver<SecurityRequestContainer, Security> _securitiesResolver;
+        public AllowEntityCreationFilter<OrderbookRequestContainer> CreationIsApproved = delegate { return true; };
+        public EntityEventHandler<OrderBook> EntityChanged = delegate { };
+        public EntityEventHandler<OrderBook> NewEntity = delegate { };
 
-        protected override Action<LuaWrap> SetWrapper => OrderbookWrapper.Set;
-        protected override string QuikCallbackMethod => OrderbookWrapper.CALLBACK_METHOD;
-        protected override string AllEntitiesTable => string.Empty;
+        private CallbackParameters _updatedArgs;
+        private EntityResolver<OrderbookRequestContainer, OrderBook> _bookResolver;
+        private EntityResolver<SecurityRequestContainer, Security> _securitiesResolver;
 
-        private static readonly List<OrderBook> _emptyList = new(0);
+        private readonly EventSignalizer<OrderBook> _eventSignalizer = new();
+        private readonly object _requestInProgressLock = new();
+        private readonly object _callbackLock = new();
 
-        public override List<OrderBook> GetAllEntities()
+        private bool _disposed;
+
+        public void Initialize()
         {
-            return _emptyList;
+            _updatedArgs.Callback = OrderbookRequestContainer.Create;
+            _bookResolver = EntityResolvers.GetOrderbooksResolver();
+            _securitiesResolver = EntityResolvers.GetSecurityResolver();
+        }
+        public void SubscribeCallback()
+        {
+            Quik.Lua.RegisterCallback(OnNewData, OrderbookWrapper.CALLBACK_METHOD);
         }
 
-        public override OrderBook? Create(ref OrderbookRequestContainer request)
+        public OrderBook? Create(ref OrderbookRequestContainer request)
         {
             if (_securitiesResolver.Resolve(ref request.SecurityRequest) is not Security security)
             {
                 return null;
             }
 
-            var orderbook = new OrderBook(security);
+            var book = new OrderBook(security);
 
-            Update(orderbook, Quik.Lua);
+            OrderbookWrapper.UpdateOrderBook(book);
 
-            return orderbook;
+            return book;
         }
-        protected override OrderBook? Create(LuaWrap state)
-        {
-            throw new InvalidOperationException("Automatic creation of orderbooks is not allowed. " +
-                "Must manually create one and then use Update() method to fill it with values.");
-        }
-        public override void Update(OrderBook entity)
-        {
-            Update(entity, Quik.Lua);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override void Update(OrderBook book, LuaWrap state)
+        public void Update(OrderBook book)
         {
             OrderbookWrapper.UpdateOrderBook(book);
         }
-        protected override OrderbookRequestContainer CreateRequestFrom(LuaWrap state)
-        {
-            OrderbookWrapper.Set(state);
 
-            return new()
+        private int OnNewData(IntPtr state)
+        {
+            lock (_callbackLock)
             {
-                SecurityRequest = new()
+                _updatedArgs.LuaProvider = state;
+
+                var request = FunctionsWrappers.ReadCallbackArguments(ref _updatedArgs);
+                var entity = _bookResolver.GetFromCache(ref request);
+
+                if (entity != null)
                 {
-                    Ticker = OrderbookWrapper.Ticker,
-                    ClassCode = OrderbookWrapper.ClassCode,
+                    Update(entity);
+
+                    _eventSignalizer.QueueEntity<EntityEventHandler<OrderBook>>(EntityChanged, entity);
+
+                    return 1;
                 }
-            };
+
+                if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
+                {
+                    _bookResolver.CacheEntity(ref request, entity);
+                    _eventSignalizer.QueueEntity<EntityEventHandler<OrderBook>>(NewEntity, entity);
+                }
+
+                return 1;
+            }
         }
 
         #region Singleton
@@ -69,8 +85,39 @@ namespace Quik.EntityProviders
         public static OrderbooksProvider Instance { get; } = new();
         private OrderbooksProvider()
         {
-            _securitiesResolver = EntityResolvers.GetSecurityResolver();
         }
+        #endregion
+
+        #region IDisposable
+        private void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                    _eventSignalizer.Stop();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                _disposed = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~OrderbooksProvider()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        } 
         #endregion
     }
 }

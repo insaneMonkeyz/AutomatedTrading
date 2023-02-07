@@ -58,6 +58,15 @@ namespace Quik.EntityProviders
                 return result;
             }
         }
+        protected override OrderExecutionRequestContainer CreateRequestFrom(LuaWrap state)
+        {
+            return new OrderExecutionRequestContainer
+            {
+                TradeId = ExecutionWrapper.TradeId,
+                ExchangeAssignedOrderId = ExecutionWrapper.ExchangeOrderId
+            };
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Order? ResolveOrderOfExecution(LuaWrap state)
         {

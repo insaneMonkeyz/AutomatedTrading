@@ -10,6 +10,7 @@ using GetItemParams = Quik.EntityProviders.QuikApiWrappers.TableWrapper.GetParam
 using GetCsv1Param = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
 using GetCsvNoParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
 using GetSecurityParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method2Params<Quik.Entities.Security?>;
+using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string, string, Quik.EntityProviders.RequestContainers.SecurityRequestContainer>;
 
 namespace Quik.EntityProviders
 {
@@ -72,14 +73,29 @@ namespace Quik.EntityProviders
             ClassCode = string.Empty,
             Parameter = string.Empty
         };
+        private static CallbackParameters _updatedArgs;
 
+        private static readonly object _callbackLock = new();
         private static readonly object _userRequestLock = new();
-        private static SecurityResolver _entityResolver;
+        private static SecurityResolver? _entityResolver;
+        
+        private static readonly EventSignalizer<Security> _eventSignalizer = new();
+
+        public static AllowEntityCreationFilter<SecurityRequestContainer> CreationIsApproved = delegate { return true; };
+        public static EntityEventHandler<Security> EntityChanged = delegate { };
+        public static EntityEventHandler<Security> NewEntity = delegate { };
 
         public static void Initialize()
         {
             SecurityWrapper.Set(Quik.Lua);
+            _updatedArgs.LuaProvider = Quik.Lua;
+            _updatedArgs.Callback = SecurityRequestContainer.Create;
             _entityResolver = EntityResolvers.GetSecurityResolver();
+            _eventSignalizer.Start();
+        }
+        public static void SubscribeCallback()
+        {
+            Quik.Lua.RegisterCallback(OnNewData, SecurityWrapper.CALLBACK_METHOD);
         }
 
         public static Decimal5? GetBuyMarginRequirements(Security security)
@@ -116,7 +132,7 @@ namespace Quik.EntityProviders
                 return FunctionsWrappers.ReadSpecificEntry(ref _classesCsvRequest); 
             }
         }
-        public static Security? GetSecurity(Type securityType, string ticker)
+        public static Security? Create(Type securityType, string ticker)
         {
             lock (_userRequestLock)
             {
@@ -127,7 +143,7 @@ namespace Quik.EntityProviders
                 return FunctionsWrappers.ReadSpecificEntry(ref _getSecurityRequest); 
             }
         }
-        public static Security? GetSecurity(ref SecurityRequestContainer request)
+        public static Security? Create(ref SecurityRequestContainer request)
         {
             if (!request.HasData)
             {
@@ -143,7 +159,7 @@ namespace Quik.EntityProviders
                 return FunctionsWrappers.ReadSpecificEntry(ref _getSecurityRequest);
             }
         }
-        public static void UpdateSecurity(Security security)
+        public static void Update(Security security)
         {
             lock (_userRequestLock)
             {
@@ -171,7 +187,7 @@ namespace Quik.EntityProviders
                     ? new CalendarSpread(ref container, nearterm, longterm)
                     : new CalendarSpread(ref container, expiry);
 
-                UpdateSecurity(result);
+                Update(result);
 
                 return result;
             }
@@ -193,7 +209,7 @@ namespace Quik.EntityProviders
                         ?? throw QuikApiException.ParseExceptionMsg(nameof(SecurityWrapper.Expiry), "string")
                 };
 
-                UpdateSecurity(result);
+                Update(result);
 
                 return result;
             }
@@ -212,7 +228,7 @@ namespace Quik.EntityProviders
                         ?? throw QuikApiException.ParseExceptionMsg(nameof(SecurityWrapper.Expiry), "string")
                 };
 
-                UpdateSecurity(result);
+                Update(result);
 
                 return result;
             }
@@ -259,17 +275,36 @@ namespace Quik.EntityProviders
         }
         private static Security? ResolveUnderlying(string? classCode, string? secCode)
         {
-            var request = new SecurityRequestContainer
-            {
-                ClassCode = classCode,
-                Ticker = secCode
-            };
+            var request = SecurityRequestContainer.Create(secCode, classCode);
             return _entityResolver.Resolve(ref request);
         }
 
-        static SecuritiesProvider()
+        private static int OnNewData(IntPtr state)
         {
-            SecurityWrapper.Set(Quik.Lua);
+            lock (_callbackLock)
+            {
+                _updatedArgs.LuaProvider = state;
+
+                var request = FunctionsWrappers.ReadCallbackArguments(ref _updatedArgs);
+                var entity = _entityResolver.GetFromCache(ref request);
+
+                if (entity != null)
+                {
+                    Update(entity);
+
+                    _eventSignalizer.QueueEntity<EntityEventHandler<Security>>(EntityChanged, entity);
+
+                    return 1;
+                }
+
+                if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
+                {
+                    _entityResolver.CacheEntity(ref request, entity);
+                    _eventSignalizer.QueueEntity<EntityEventHandler<Security>>(NewEntity, entity);
+                }
+
+                return 1;
+            }
         }
     }
 }

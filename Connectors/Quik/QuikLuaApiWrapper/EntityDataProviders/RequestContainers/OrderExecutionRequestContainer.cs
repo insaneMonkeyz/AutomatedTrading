@@ -5,18 +5,18 @@ namespace Quik.EntityProviders.RequestContainers
     internal struct OrderExecutionRequestContainer : IRequestContainer<OrderExecution>, IEquatable<OrderExecutionRequestContainer>
     {
         public long TradeId;
-        public long ExchangeAssignedOrderId;
+        public string? ExchangeAssignedOrderId;
 
         public bool HasData 
         {
-            get => TradeId != 0 && ExchangeAssignedOrderId != 0;
+            get => TradeId != 0 && string.IsNullOrWhiteSpace(ExchangeAssignedOrderId);
         }
 
         public bool IsMatching(OrderExecution? entity)
         {
             return entity is OrderExecution orderExecution
                 && TradeId == orderExecution.TradeId
-                && ExchangeAssignedOrderId == orderExecution.Order.ExchangeAssignedId;
+                && ExchangeAssignedOrderId == orderExecution.Order.ExchangeAssignedIdString;
         }
 
         public bool Equals(OrderExecutionRequestContainer obj)

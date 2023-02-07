@@ -41,7 +41,7 @@ namespace Quik.EntityProviders.RequestContainers
         public override string ToString()
         {
             return HasData 
-                ? ExchangeAssignedId.ToString()
+                ? ExchangeAssignedId
                 : "N/A";
         }
     }
