@@ -13,15 +13,17 @@ namespace Quik.Entities
         public long OrderId { get; init; }
         public string AccountId { get; init; }
         public string ClientCode { get; init; }
-
-        Guid IOrderExecution.AccountId => throw new NotImplementedException();
-        IQuote IOrderExecution.Quote => Quote;
-        public IOrder Order { get; }
-        public ISecurity Security { get; }
+        public Order Order { get; }
+        public Security Security { get; }
         public Quote Quote { get; init; }
         public DateTimeOffset TimeStamp { get; init; }
 
-        public OrderExecution(IOrder order)
+        Guid IOrderExecution.AccountId => throw new NotImplementedException();
+        IQuote IOrderExecution.Quote => Quote;
+        IOrder IOrderExecution.Order => Order;
+        ISecurity IOrderExecution.Security => Security;
+
+        public OrderExecution(Order order)
         {
             Order = order ?? throw new ArgumentNullException(nameof(order));
             Security = order.Security;

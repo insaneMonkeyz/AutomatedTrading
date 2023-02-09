@@ -118,7 +118,7 @@ namespace Quik.Entities
             }
         }
 
-        public void UseQuotes(QuotesReader reader, long marketDepth)
+        public void UseQuotes(QuotesReader reader)
         {
             lock (_bidsLock)
             {

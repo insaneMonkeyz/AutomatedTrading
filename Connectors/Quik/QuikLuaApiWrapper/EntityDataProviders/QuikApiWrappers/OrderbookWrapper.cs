@@ -19,46 +19,30 @@ namespace Quik.EntityProviders.QuikApiWrappers
         private const string CLASS_CODE = "class_code";
         private const string TICKER = "sec_code";
 
-        private static LuaWrap _stack;
-
         public static readonly object Lock = new();
-
-        public static void Set(LuaWrap stack)
-        {
-            _stack = stack;
-        }
-
-        public static string? ClassCode
-        {
-            get => _stack.ReadRowValueString(CLASS_CODE);
-        }
-        public static string? Ticker
-        {
-            get => _stack.ReadRowValueString(TICKER);
-        }
 
         public static void UpdateOrderBook(OrderBook book)
         {
-            lock (global::Quik.Quik.SyncRoot)
+            lock (Quik.SyncRoot)
             {
-                if (_stack.ExecFunction(GET_METOD, Api.TYPE_TABLE, book.Security.ClassCode, book.Security.Ticker))
+                if (Quik.Lua.ExecFunction(GET_METOD, Api.TYPE_TABLE, book.Security.ClassCode, book.Security.Ticker))
                 {
-                    if (_stack.ReadRowValueLong(BIDS_COUNT) > 0 &&
-                        _stack.PushColumnValueTable(BIDS))
+                    if (Quik.Lua.ReadRowValueLong(BIDS_COUNT) > 0 &&
+                        Quik.Lua.PushColumnValueTable(BIDS))
                     {
                         book.UseBids(ReadQuotes);
-                        _stack.PopFromStack();
+                        Quik.Lua.PopFromStack();
                     }
 
-                    if (_stack.ReadRowValueLong(ASKS_COUNT) > 0 &&
-                        _stack.PushColumnValueTable(ASKS))
+                    if (Quik.Lua.ReadRowValueLong(ASKS_COUNT) > 0 &&
+                        Quik.Lua.PushColumnValueTable(ASKS))
                     {
                         book.UseAsks(ReadQuotes);
-                        _stack.PopFromStack();
+                        Quik.Lua.PopFromStack();
                     }
                 }
 
-                _stack.PopFromStack();
+                Quik.Lua.PopFromStack();
             }
         }
 
@@ -67,52 +51,54 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             const int LAST_ITEM = -1;
 
-            var dataLen = (long)Api.lua_rawlen(_stack, LAST_ITEM);
+            var dataLen = (long)Api.lua_rawlen(Quik.Lua, LAST_ITEM);
             var quotesSize = Math.Min(dataLen, marketDepth);
 
-            if (quotesSize > 0)
+            if (quotesSize <= 0)
             {
-                long passed = 0;
-                long thisIndex = 0;
-                long luaIndex = 1;
-                long increment = 1;
+                return;
+            }
 
-                if (operation == Operations.Buy && quotesSize != 1)
+            long passed = 0;
+            long thisIndex = 0;
+            long luaIndex = 1;
+            long increment = 1;
+
+            if (operation == Operations.Buy && quotesSize != 1)
+            {
+                luaIndex = dataLen - quotesSize - 1;
+                thisIndex = quotesSize - 1;
+                increment = -1;
+            }
+
+            while (passed < quotesSize)
+            {
+                if (Api.lua_rawgeti(Quik.Lua, LAST_ITEM, luaIndex++) != Api.TYPE_TABLE)
                 {
-                    luaIndex = dataLen - quotesSize - 1;
-                    thisIndex = quotesSize - 1;
-                    increment = -1;
+                    Quik.Lua.PopFromStack();
+                    throw new QuikApiException("Array of quotes ended prior than expected. ");
                 }
 
-                while (passed < quotesSize)
+                if (Quik.Lua.TryFetchDecimalFromTable(PRICE, out Decimal5 price) &&
+                    Quik.Lua.TryFetchLongFromTable(SIZE, out long size))
                 {
-                    if (Api.lua_rawgeti(_stack, LAST_ITEM, luaIndex++) != Api.TYPE_TABLE)
+                    quotes[thisIndex] = new Quote
                     {
-                        _stack.PopFromStack();
-                        throw new QuikApiException("Array of quotes ended prior than expected. ");
-                    }
+                        Price = price,
+                        Size = size,
+                        Operation = operation
+                    };
 
-                    if (_stack.TryFetchDecimalFromTable(PRICE, out Decimal5 price) &&
-                        _stack.TryFetchLongFromTable(SIZE, out long size))
-                    {
-                        quotes[thisIndex] = new Quote
-                        {
-                            Price = price,
-                            Size = size,
-                            Operation = operation
-                        };
+                    Quik.Lua.PopFromStack();
 
-                        _stack.PopFromStack();
+                    thisIndex += increment;
+                    passed++;
+                }
+                else
+                {
+                    Quik.Lua.PopFromStack();
 
-                        thisIndex += increment;
-                        passed++;
-                    }
-                    else
-                    {
-                        _stack.PopFromStack();
-
-                        break;
-                    }
+                    break;
                 }
             }
         }

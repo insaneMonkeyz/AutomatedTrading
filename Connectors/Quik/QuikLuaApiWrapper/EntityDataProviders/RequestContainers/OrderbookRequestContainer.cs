@@ -6,6 +6,13 @@ namespace Quik.EntityProviders.RequestContainers
     {
         public SecurityRequestContainer SecurityRequest;
 
+        public static OrderbookRequestContainer Create(string? ticker, string? classcode)
+        {
+            return new OrderbookRequestContainer {
+                SecurityRequest = SecurityRequestContainer.Create(ticker, classcode)
+            };
+        }
+
         public bool HasData => SecurityRequest.HasData;
         public bool IsMatching(OrderBook? entity)
         {

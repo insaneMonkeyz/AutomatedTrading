@@ -12,7 +12,7 @@ namespace Quik.Entities
         private const int DEFAULT_EXECUTIONS_LIST_SIZE = 10;
 
         private Security _security;
-        private string _exchangeAssignedId;
+        private string? _exchangeAssignedIdString;
 
         public Security Security
         {
@@ -23,12 +23,17 @@ namespace Quik.Entities
         public List<OrderExecution> Executions { get; } = new(DEFAULT_EXECUTIONS_LIST_SIZE);
 
         public OrderStates State { get; set; }
-        public string ExchangeAssignedIdString
-        {
-            get => _exchangeAssignedId ??= ExchangeAssignedId.ToString();
+        public string? ExchangeAssignedIdString 
+        { 
+            get => _exchangeAssignedIdString; 
+            internal set
+            {
+                _exchangeAssignedIdString = value ?? throw new ArgumentNullException(nameof(value));
+                ExchangeAssignedId = long.Parse(value);
+            }
         }
-        public long ExchangeAssignedId { get; set; }
-        public long InternalId { get; init; }
+        public long ExchangeAssignedId { get; private set; }
+        public long TransactionId { get; init; }
         public bool IsLimit { get; init; }
         public long RemainingSize { get; set; }
         public long ExecutedSize => Quote.Size - RemainingSize;

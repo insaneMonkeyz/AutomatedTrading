@@ -11,7 +11,7 @@
         /// Original quotes, not copies, are passed to the reader method.
         /// </summary>
         /// <param name="reader">A method that operates on quotes</param>
-        void UseQuotes(QuotesReader reader, long marketDepth);
+        void UseQuotes(QuotesReader reader);
         void UseBids(OneSideQuotesReader reader);
         void UseAsks(OneSideQuotesReader reader);
     }

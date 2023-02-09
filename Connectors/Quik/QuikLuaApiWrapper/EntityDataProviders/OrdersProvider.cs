@@ -90,6 +90,7 @@ namespace Quik.EntityProviders
                     ExecutionMode = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
                     Expiry = OrdersWrapper.Expiry ?? default,
                     IsLimit = flags.HasFlag(OrderFlags.IsLimitOrder),
+                    TransactionId = OrdersWrapper.TransactionId,                    
                     Quote = new Quote
                     {
                         Price = OrdersWrapper.Price,
@@ -102,7 +103,7 @@ namespace Quik.EntityProviders
 
                 Update(order, state);
 
-                return order; 
+                return order;
             }
         }
         public override void Update(Order entity)
@@ -121,6 +122,15 @@ namespace Quik.EntityProviders
             lock (OrderbookWrapper.Lock)
             {
                 OrdersWrapper.Set(state);
+
+                if (OrdersWrapper.ExchangeOrderId is string orderId && !string.IsNullOrEmpty(orderId))
+                {
+                    entity.ExchangeAssignedIdString = orderId;
+                }
+                else
+                {
+                    $"Order id was not assigned to {entity} because it was not provided in the feed".DebugPrintWarning();
+                }
 
                 var flags = OrdersWrapper.Flags;
 
