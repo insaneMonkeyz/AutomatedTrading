@@ -1,12 +1,17 @@
-﻿using Quik.EntityProviders.QuikApiWrappers;
+﻿using BasicConcepts;
+using Quik.Entities;
+using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
+
+using static Quik.Quik;
 
 namespace Quik.EntityProviders
 {
     internal delegate void EntityEventHandler<T>(T entity);
     internal delegate TEntity? GetChangingEntityHandler<TEntity, TRequestContainer>(TRequestContainer dummy);
-    internal delegate bool AllowEntityCreationFilter<TRequestContainer>(ref TRequestContainer request);
      
     /// <summary>
     /// Fetches business entity from quik
@@ -29,7 +34,6 @@ namespace Quik.EntityProviders
         protected abstract string AllEntitiesTable { get; }
         protected abstract Action<LuaWrap> SetWrapper { get; }
 
-        public AllowEntityCreationFilter<TRequestContainer> CreationIsApproved = delegate { return true; };
         public EntityEventHandler<TEntity> NewEntity = delegate { };
 
         public void SubscribeCallback()
@@ -51,13 +55,10 @@ namespace Quik.EntityProviders
         }
         public    abstract TEntity? Create(ref TRequestContainer request);
         protected abstract TEntity? Create(LuaWrap state);
-        protected abstract TRequestContainer CreateRequestFrom(LuaWrap state);
 
         protected virtual int OnNewData(IntPtr state)
         {
-            var request = CreateRequestFrom(state);
-
-            if (CreationIsApproved(ref request) && Create(state) is TEntity entity)
+            if (Create(state) is TEntity entity)
             {
                 _eventSignalizer.QueueEntity<EntityEventHandler<TEntity>>(NewEntity, entity);
             }
@@ -66,7 +67,6 @@ namespace Quik.EntityProviders
         }
 
         #region IDisposable
-        protected virtual void DisposeInternal() { }
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -74,9 +74,6 @@ namespace Quik.EntityProviders
                 if (disposing)
                 {
                     _eventSignalizer.Stop();
-                    NewEntity = delegate { };
-                    CreationIsApproved = delegate { return false; };
-                    DisposeInternal();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

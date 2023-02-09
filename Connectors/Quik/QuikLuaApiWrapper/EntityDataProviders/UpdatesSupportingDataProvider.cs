@@ -10,7 +10,7 @@ namespace Quik.EntityProviders
             where TRequestContainer : struct, IRequestContainer<TEntity>
             where TEntity : class, INotifyEntityUpdated
     {
-        protected EntityResolver<TRequestContainer, TEntity>? _entityResolver;
+        protected EntityResolver<TRequestContainer, TEntity> _entityResolver;
 
         public EntityEventHandler<TEntity> EntityChanged = delegate { };
 
@@ -21,6 +21,7 @@ namespace Quik.EntityProviders
         }
         public abstract void Update(TEntity entity);
         protected abstract void Update(TEntity entity, LuaWrap state);
+        protected abstract TRequestContainer CreateRequestFrom(LuaWrap state);
 
         protected override int OnNewData(IntPtr state)
         {
@@ -41,7 +42,9 @@ namespace Quik.EntityProviders
                     return 1;
                 }
 
-                if (CreationIsApproved(ref request) && (entity = Create(state)) != null)
+                entity = Create(state);
+
+                if (entity != null)
                 {
                     _entityResolver.CacheEntity(ref request, entity);
                     _eventSignalizer.QueueEntity<EntityEventHandler<TEntity>>(NewEntity, entity);
@@ -49,11 +52,6 @@ namespace Quik.EntityProviders
 
                 return 1;
             }
-        }
-
-        protected override void DisposeInternal()
-        {
-            EntityChanged = delegate { };
         }
     }
 }

@@ -47,7 +47,7 @@ namespace Quik.Lua
         }
         internal void PrintStack(string comment = null)
         {
-            //return;
+            return;
             Debug.Print(comment != null
                 ? $"========= {ThreadName} {_state} {comment} ========="
                 : $"========= {ThreadName} {_state} =========");

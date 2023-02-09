@@ -1,15 +1,9 @@
-﻿using Quik.Lua;
-using static Quik.Quik;
+﻿using static Quik.Quik;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
     internal static class FunctionsWrappers
     {
-        public struct ReadCallbackArgs<TArg0, TArg1, TResult>
-        {
-            public LuaWrap LuaProvider;
-            public Func<TArg0, TArg1, TResult> Callback;
-        }
         public struct VoidCallback1Param<TReturn>
         {
             public TReturn Arg0;
@@ -234,15 +228,6 @@ namespace Quik.EntityProviders.QuikApiWrappers
             }
 
             return result;
-        }
-        public static TResult ReadCallbackArguments<TResult>(ref ReadCallbackArgs<string, string, TResult> callbackReaderParams)
-        {
-            lock (SyncRoot)
-            {
-                return callbackReaderParams.Callback(
-                    callbackReaderParams.LuaProvider.PopString(),
-                    callbackReaderParams.LuaProvider.PopString());
-            }
         }
     }
 }

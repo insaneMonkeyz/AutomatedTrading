@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Text;
+
 using Quik.EntityProviders;
-using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
 
 namespace Quik
@@ -33,10 +32,8 @@ namespace Quik
 
                 //AccountsProvider.Instance.SubscribeCallback(lua);
                 //DerivativesBalanceProvider.Instance.SubscribeCallback();
-                SecuritiesProvider.SubscribeCallback();
                 OrdersProvider.Instance.SubscribeCallback();
                 ExecutionsProvider.Instance.SubscribeCallback();
-                OrderbooksProvider.Instance.SubscribeCallback();
             }
             catch (Exception ex)
             {
@@ -53,14 +50,9 @@ namespace Quik
 
             try
             {
-                SecuritiesProvider.CreationIsApproved = (ref SecurityRequestContainer request) =>
-                {
-                    return false;
-                };
                 SecuritiesProvider.Initialize();
                 OrdersProvider.Instance.Initialize();
                 ExecutionsProvider.Instance.Initialize();
-                OrderbooksProvider.Instance.Initialize();
 
                 Api.lua_pushstring(Lua, "one");
                 Api.lua_pushstring(Lua, "two");
@@ -124,6 +116,8 @@ namespace Quik
                     Debug.Print($"-- {DateTime.Now:O} ORDER CHANGED {order}");
                 };
 
+                Debugger.Launch();
+
                 var execs = ExecutionsProvider.Instance.GetAllEntities();
 
                 foreach (var exec in execs)
@@ -133,49 +127,6 @@ namespace Quik
                 ExecutionsProvider.Instance.NewEntity = (exec) =>
                 {
                     Debug.Print($"-- {DateTime.Now:O} NEW ENTITY {exec}");
-                };
-
-                Debugger.Launch();
-                var sec = orders.Last().Security;
-                var bookRequest = new OrderbookRequestContainer
-                {
-                    SecurityRequest = new()
-                    {
-                        Ticker = sec.Ticker,
-                        ClassCode = sec.ClassCode
-                    }
-                };
-                var book = OrderbooksProvider.Instance.Create(ref bookRequest);
-
-                OrderbooksProvider.Instance.EntityChanged = (b) =>
-                {
-                    b.UseQuotes((bids, asks, depth) =>
-                    {
-                        var maxdepth = Math.Min(depth, 5);
-
-                        if (maxdepth <= 0)
-                        {
-                            "Zero size orderbook received".DebugPrintWarning();
-                        }
-
-                        var sb = new StringBuilder();
-
-                        sb.AppendLine("-------------------------");
-
-                        for (int i = 0; i < maxdepth; i++)
-                        {
-                            sb.AppendLine(asks[i].ToString());
-                        }
-
-                        for (int i = 0; i < maxdepth; i++)
-                        {
-                            sb.AppendLine(bids[i].ToString());
-                        }
-
-                        sb.AppendLine("-------------------------");
-
-                        Debug.Print(sb.ToString());
-                    });
                 };
 
                 //==========================================================================
@@ -191,7 +142,7 @@ namespace Quik
 
                 while (true)
                 {
-                    Thread.Sleep(50);
+                    Thread.Sleep(10);
                 }
             }
             catch (Exception ex)

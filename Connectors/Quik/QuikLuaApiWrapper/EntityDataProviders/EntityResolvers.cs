@@ -29,7 +29,7 @@ namespace Quik.EntityProviders
                         SecuritiesProvider.GetAvailableClasses,
                         SecuritiesProvider.GetAvailableSecuritiesOfType);
 
-                    _securityResolver = new SecurityResolver(SecuritiesProvider.Create, map);
+                    _securityResolver = new SecurityResolver(SecuritiesProvider.GetSecurity, map);
 
                     // TODO: make sure it is invoked every time after the clearing
                     map.Initialize();
