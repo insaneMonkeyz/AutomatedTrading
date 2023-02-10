@@ -67,7 +67,7 @@ namespace Quik.EntityProviders
                 .First()
                 .Invoke(null, null) as EntityResolver<TRequest, TEntity>;
 
-#pragma warning restore
+#pragma warning restore CS8603
         }
     }
 }

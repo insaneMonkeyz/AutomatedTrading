@@ -17,8 +17,29 @@ namespace Quik.EntityProviders
     
     internal class DerivativesBalanceProvider : UpdatableEntitiesProvider<SecurityBalance, SecurityBalanceRequestContainer>
     {
-        private static UpdateParams _updateParams;
-        private static CreateParams _createParams;
+        private static UpdateParams _updateParams = new()
+        {
+            Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
+            Method = DerivativesPositionsWrapper.GET_METOD,
+            ReturnType = Api.TYPE_TABLE,
+            Callback = new()
+            {
+                Arg1 = default,
+                Invoke = default
+            },
+        };
+        private static CreateParams _createParams = new()
+        {
+            Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
+            Method = DerivativesPositionsWrapper.GET_METOD,
+            ReturnType = Api.TYPE_TABLE,
+            Callback = new()
+            {
+                Arg = default,
+                Invoke = default,
+                DefaultValue = null
+            },
+        };
 
         private readonly object _securityRequestLock = new();
         private SecurityResolver _securitiesResolver;
@@ -27,35 +48,16 @@ namespace Quik.EntityProviders
         protected override string AllEntitiesTable => DerivativesPositionsWrapper.NAME;
         protected override Action<LuaWrap> SetWrapper => DerivativesPositionsWrapper.Set;
 
-        public override void Initialize()
+        public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
-            _updateParams = new()
-            {
-                Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
-                Method = DerivativesPositionsWrapper.GET_METOD,
-                ReturnType = Api.TYPE_TABLE,
-                Callback = new()
-                {
-                    Arg1 = Quik.Lua,
-                    Invoke = Update
-                },
-            };
-            _createParams = new()
-            {
-                Arg3 = DerivativesPositionsWrapper.LIMIT_TYPE,
-                Method = DerivativesPositionsWrapper.GET_METOD,
-                ReturnType = Api.TYPE_TABLE,
-                Callback = new()
-                {
-                    Arg = Quik.Lua,
-                    Invoke = Create,
-                    DefaultValue = null
-                },
-            };
+            _updateParams.Callback.Invoke = Update;
+            _createParams.Callback.Invoke = Create;
+            _updateParams.Callback.Arg1 = Quik.Lua;
+            _createParams.Callback.Arg = Quik.Lua;
 
             _securitiesResolver = EntityResolvers.GetSecurityResolver();
 
-            base.Initialize();
+            base.Initialize(entityNotificationLoop);
         }
         public override SecurityBalance? Create(ref SecurityBalanceRequestContainer request)
         {

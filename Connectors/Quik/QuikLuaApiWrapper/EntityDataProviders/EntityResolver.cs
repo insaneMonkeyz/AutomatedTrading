@@ -9,6 +9,7 @@ namespace Quik.EntityProviders
         where TEntity : class
         where TRequest : struct, IRequestContainer<TEntity>
     {
+        private readonly object _resolveInProgress = new();
         private readonly Dictionary<int, TEntity> _cache;
         private readonly ResolveEntityHandler<TRequest, TEntity>? _fetchFromQuik;
 
@@ -20,7 +21,10 @@ namespace Quik.EntityProviders
 
         public void CacheEntity(ref TRequest request, TEntity entity)
         {
-            _cache[request.GetHashCode()] = entity;
+            lock (_resolveInProgress)
+            {
+                _cache[request.GetHashCode()] = entity; 
+            }
         }
         public virtual TEntity? GetFromCache(ref TRequest request)
         {
@@ -30,7 +34,10 @@ namespace Quik.EntityProviders
                 return default;
             }
 
-            return GetFromCacheInternal(ref request);
+            lock (_resolveInProgress)
+            {
+                return GetFromCacheInternal(ref request); 
+            }
         }
         public virtual TEntity? Resolve(ref TRequest request)
         {
@@ -40,19 +47,22 @@ namespace Quik.EntityProviders
                 return default;
             }
 
-            if (GetFromCacheInternal(ref request) is TEntity entity)
+            lock (_resolveInProgress)
             {
-                return entity;
+                if (GetFromCacheInternal(ref request) is TEntity entity)
+                {
+                    return entity;
+                }
+
+                entity = _fetchFromQuik?.Invoke(ref request);
+
+                if (entity != null)
+                {
+                    _cache.Add(request.GetHashCode(), entity);
+                }
+
+                return entity; 
             }
-
-            entity = _fetchFromQuik?.Invoke(ref request);
-
-            if(entity != null)
-            {
-                _cache.Add(request.GetHashCode(), entity);
-            }
-
-            return entity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

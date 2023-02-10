@@ -18,10 +18,6 @@ namespace Quik.EntityProviders
         protected override string AllEntitiesTable => ExecutionWrapper.NAME;
         protected override Action<LuaWrap> SetWrapper => ExecutionWrapper.Set;
 
-        public override void Initialize()
-        {
-            base.Initialize();
-        }
         public override OrderExecution? Create(ref OrderExecutionRequestContainer request)
         {
             throw new NotImplementedException("Need to implement 'SearchItems' from quik API in order " +

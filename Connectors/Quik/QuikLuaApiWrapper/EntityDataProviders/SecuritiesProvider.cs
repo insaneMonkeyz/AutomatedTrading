@@ -154,20 +154,6 @@ namespace Quik.EntityProviders
                 return FunctionsWrappers.ReadSpecificEntry(ref _classesCsvRequest); 
             }
         }
-        public static Security? Create(Type securityType, string ticker)
-        {
-#if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
-#endif
-            lock (_userRequestLock)
-            {
-                _getSecurityRequest.Action = _securityTypeToCreateMethod[securityType];
-                _getSecurityRequest.Arg0 = _securityTypeToClassCode[securityType];
-                _getSecurityRequest.Arg1 = ticker;
-
-                return FunctionsWrappers.ReadSpecificEntry(ref _getSecurityRequest); 
-            }
-        }
         public static Security? Create(ref SecurityRequestContainer request)
         {
 #if TRACE

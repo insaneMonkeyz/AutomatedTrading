@@ -9,21 +9,19 @@
         public event Action? Starting;
         public event Action? Stopping;
 
-        public virtual void Start()
+        public virtual void Enter()
         {
             if (!_running)
             {
                 _running = true;
-                _thread = new Thread(Loop);
-                _thread.Start();
+                Loop();
             }
         }
-        public virtual void Stop()
+        public virtual void Abort()
         {
             if (_running)
             {
                 _running = false;
-                _thread = null;
             }
         }
 

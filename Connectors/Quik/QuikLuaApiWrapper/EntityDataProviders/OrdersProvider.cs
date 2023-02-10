@@ -1,57 +1,57 @@
-﻿using BasicConcepts;
+﻿using System.Runtime.CompilerServices;
+
+using BasicConcepts;
+
 using Quik.Entities;
 using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
-using Quik.EntityProviders.QuikApiWrappers;
-
-using static Quik.Quik;
-
-using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.Lua.LuaWrap>;
-using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MultiGetMethod2Params<Quik.Lua.LuaWrap, Quik.Entities.Order?>;
-using SecurityResolver = Quik.EntityProviders.EntityResolver<Quik.EntityProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
-using System.Runtime.CompilerServices;
 using Quik.Lua;
-using Quik.EntityProviders.QuikApiWrappers;
+
+using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MultiGetMethod2Params<Quik.Lua.LuaWrap, Quik.Entities.Order?>;
+using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.Lua.LuaWrap>;
 
 namespace Quik.EntityProviders
 {
     internal class OrdersProvider : UpdatableEntitiesProvider<Order, OrderRequestContainer>
     {
         private readonly SecurityResolver _securityResolver = EntityResolvers.GetSecurityResolver();
-        private UpdateParams _updateParams;
-        private CreateParams _createParams;
+        private UpdateParams _updateParams = new()
+        {
+            Method = OrdersWrapper.GET_METOD,
+            ReturnType1 = Api.TYPE_TABLE,
+            ReturnType2 = Api.TYPE_NUMBER,
+            Callback = new()
+            {
+                Arg1 = default,
+                Invoke = default
+            }
+        };
+        private CreateParams _createParams = new()
+        {
+            Method = OrdersWrapper.GET_METOD,
+            ReturnType1 = Api.TYPE_TABLE,
+            ReturnType2 = Api.TYPE_NUMBER,
+            Callback = new()
+            {
+                Arg = default,
+                Invoke = default,
+                DefaultValue = null
+            }
+        };
 
         protected override string QuikCallbackMethod => OrdersWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => OrdersWrapper.NAME;
         protected override Action<LuaWrap> SetWrapper => OrdersWrapper.Set;
 
-        public override void Initialize()
+        public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
-            _updateParams = new()
-            {
-                Method = OrdersWrapper.GET_METOD,
-                ReturnType1 = Api.TYPE_TABLE,
-                ReturnType2 = Api.TYPE_NUMBER,
-                Callback = new()
-                {
-                    Arg1 = Quik.Lua,
-                    Invoke = Update
-                }
-            };
-            _createParams = new()
-            {
-                Method = OrdersWrapper.GET_METOD,
-                ReturnType1 = Api.TYPE_TABLE,
-                ReturnType2 = Api.TYPE_NUMBER,
-                Callback = new()
-                {
-                    Arg = Quik.Lua,
-                    Invoke = Create,
-                    DefaultValue = null
-                }
-            };
+            _updateParams.Callback.Invoke = Update;
+            _createParams.Callback.Invoke = Create;
+            _updateParams.Callback.Arg1 = Quik.Lua;
+            _createParams.Callback.Arg = Quik.Lua;
 
-            base.Initialize();
+            base.Initialize(entityNotificationLoop);
         }
 
         public override Order? Create(ref OrderRequestContainer request)
