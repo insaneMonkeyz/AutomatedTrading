@@ -1,53 +1,63 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Quik.EntityProviders
 {
-    internal class EventSignalizer<TEntity>
+    internal class EventSignalizer<TEntity> : IEntityEventSignalizer<TEntity>
         where TEntity : class
     {
-        private readonly ConcurrentQueue<(EntityEventHandler<TEntity>, TEntity)> _entitiesToSend = new();
-        private bool _running = false;
-        private Thread? _thread;
+        protected readonly ConcurrentQueue<(EntityEventHandler<TEntity>, TEntity)> _entitiesToSend = new();
+        private readonly ExecutionLoop _loop;
+        private bool _enabled;
+        private bool _disposed;
 
-        public void QueueEntity<THandler>(EntityEventHandler<TEntity> handler, TEntity entity)
+        public bool IsEnabled 
+        { 
+            get => _enabled; 
+            set
+            {
+                if (_enabled ^ value)
+                {
+                    if (value)
+                    {
+                        _loop.Execute += Loop; 
+                    }
+                    else
+                    {
+                        _loop.Execute -= Loop;
+                    }
+
+                    _enabled = value;
+                }
+            }
+        }
+
+        public void QueueEntity(EntityEventHandler<TEntity> handler, TEntity entity)
         {
             _entitiesToSend.Enqueue((handler, entity));
         }
-        public void Start()
+
+        protected void Loop()
         {
-            if (!_running)
+            if (_entitiesToSend.TryDequeue(out (EntityEventHandler<TEntity> Handle, TEntity Entity) param))
             {
-                _running = true;
-                _thread = new Thread(Loop);
-                _thread.Start(); 
-            }
-        }
-        public void Stop()
-        {
-            if (_running)
-            {
-                _running = false;
-                _thread = null;
-                _entitiesToSend.Clear();
+                param.Handle(param.Entity);
             }
         }
 
-        private void Loop()
+        public EventSignalizer(ExecutionLoop loop)
         {
-            while (_running)
-            {
-                while (_entitiesToSend.TryDequeue(out (EntityEventHandler<TEntity> Handle, TEntity Entity) param))
-                {
-                    try
-                    {
-                        param.Handle(param.Entity);
-                    }
-                    catch (Exception e)
-                    {
-                        e.ToString().DebugPrintWarning();
-                    }
-                }
-            }
+            _loop = loop;
+        }
+
+        public void Dispose()
+        {
+            if(_disposed) return;
+
+            _disposed = true;
+            _entitiesToSend.Clear();
+            IsEnabled= false;
         }
     }
 }

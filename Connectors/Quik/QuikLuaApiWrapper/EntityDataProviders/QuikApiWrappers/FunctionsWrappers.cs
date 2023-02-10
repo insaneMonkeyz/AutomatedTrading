@@ -189,6 +189,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static T ReadSpecificEntry<T>(ref Method2Params<T> param)
         {
+            param.Method.DebugPrintQuikFunctionCall(param.Arg0, param.Arg1);
+
             T result = param.DefaultValue;
 
             lock (SyncRoot)
@@ -205,6 +207,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static T ReadSpecificEntry<T>(ref Method1Param<T> param)
         {
+            param.Method.DebugPrintQuikFunctionCall(param.Arg0);
+
             T result = param.DefaultValue;
 
             lock (SyncRoot)
@@ -221,6 +225,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static T ReadSpecificEntry<T>(ref MethodNoParams<T> param)
         {
+            param.Method.DebugPrintQuikFunctionCall();
+
             T result = param.DefaultValue;
 
             lock (SyncRoot)
@@ -235,13 +241,16 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
             return result;
         }
-        public static TResult ReadCallbackArguments<TResult>(ref ReadCallbackArgs<string, string, TResult> callbackReaderParams)
+        public static TResult ReadCallbackArguments<TResult>(ref ReadCallbackArgs<string?, string?, TResult> callbackReaderParams)
         {
             lock (SyncRoot)
             {
-                return callbackReaderParams.Callback(
-                    callbackReaderParams.LuaProvider.PopString(),
-                    callbackReaderParams.LuaProvider.PopString());
+                // order of reading is important.
+                // the last item is on top of the stack
+                var arg1 = callbackReaderParams.LuaProvider.ReadAsString();
+                var arg0 = callbackReaderParams.LuaProvider.ReadAsString(-2);
+
+                return callbackReaderParams.Callback(arg0, arg1);
             }
         }
     }

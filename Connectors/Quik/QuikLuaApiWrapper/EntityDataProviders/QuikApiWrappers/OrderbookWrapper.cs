@@ -21,10 +21,14 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
         public static readonly object Lock = new();
 
-        public static void UpdateOrderBook(OrderBook book)
+        public static bool UpdateOrderBook(OrderBook book)
         {
             lock (Quik.SyncRoot)
             {
+                GET_METOD.DebugPrintQuikFunctionCall(book.Security.ClassCode, book.Security.Ticker);
+
+                bool updated = false;
+
                 if (Quik.Lua.ExecFunction(GET_METOD, Api.TYPE_TABLE, book.Security.ClassCode, book.Security.Ticker))
                 {
                     if (Quik.Lua.ReadRowValueLong(BIDS_COUNT) > 0 &&
@@ -32,6 +36,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
                     {
                         book.UseBids(ReadQuotes);
                         Quik.Lua.PopFromStack();
+                        updated = true;
                     }
 
                     if (Quik.Lua.ReadRowValueLong(ASKS_COUNT) > 0 &&
@@ -39,10 +44,13 @@ namespace Quik.EntityProviders.QuikApiWrappers
                     {
                         book.UseAsks(ReadQuotes);
                         Quik.Lua.PopFromStack();
+                        updated = true;
                     }
                 }
 
                 Quik.Lua.PopFromStack();
+
+                return updated;
             }
         }
 

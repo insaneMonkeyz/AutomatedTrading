@@ -1,4 +1,5 @@
-﻿using Quik.EntityProviders.QuikApiWrappers;
+﻿using System.Diagnostics;
+using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
 
@@ -20,7 +21,7 @@ namespace Quik.EntityProviders
         where TRequestContainer : struct, IRequestContainer<TEntity>
         where TEntity : class
     {
-        protected readonly EventSignalizer<TEntity> _eventSignalizer = new();
+        protected IEntityEventSignalizer<TEntity> _eventSignalizer = new DirectEntitySignalizer<TEntity>();
         protected readonly object _requestInProgressLock = new();
         protected readonly object _callbackLock = new();
         private bool _disposed;
@@ -36,10 +37,13 @@ namespace Quik.EntityProviders
         {
             Quik.Lua.RegisterCallback(OnNewData, QuikCallbackMethod);
         }
-        public virtual void Initialize()
+        public virtual void Initialize(ExecutionLoop entityNotificationLoop)
         {
             SetWrapper(Quik.Lua);
-            _eventSignalizer.Start();
+            _eventSignalizer = new EventSignalizer<TEntity>(entityNotificationLoop)
+            {
+                IsEnabled = true
+            };
         }
 
         public virtual List<TEntity> GetAllEntities()
@@ -55,14 +59,27 @@ namespace Quik.EntityProviders
 
         protected virtual int OnNewData(IntPtr state)
         {
-            var request = CreateRequestFrom(state);
-
-            if (CreationIsApproved(ref request) && Create(state) is TEntity entity)
+            try
             {
-                _eventSignalizer.QueueEntity<EntityEventHandler<TEntity>>(NewEntity, entity);
-            }
+                Debug.Print($"*** {this.GetType().Name}.OnNewData");
 
-            return 1;
+                lock (_callbackLock)
+                {
+                    var request = CreateRequestFrom(state);
+
+                    if (CreationIsApproved(ref request) && Create(state) is TEntity entity)
+                    {
+                        _eventSignalizer.QueueEntity(NewEntity, entity);
+                    }
+
+                    return 1;
+                }
+            }
+            catch (Exception e)
+            {
+                $"{e.Message}\n{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
+                return -1;
+            }
         }
 
         #region IDisposable
@@ -73,10 +90,10 @@ namespace Quik.EntityProviders
             {
                 if (disposing)
                 {
-                    _eventSignalizer.Stop();
-                    NewEntity = delegate { };
-                    CreationIsApproved = delegate { return false; };
                     DisposeInternal();
+                    _eventSignalizer.Dispose();
+                    NewEntity = default;
+                    CreationIsApproved = default;
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

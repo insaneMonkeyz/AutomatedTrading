@@ -28,8 +28,7 @@ namespace Quik.Entities
             get => _marketDepth; 
             set 
             {
-                if (_marketDepth > MAX_MARKET_DEPTH ||
-                    _marketDepth < MIN_MARKET_DEPTH)
+                if (_marketDepth is > MAX_MARKET_DEPTH or < MIN_MARKET_DEPTH)
                 {
                     throw new ArgumentOutOfRangeException(nameof(MarketDepth), 
                         $"Value must be between {nameof(MAX_MARKET_DEPTH)} and {MIN_MARKET_DEPTH} constants value");

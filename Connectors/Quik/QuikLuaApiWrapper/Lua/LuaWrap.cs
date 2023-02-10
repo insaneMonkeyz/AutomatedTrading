@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using BasicConcepts;
 
@@ -25,7 +26,26 @@ namespace Quik.Lua
 
         public static implicit operator IntPtr(LuaWrap state) => state._state;
         public static implicit operator LuaWrap(IntPtr pointer) => new(pointer);
+        public static bool operator ==(LuaWrap left, LuaWrap right) => left.Equals(right);
+        public static bool operator !=(LuaWrap left, LuaWrap right) => !left.Equals(right);
         #endregion
+
+        public bool Equals(LuaWrap other)
+        {
+            return _state == other._state;
+        }
+        public override bool Equals([NotNullWhen(true)] object? obj)
+        {
+            return obj is LuaWrap other && other._state == _state;
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_state, 64425674);
+        }
+        public override string ToString()
+        {
+            return _state.ToString();
+        }
 
         internal string ReadValueSafe(LuaTypes type, IntPtr pStack, int i)
         {
@@ -47,13 +67,17 @@ namespace Quik.Lua
         }
         internal void PrintStack(string comment = null)
         {
-            //return;
+            if (!GlobalParameters.TraceLuaApiCalls)
+            {
+                return; 
+            }
+
             Debug.Print(comment != null
                 ? $"========= {ThreadName} {_state} {comment} ========="
                 : $"========= {ThreadName} {_state} =========");
 
 
-            for (int i = -1; i > -4; i--)
+            for (int i = -1; i > -6; i--)
             {
                 var type = (LuaTypes)Api.lua_type(_state, i);
 
@@ -340,6 +364,17 @@ namespace Quik.Lua
 
             return null;
         }
+        internal string? ReadAsString(int index)
+        {
+            if (Api.lua_isstring(_state, index) > 0)
+            {
+                var pstr = Api.lua_tolstring(_state, index, out ulong len);
+
+                return len > 0 ? Marshal.PtrToStringAnsi(pstr, (int)len) : string.Empty;
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Reads value of a field of the table on top of the stack
@@ -529,6 +564,8 @@ namespace Quik.Lua
         }
         internal bool ExecFunction(string name, int returnType, string arg0, string arg1)
         {
+            PrintStack($"ExecFunction {name}({arg0}, {arg1})");
+
             Api.lua_getglobal(_state, name);
             Api.lua_pushstring(_state, arg0);
             Api.lua_pushstring(_state, arg1);

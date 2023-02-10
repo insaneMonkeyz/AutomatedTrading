@@ -1,4 +1,5 @@
-﻿using Quik.Entities;
+﻿using System.Diagnostics;
+using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
@@ -17,25 +18,38 @@ namespace Quik.EntityProviders
         private EntityResolver<OrderbookRequestContainer, OrderBook> _bookResolver;
         private EntityResolver<SecurityRequestContainer, Security> _securitiesResolver;
 
-        private readonly EventSignalizer<OrderBook> _eventSignalizer = new();
+        private IEntityEventSignalizer<OrderBook> _eventSignalizer = new DirectEntitySignalizer<OrderBook>();
         private readonly object _requestInProgressLock = new();
         private readonly object _callbackLock = new();
 
         private bool _disposed;
 
-        public void Initialize()
+        public void Initialize(ExecutionLoop entityNotificationLoop)
         {
+#if TRACE
+            Extentions.Trace(nameof(OrderbooksProvider));
+#endif
             _updatedArgs.Callback = OrderbookRequestContainer.Create;
             _bookResolver = EntityResolvers.GetOrderbooksResolver();
             _securitiesResolver = EntityResolvers.GetSecurityResolver();
+            _eventSignalizer = new EventSignalizer<OrderBook>(entityNotificationLoop)
+            {
+                IsEnabled = true
+            };
         }
         public void SubscribeCallback()
         {
+#if TRACE
+            Extentions.Trace(nameof(OrderbooksProvider));
+#endif
             Quik.Lua.RegisterCallback(OnNewData, OrderbookWrapper.CALLBACK_METHOD);
         }
 
         public OrderBook? Create(ref OrderbookRequestContainer request)
         {
+#if TRACE
+            Extentions.Trace(nameof(OrderbooksProvider));
+#endif
             if (_securitiesResolver.Resolve(ref request.SecurityRequest) is not Security security)
             {
                 return null;
@@ -47,13 +61,19 @@ namespace Quik.EntityProviders
 
             return book;
         }
-        public void Update(OrderBook book)
+        public bool Update(OrderBook book)
         {
-            OrderbookWrapper.UpdateOrderBook(book);
+#if TRACE
+            Extentions.Trace(nameof(OrderbooksProvider));
+#endif
+            return OrderbookWrapper.UpdateOrderBook(book);
         }
 
         private int OnNewData(IntPtr state)
         {
+#if TRACE
+            Extentions.Trace(nameof(OrderbooksProvider));
+#endif
             lock (_callbackLock)
             {
                 _updatedArgs.LuaProvider = state;
@@ -61,11 +81,9 @@ namespace Quik.EntityProviders
                 var request = FunctionsWrappers.ReadCallbackArguments(ref _updatedArgs);
                 var entity = _bookResolver.GetFromCache(ref request);
 
-                if (entity != null)
+                if (entity != null && Update(entity))
                 {
-                    Update(entity);
-
-                    _eventSignalizer.QueueEntity<EntityEventHandler<OrderBook>>(EntityChanged, entity);
+                    _eventSignalizer.QueueEntity(EntityChanged, entity);
 
                     return 1;
                 }
@@ -73,7 +91,7 @@ namespace Quik.EntityProviders
                 if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
                 {
                     _bookResolver.CacheEntity(ref request, entity);
-                    _eventSignalizer.QueueEntity<EntityEventHandler<OrderBook>>(NewEntity, entity);
+                    _eventSignalizer.QueueEntity(NewEntity, entity);
                 }
 
                 return 1;
@@ -91,12 +109,15 @@ namespace Quik.EntityProviders
         #region IDisposable
         private void Dispose(bool disposing)
         {
+#if TRACE
+            Extentions.Trace(nameof(OrderbooksProvider));
+#endif
             if (!_disposed)
             {
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects)
-                    _eventSignalizer.Stop();
+                    _eventSignalizer.Dispose();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

@@ -9,6 +9,10 @@ namespace Quik
 {
     internal static class Extentions
     {
+        public static void Trace(string className, [CallerMemberName] string methodName = "UNRESOLVED_METHOD")
+        {
+            Debug.Print($"- {className}.{methodName}");
+        }
         public static bool TryConvertToMoexExpiry(this string date, out DateTimeOffset result)
         {
             result = default;
@@ -55,6 +59,21 @@ namespace Quik
                        "=======================================================================\n" +
                        prefix + msg +
                        "\n=======================================================================";
+
+            Debug.Print(text);
+        }
+        public static void DebugPrintQuikFunctionCall(this string func, params string[] args)
+        {
+            if (!GlobalParameters.TraceQuikFunctionCalls)
+            {
+                return;
+            }
+
+            var arguments = args?.Length > 0 
+                ? string.Join(',', args)
+                : string.Empty;
+
+            var text = $"## CALLING QUIK FUNCTION {func}({arguments});";
 
             Debug.Print(text);
         }

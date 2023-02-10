@@ -22,7 +22,7 @@ namespace Quik.EntityProviders.RequestContainers
                 && entity.Ticker == Ticker;
         }
 
-        public static SecurityRequestContainer Create(string? ticker, string? classcode)
+        public static SecurityRequestContainer Create(string? classcode, string? ticker)
         {
             return new()
             {

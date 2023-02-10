@@ -7,8 +7,9 @@ namespace Quik.EntityProviders
     {
         private ClassGetter _getClasses;
         private SecuritiesByClassGetter _getSecuritiesOfClass;
-        private Dictionary<string, IEnumerable<string>> _securitiesByClasscode;
-        private Dictionary<string, string> _classcodeBySecurity;
+        private Dictionary<string, IEnumerable<string>>? _securitiesByClasscode;
+        private Dictionary<string, string>? _classcodeBySecurity;
+
         private static readonly IEnumerable<string> _emptyResult = Enumerable.Empty<string>();
 
         public int TotalSecuritiesCount { get; private set; }
@@ -35,25 +36,41 @@ namespace Quik.EntityProviders
 
         public string? GetClassCode(string ticker)
         {
-            if (_classcodeBySecurity.TryGetValue(ticker, out string? classcode))
+            try
             {
+                if (_classcodeBySecurity.TryGetValue(ticker, out string? classcode))
+                {
+                    return classcode;
+                }
+
+                classcode = _securitiesByClasscode.FirstOrDefault(map => map.Value.Contains(ticker)).Key;
+
+                if (classcode != null)
+                {
+                    _classcodeBySecurity[ticker] = classcode;
+                }
+
                 return classcode;
             }
-
-            classcode = _securitiesByClasscode.FirstOrDefault(map => map.Value.Contains(ticker)).Key;
-
-            if (classcode != null)
+            catch (NullReferenceException)
             {
-                _classcodeBySecurity[ticker] = classcode;
+                "Forgot to initialize classcode maps".DebugPrintWarning();
+                return null;
             }
-
-            return classcode;
         }
         public IEnumerable<string> GetSecurities(string classcode)
         {
-            return _securitiesByClasscode.TryGetValue(classcode, out IEnumerable<string>? securities)
-                ? securities
-                : _emptyResult;
+            try
+            {
+                return _securitiesByClasscode.TryGetValue(classcode, out IEnumerable<string>? securities)
+                        ? securities
+                        : _emptyResult;
+            }
+            catch (NullReferenceException)
+            {
+                "Forgot to initialize securities by classcode map".DebugPrintWarning();
+                return null;
+            }
         }
     }
 }

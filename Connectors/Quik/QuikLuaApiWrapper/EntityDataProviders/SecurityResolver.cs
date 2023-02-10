@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 using EntityFetcher = Quik.EntityProviders.ResolveEntityHandler<Quik.EntityProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
@@ -32,6 +33,8 @@ namespace Quik.EntityProviders
         {
             if (!string.IsNullOrWhiteSpace(request.Ticker) && string.IsNullOrWhiteSpace(request.ClassCode))
             {
+                Debugger.Launch();
+
                 request.ClassCode = _classcodesMap.GetClassCode(request.Ticker);
             }
         }

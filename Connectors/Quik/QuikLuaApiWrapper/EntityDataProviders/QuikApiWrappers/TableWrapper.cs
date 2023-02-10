@@ -68,6 +68,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static string? FetchParamEx(ref GetParamExParams param)
         {
+            GET_PARAM_EX_METHOD.DebugPrintQuikFunctionCall(param.ClassCode, param.Ticker, param.Parameter);
+
             string? result = null;
 
             lock (SyncRoot)

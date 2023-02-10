@@ -10,7 +10,8 @@ using GetItemParams = Quik.EntityProviders.QuikApiWrappers.TableWrapper.GetParam
 using GetCsv1Param = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
 using GetCsvNoParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
 using GetSecurityParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method2Params<Quik.Entities.Security?>;
-using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string, string, Quik.EntityProviders.RequestContainers.SecurityRequestContainer>;
+using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string?, string?, Quik.EntityProviders.RequestContainers.SecurityRequestContainer>;
+using System.Diagnostics;
 
 namespace Quik.EntityProviders
 {
@@ -79,19 +80,25 @@ namespace Quik.EntityProviders
         private static readonly object _userRequestLock = new();
         private static SecurityResolver? _entityResolver;
         
-        private static readonly EventSignalizer<Security> _eventSignalizer = new();
+        private static IEntityEventSignalizer<Security> _eventSignalizer = new DirectEntitySignalizer<Security>();
 
         public static AllowEntityCreationFilter<SecurityRequestContainer> CreationIsApproved = delegate { return true; };
         public static EntityEventHandler<Security> EntityChanged = delegate { };
         public static EntityEventHandler<Security> NewEntity = delegate { };
 
-        public static void Initialize()
+        public static void Initialize(ExecutionLoop entityNotificationLoop)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             SecurityWrapper.Set(Quik.Lua);
             _updatedArgs.LuaProvider = Quik.Lua;
             _updatedArgs.Callback = SecurityRequestContainer.Create;
             _entityResolver = EntityResolvers.GetSecurityResolver();
-            _eventSignalizer.Start();
+            _eventSignalizer = new EventSignalizer<Security>(entityNotificationLoop)
+            {
+                IsEnabled = true
+            };
         }
         public static void SubscribeCallback()
         {
@@ -100,15 +107,24 @@ namespace Quik.EntityProviders
 
         public static Decimal5? GetBuyMarginRequirements(Security security)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             return TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_BUY_MARGIN_REQUIREMENTS);
         }
         public static Decimal5? GetSellMarginRequirements(Security security)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             return TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
         }
 
         public static IEnumerable<string> GetAvailableSecuritiesOfType(string classcode)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             lock (_userRequestLock)
             {
                 _securitiesCsvRequest.Arg0 = classcode;
@@ -118,6 +134,9 @@ namespace Quik.EntityProviders
         }
         public static IEnumerable<string> GetAvailableSecuritiesOfType(Type type)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             lock (_userRequestLock)
             {
                 _securitiesCsvRequest.Arg0 = _securityTypeToClassCode[type];
@@ -127,6 +146,9 @@ namespace Quik.EntityProviders
         }
         public static IEnumerable<string> GetAvailableClasses()
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             lock (_userRequestLock)
             {
                 return FunctionsWrappers.ReadSpecificEntry(ref _classesCsvRequest); 
@@ -134,6 +156,9 @@ namespace Quik.EntityProviders
         }
         public static Security? Create(Type securityType, string ticker)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             lock (_userRequestLock)
             {
                 _getSecurityRequest.Action = _securityTypeToCreateMethod[securityType];
@@ -145,6 +170,9 @@ namespace Quik.EntityProviders
         }
         public static Security? Create(ref SecurityRequestContainer request)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             if (!request.HasData)
             {
                 return null;
@@ -161,6 +189,9 @@ namespace Quik.EntityProviders
         }
         public static void Update(Security security)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             lock (_userRequestLock)
             {
                 security.PriceStepValue = TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
@@ -175,6 +206,9 @@ namespace Quik.EntityProviders
 
         private static Security? CreateCalendarSpread()
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
                 var nearTermLeg = ResolveUnderlying(SecurityWrapper.NearTermLegClassCode, SecurityWrapper.NearTermLegSecCode);
@@ -196,6 +230,9 @@ namespace Quik.EntityProviders
         }
         private static Security? CreateOption()
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
                 var result = new Option(ref container)
@@ -218,6 +255,9 @@ namespace Quik.EntityProviders
         }
         private static Security? CreateFutures()
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
                 var result = new Futures(ref container)
@@ -237,6 +277,9 @@ namespace Quik.EntityProviders
         }
         private static Security? CreateStock()
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             return TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
                 ? new Stock(ref container)
                 : null;
@@ -244,6 +287,9 @@ namespace Quik.EntityProviders
         
         private static bool TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             container = new ()
             {
                 Ticker = SecurityWrapper.Ticker,
@@ -267,6 +313,9 @@ namespace Quik.EntityProviders
         }
         private static IEnumerable<string> GetCsvValues()
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             var csv = Quik.Lua.ReadAsString();
 
             return string.IsNullOrWhiteSpace(csv)
@@ -275,12 +324,18 @@ namespace Quik.EntityProviders
         }
         private static Security? ResolveUnderlying(string? classCode, string? secCode)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             var request = SecurityRequestContainer.Create(secCode, classCode);
             return _entityResolver.Resolve(ref request);
         }
 
         private static int OnNewData(IntPtr state)
         {
+#if TRACE
+            Extentions.Trace(nameof(SecuritiesProvider));
+#endif
             lock (_callbackLock)
             {
                 _updatedArgs.LuaProvider = state;
@@ -292,15 +347,14 @@ namespace Quik.EntityProviders
                 {
                     Update(entity);
 
-                    _eventSignalizer.QueueEntity<EntityEventHandler<Security>>(EntityChanged, entity);
-
+                    _eventSignalizer.QueueEntity(EntityChanged, entity);
                     return 1;
                 }
 
                 if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
                 {
                     _entityResolver.CacheEntity(ref request, entity);
-                    _eventSignalizer.QueueEntity<EntityEventHandler<Security>>(NewEntity, entity);
+                    _eventSignalizer.QueueEntity(NewEntity, entity);
                 }
 
                 return 1;

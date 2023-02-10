@@ -6,10 +6,10 @@ namespace Quik.EntityProviders.RequestContainers
     {
         public SecurityRequestContainer SecurityRequest;
 
-        public static OrderbookRequestContainer Create(string? ticker, string? classcode)
+        public static OrderbookRequestContainer Create(string? classcode, string? ticker)
         {
             return new OrderbookRequestContainer {
-                SecurityRequest = SecurityRequestContainer.Create(ticker, classcode)
+                SecurityRequest = SecurityRequestContainer.Create(classcode, ticker)
             };
         }
 
