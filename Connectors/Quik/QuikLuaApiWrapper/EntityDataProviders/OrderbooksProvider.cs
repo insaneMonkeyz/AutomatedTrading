@@ -1,10 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
-
-using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string, string, Quik.EntityProviders.RequestContainers.OrderbookRequestContainer>;
+using Quik.Lua;
+using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string?, string?, Quik.EntityProviders.RequestContainers.OrderbookRequestContainer>;
 
 namespace Quik.EntityProviders
 {
@@ -14,14 +15,21 @@ namespace Quik.EntityProviders
         public EntityEventHandler<OrderBook> EntityChanged = delegate { };
         public EntityEventHandler<OrderBook> NewEntity = delegate { };
 
-        private CallbackParameters _updatedArgs;
-        private EntityResolver<OrderbookRequestContainer, OrderBook> _bookResolver;
-        private EntityResolver<SecurityRequestContainer, Security> _securitiesResolver;
+        private CallbackParameters _requestContainerCreationArgs = new()
+        {
+            Callback = OrderbookRequestContainer.Create
+        };
+        private EntityResolver<OrderbookRequestContainer, OrderBook> _bookResolver 
+                  = NoResolver<OrderbookRequestContainer, OrderBook>.Instance;
+        private EntityResolver<SecurityRequestContainer, Security> _securitiesResolver 
+                  = NoResolver<SecurityRequestContainer, Security>.Instance;
 
+        private readonly LuaFunction _onNewDataCallback;
         private IEntityEventSignalizer<OrderBook> _eventSignalizer = new DirectEntitySignalizer<OrderBook>();
         private readonly object _requestInProgressLock = new();
         private readonly object _callbackLock = new();
 
+        private bool _initialized;
         private bool _disposed;
 
         public void Initialize(ExecutionLoop entityNotificationLoop)
@@ -29,20 +37,23 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(OrderbooksProvider));
 #endif
-            _updatedArgs.Callback = OrderbookRequestContainer.Create;
-            _bookResolver = EntityResolvers.GetOrderbooksResolver();
-            _securitiesResolver = EntityResolvers.GetSecurityResolver();
-            _eventSignalizer = new EventSignalizer<OrderBook>(entityNotificationLoop)
+            lock (_callbackLock)
             {
-                IsEnabled = true
-            };
+                _bookResolver = EntityResolvers.GetOrderbooksResolver();
+                _securitiesResolver = EntityResolvers.GetSecurityResolver();
+                _eventSignalizer = new EventSignalizer<OrderBook>(entityNotificationLoop)
+                {
+                    IsEnabled = true
+                };
+                _initialized = true; 
+            }
         }
         public void SubscribeCallback()
         {
 #if TRACE
             Extentions.Trace(nameof(OrderbooksProvider));
 #endif
-            Quik.Lua.RegisterCallback(OnNewData, OrderbookWrapper.CALLBACK_METHOD);
+            Quik.Lua.RegisterCallback(_onNewDataCallback, OrderbookWrapper.CALLBACK_METHOD);
         }
 
         public OrderBook? Create(ref OrderbookRequestContainer request)
@@ -50,7 +61,9 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(OrderbooksProvider));
 #endif
-            if (_securitiesResolver.Resolve(ref request.SecurityRequest) is not Security security)
+            EnsureInitialized();
+            
+            if(_securitiesResolver.Resolve(ref request.SecurityRequest) is not Security security)
             {
                 return null;
             }
@@ -66,6 +79,8 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(OrderbooksProvider));
 #endif
+            EnsureInitialized();
+
             return OrderbookWrapper.UpdateOrderBook(book);
         }
 
@@ -76,25 +91,42 @@ namespace Quik.EntityProviders
 #endif
             lock (_callbackLock)
             {
-                _updatedArgs.LuaProvider = state;
-
-                var request = FunctionsWrappers.ReadCallbackArguments(ref _updatedArgs);
-                var entity = _bookResolver.GetFromCache(ref request);
-
-                if (entity != null && Update(entity))
+                try
                 {
-                    _eventSignalizer.QueueEntity(EntityChanged, entity);
+                    _requestContainerCreationArgs.LuaProvider = state;
+
+                    var request = FunctionsWrappers.ReadCallbackArguments(ref _requestContainerCreationArgs);
+                    var entity = _bookResolver.GetFromCache(ref request);
+
+                    if (entity != null && Update(entity))
+                    {
+                        _eventSignalizer.QueueEntity(EntityChanged, entity);
+
+                        return 1;
+                    }
+
+                    if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
+                    {
+                        _bookResolver.CacheEntity(ref request, entity);
+                        _eventSignalizer.QueueEntity(NewEntity, entity);
+                    }
 
                     return 1;
                 }
-
-                if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
+                catch (Exception e)
                 {
-                    _bookResolver.CacheEntity(ref request, entity);
-                    _eventSignalizer.QueueEntity(NewEntity, entity);
-                }
+                    e.DebugPrintException();
 
-                return 1;
+                    return 0;
+                }
+            }
+        }
+
+        private void EnsureInitialized([CallerMemberName] string? method = null)
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException($"Calling {method ?? "METHOD_NOT_PROVIDED"} from {this.GetType().Name} before it was initialized.");
             }
         }
 
@@ -103,6 +135,7 @@ namespace Quik.EntityProviders
         public static OrderbooksProvider Instance { get; } = new();
         private OrderbooksProvider()
         {
+            _onNewDataCallback = OnNewData;
         }
         #endregion
 

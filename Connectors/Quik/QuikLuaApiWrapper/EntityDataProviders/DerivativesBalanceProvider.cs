@@ -61,10 +61,7 @@ namespace Quik.EntityProviders
         }
         public override SecurityBalance? Create(ref SecurityBalanceRequestContainer request)
         {
-            if (!request.HasData)
-            {
-                $"{nameof(SecurityBalanceRequestContainer)} request is missing essential parameters".DebugPrintWarning();
-            }
+            base.Create(ref request);
 
             lock (_requestInProgressLock)
             {
@@ -103,6 +100,8 @@ namespace Quik.EntityProviders
         }
         public override void Update(SecurityBalance entity)
         {
+            base.Update(entity);
+
             lock (_requestInProgressLock)
             {
                 _updateParams.Arg0 = entity.FirmId;

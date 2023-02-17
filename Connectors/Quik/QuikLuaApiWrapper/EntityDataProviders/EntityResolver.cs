@@ -19,7 +19,7 @@ namespace Quik.EntityProviders
             _fetchFromQuik = fetchFromQuik;
         }
 
-        public void CacheEntity(ref TRequest request, TEntity entity)
+        public virtual void CacheEntity(ref TRequest request, TEntity entity)
         {
             lock (_resolveInProgress)
             {

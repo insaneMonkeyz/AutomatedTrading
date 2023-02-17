@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
@@ -24,7 +25,9 @@ namespace Quik.EntityProviders
         protected IEntityEventSignalizer<TEntity> _eventSignalizer = new DirectEntitySignalizer<TEntity>();
         protected readonly object _requestInProgressLock = new();
         protected readonly object _callbackLock = new();
+        private readonly LuaFunction _onNewDataCallback;
         private bool _disposed;
+        private bool _initialized;
 
         protected abstract string QuikCallbackMethod { get; }
         protected abstract string AllEntitiesTable { get; }
@@ -35,10 +38,16 @@ namespace Quik.EntityProviders
 
         public void SubscribeCallback()
         {
-            Quik.Lua.RegisterCallback(OnNewData, QuikCallbackMethod);
+#if TRACE
+            this.Trace();
+#endif
+            Quik.Lua.RegisterCallback(_onNewDataCallback, QuikCallbackMethod);
         }
         public virtual void Initialize(ExecutionLoop entityNotificationLoop)
         {
+#if TRACE
+            this.Trace();
+#endif
             SetWrapper(Quik.Lua);
             _eventSignalizer = new EventSignalizer<TEntity>(entityNotificationLoop)
             {
@@ -48,12 +57,30 @@ namespace Quik.EntityProviders
 
         public virtual List<TEntity> GetAllEntities()
         {
+#if TRACE
+            this.Trace();
+#endif
+            EnsureInitialized();
+
             lock (_requestInProgressLock)
             {
                 return TableWrapper.ReadWholeTable(AllEntitiesTable, Create); 
             }
         }
-        public    abstract TEntity? Create(ref TRequestContainer request);
+        public virtual TEntity? Create(ref TRequestContainer request)
+        {
+#if TRACE
+            this.Trace();
+#endif
+            EnsureInitialized();
+
+            if (!request.HasData)
+            {
+                $"{request.GetType().Name} request is missing essential parameters".DebugPrintWarning();
+            }
+
+            return null;
+        }
         protected abstract TEntity? Create(LuaWrap state);
         protected abstract TRequestContainer CreateRequestFrom(LuaWrap state);
 
@@ -61,7 +88,9 @@ namespace Quik.EntityProviders
         {
             try
             {
-                Debug.Print($"*** {this.GetType().Name}.OnNewData");
+#if TRACE
+                this.Trace();
+#endif
 
                 lock (_callbackLock)
                 {
@@ -80,6 +109,19 @@ namespace Quik.EntityProviders
                 $"{e.Message}\n{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
                 return -1;
             }
+        }
+
+        protected void EnsureInitialized([CallerMemberName] string? method = "METHOD_NOT_PROVIDED")
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException($"Calling {method} from {this.GetType().Name} before it was initialized.");
+            }
+        }
+
+        protected DataProvider()
+        {
+            _onNewDataCallback = OnNewData;
         }
 
         #region IDisposable

@@ -33,8 +33,6 @@ namespace Quik.EntityProviders
         {
             if (!string.IsNullOrWhiteSpace(request.Ticker) && string.IsNullOrWhiteSpace(request.ClassCode))
             {
-                Debugger.Launch();
-
                 request.ClassCode = _classcodesMap.GetClassCode(request.Ticker);
             }
         }

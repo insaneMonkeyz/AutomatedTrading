@@ -21,11 +21,11 @@ namespace Quik.EntityProviders
                 {
                     if (value)
                     {
-                        _loop.Execute += Loop; 
+                        _loop.Execute += Signalize; 
                     }
                     else
                     {
-                        _loop.Execute -= Loop;
+                        _loop.Execute -= Signalize;
                     }
 
                     _enabled = value;
@@ -38,7 +38,7 @@ namespace Quik.EntityProviders
             _entitiesToSend.Enqueue((handler, entity));
         }
 
-        protected void Loop()
+        protected void Signalize()
         {
             if (_entitiesToSend.TryDequeue(out (EntityEventHandler<TEntity> Handle, TEntity Entity) param))
             {

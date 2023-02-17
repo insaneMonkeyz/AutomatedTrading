@@ -17,21 +17,29 @@ namespace Quik.EntityProviders
 
         public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
+#if TRACE
+            this.Trace();
+#endif
             _entityResolver = EntityResolvers.GetResolver<TRequestContainer, TEntity>();
             base.Initialize(entityNotificationLoop);
         }
-        public abstract void Update(TEntity entity);
+        public virtual void Update(TEntity entity)
+        {
+#if TRACE
+            this.Trace();
+#endif
+            EnsureInitialized();
+        }
         protected abstract void Update(TEntity entity, LuaWrap state);
 
         protected override int OnNewData(IntPtr state)
         {
-            // TODO: warning! this will definetely include dependencies resolving.
-            // must find a way to do it asynchronously in order not to block quik's main thread
+#if TRACE
+            this.Trace();
+#endif
 
             try
             {
-                Debug.Print($"*** {this.GetType().Name}.OnNewData");
-
                 lock (_callbackLock)
                 {
                     var request = CreateRequestFrom(state);
@@ -57,7 +65,7 @@ namespace Quik.EntityProviders
             }
             catch (Exception e)
             {
-                $"{e.Message}\n{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
+                e.DebugPrintException();
                 return -1;
             }
         }

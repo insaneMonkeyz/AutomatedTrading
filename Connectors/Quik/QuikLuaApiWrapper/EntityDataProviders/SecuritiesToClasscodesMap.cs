@@ -30,8 +30,6 @@ namespace Quik.EntityProviders
             TotalSecuritiesCount = _securitiesByClasscode.Values.Count;
 
             _classcodeBySecurity = new(TotalSecuritiesCount);
-
-            GC.Collect(3, GCCollectionMode.Forced, blocking: true, compacting: true);
         }
 
         public string? GetClassCode(string ticker)
@@ -69,7 +67,7 @@ namespace Quik.EntityProviders
             catch (NullReferenceException)
             {
                 "Forgot to initialize securities by classcode map".DebugPrintWarning();
-                return null;
+                return _emptyResult;
             }
         }
     }

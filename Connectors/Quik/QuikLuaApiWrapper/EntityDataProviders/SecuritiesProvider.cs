@@ -5,13 +5,14 @@ using Quik.Entities;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using GetItemParams = Quik.EntityProviders.QuikApiWrappers.TableWrapper.GetParamExParams;
 using GetCsv1Param = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
 using GetCsvNoParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
 using GetSecurityParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method2Params<Quik.Entities.Security?>;
 using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string?, string?, Quik.EntityProviders.RequestContainers.SecurityRequestContainer>;
-using System.Diagnostics;
 
 namespace Quik.EntityProviders
 {
@@ -74,35 +75,45 @@ namespace Quik.EntityProviders
             ClassCode = string.Empty,
             Parameter = string.Empty
         };
-        private static CallbackParameters _updatedArgs;
+        private static CallbackParameters _requestContainerCreationArgs = new()
+        {
+            Callback = SecurityRequestContainer.Create
+        };
 
+        private static readonly LuaFunction _onNewDataCallback = OnNewData;
+        private static bool _initialized;
         private static readonly object _callbackLock = new();
         private static readonly object _userRequestLock = new();
-        private static SecurityResolver? _entityResolver;
-        
+        private static EntityResolver<SecurityRequestContainer, Security> _entityResolver = NoResolver<SecurityRequestContainer, Security>.Instance;
+
         private static IEntityEventSignalizer<Security> _eventSignalizer = new DirectEntitySignalizer<Security>();
 
         public static AllowEntityCreationFilter<SecurityRequestContainer> CreationIsApproved = delegate { return true; };
         public static EntityEventHandler<Security> EntityChanged = delegate { };
         public static EntityEventHandler<Security> NewEntity = delegate { };
+        public static event Action OnInitialized = delegate { };
 
         public static void Initialize(ExecutionLoop entityNotificationLoop)
         {
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
-            SecurityWrapper.Set(Quik.Lua);
-            _updatedArgs.LuaProvider = Quik.Lua;
-            _updatedArgs.Callback = SecurityRequestContainer.Create;
-            _entityResolver = EntityResolvers.GetSecurityResolver();
-            _eventSignalizer = new EventSignalizer<Security>(entityNotificationLoop)
+            lock (_callbackLock)
             {
-                IsEnabled = true
-            };
+                SecurityWrapper.Set(Quik.Lua);
+                _entityResolver = EntityResolvers.GetSecurityResolver();
+                _eventSignalizer = new EventSignalizer<Security>(entityNotificationLoop)
+                {
+                    IsEnabled = true
+                };
+                _initialized = true;
+
+                OnInitialized(); 
+            }
         }
         public static void SubscribeCallback()
         {
-            Quik.Lua.RegisterCallback(OnNewData, SecurityWrapper.CALLBACK_METHOD);
+            Quik.Lua.RegisterCallback(_onNewDataCallback, SecurityWrapper.CALLBACK_METHOD);
         }
 
         public static Decimal5? GetBuyMarginRequirements(Security security)
@@ -110,6 +121,8 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
+            EnsureInitialized();
+            
             return TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_BUY_MARGIN_REQUIREMENTS);
         }
         public static Decimal5? GetSellMarginRequirements(Security security)
@@ -117,6 +130,8 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
+            EnsureInitialized();
+
             return TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
         }
 
@@ -125,6 +140,8 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
+            EnsureInitialized();
+
             lock (_userRequestLock)
             {
                 _securitiesCsvRequest.Arg0 = classcode;
@@ -137,6 +154,8 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
+            EnsureInitialized();
+
             lock (_userRequestLock)
             {
                 _securitiesCsvRequest.Arg0 = _securityTypeToClassCode[type];
@@ -149,6 +168,8 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
+            EnsureInitialized();
+
             lock (_userRequestLock)
             {
                 return FunctionsWrappers.ReadSpecificEntry(ref _classesCsvRequest); 
@@ -159,6 +180,8 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
+            EnsureInitialized();
+
             if (!request.HasData)
             {
                 return null;
@@ -178,6 +201,8 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
+            EnsureInitialized();
+
             lock (_userRequestLock)
             {
                 security.PriceStepValue = TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
@@ -313,7 +338,7 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(SecuritiesProvider));
 #endif
-            var request = SecurityRequestContainer.Create(secCode, classCode);
+            var request = SecurityRequestContainer.Create(classCode, secCode);
             return _entityResolver.Resolve(ref request);
         }
 
@@ -324,26 +349,43 @@ namespace Quik.EntityProviders
 #endif
             lock (_callbackLock)
             {
-                _updatedArgs.LuaProvider = state;
-
-                var request = FunctionsWrappers.ReadCallbackArguments(ref _updatedArgs);
-                var entity = _entityResolver.GetFromCache(ref request);
-
-                if (entity != null)
+                try
                 {
-                    Update(entity);
+                    _requestContainerCreationArgs.LuaProvider = state;
 
-                    _eventSignalizer.QueueEntity(EntityChanged, entity);
+                    var request = FunctionsWrappers.ReadCallbackArguments(ref _requestContainerCreationArgs);
+                    var entity = _entityResolver.GetFromCache(ref request);
+
+                    if (entity != null)
+                    {
+                        Update(entity);
+
+                        _eventSignalizer.QueueEntity(EntityChanged, entity);
+                        return 1;
+                    }
+
+                    if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
+                    {
+                        _entityResolver.CacheEntity(ref request, entity);
+                        _eventSignalizer.QueueEntity(NewEntity, entity);
+                    }
+
                     return 1;
                 }
-
-                if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
+                catch (Exception e)
                 {
-                    _entityResolver.CacheEntity(ref request, entity);
-                    _eventSignalizer.QueueEntity(NewEntity, entity);
-                }
+                    e.DebugPrintException();
 
-                return 1;
+                    return 0;
+                }
+            }
+        }
+
+        private static void EnsureInitialized([CallerMemberName] string? method = null)
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException($"Calling {method ?? "METHOD_NOT_PROVIDED"} from {nameof(SecuritiesProvider)} before it was initialized.");
             }
         }
     }

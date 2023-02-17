@@ -29,10 +29,9 @@ namespace Quik.EntityProviders
                         SecuritiesProvider.GetAvailableClasses,
                         SecuritiesProvider.GetAvailableSecuritiesOfType);
 
-                    _securityResolver = new SecurityResolver(SecuritiesProvider.Create, map);
+                    SecuritiesProvider.OnInitialized += map.Initialize;
 
-                    // TODO: make sure it is invoked every time after the clearing
-                    map.Initialize();
+                    _securityResolver = new SecurityResolver(SecuritiesProvider.Create, map);
                 }
 
                 return _securityResolver;
@@ -54,7 +53,7 @@ namespace Quik.EntityProviders
         {
             return _orderExecutionsResolver ??= new(1_000, default);
         }
-
+        
         public static EntityResolver<TRequest, TEntity> GetResolver<TRequest, TEntity>()
             where TEntity : class
             where TRequest : struct, IRequestContainer<TEntity>

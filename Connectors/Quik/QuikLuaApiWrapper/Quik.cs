@@ -19,6 +19,10 @@ namespace Quik
         internal static LuaWrap Lua;
 #endif
 
+        // https://stackoverflow.com/questions/9957544/callbackoncollecteddelegate-in-globalkeyboardhook-was-detected
+        private static readonly LuaFunction _onStop = OnStop;
+        private static readonly LuaFunction _main = Main;
+
         /// <summary>
         /// Entry Point. This method gets called from the lua wrapper of the Quik trading terminal
         /// </summary>
@@ -31,7 +35,8 @@ namespace Quik
             try
             {
                 Lua.TieProxyLibrary("NativeToManagedProxy");
-                Lua.RegisterCallback(Main, "main");
+                Lua.RegisterCallback(_main, "main");
+                Lua.RegisterCallback(_onStop, "OnStop");
 
                 LiveSmokeTest.Instance.Initialize();
             }
@@ -44,20 +49,38 @@ namespace Quik
             return 0;
         }
 
+        private static int OnStop(IntPtr state)
+        {
+            try
+            {
+                lock (SyncRoot)
+                {
+#if TRACE
+                    Extentions.Trace(nameof(Quik));
+#endif
+                    LiveSmokeTest.Instance.Complete(); 
+                }
+            }
+            catch (Exception e)
+            {
+                $"{e.Message}\n{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
+                return -1;
+            }
+
+            return 1;
+        }
+
         private static int Main(IntPtr state)
         {
             Lua = new(state, "Main thread");
 
+            for (int i = 0; i < 5; i++)
+            {
+                Api.lua_pushstring(Quik.Lua, "AUTOMATED TRADING");
+            }
+
             try
             {
-                Debugger.Launch();
-
-                LiveSmokeTest.Instance.Begin();
-
-                Thread.Sleep(60 * 1000);
-
-                LiveSmokeTest.Instance.Complete();
-
                 //==========================================================================
                 //
                 //  WARNING! It turns out that quik rounds long numbers of type 'number'
@@ -69,20 +92,12 @@ namespace Quik
                 //
                 //==========================================================================
 
-                //while (true)
-                //{
-                //    Thread.Sleep(1000);
-                //    //var i = 5;
-                //    //var s = 76;
-                //    //var x = 5 * i * s / 128;
-                //    //var g = x ^ x;
-                //    //var n = g % 7;
-                //    //var ff = Math.Max(4534,Math.Pow(n,2));
-                //}
+                Debugger.Launch();
+                LiveSmokeTest.Instance.Begin();
             }
             catch (Exception ex)
             {
-                $"{ex.Message}\n{ex.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
+                ex.DebugPrintException();
                 return -1;
             }
             return 1;

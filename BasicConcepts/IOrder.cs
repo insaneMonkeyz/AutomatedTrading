@@ -6,7 +6,7 @@ namespace BasicConcepts
     {
         long TransactionId { get; }
         long ExchangeAssignedId { get; }
-        OrderExecutionModes ExecutionMode { get; }
+        OrderExecutionConditions ExecutionCondition { get; }
         OrderStates State { get; }
         ISecurity Security { get; }
         IQuote Quote { get; }

@@ -248,7 +248,9 @@ namespace Quik.EntityProviders.QuikApiWrappers
                 // order of reading is important.
                 // the last item is on top of the stack
                 var arg1 = callbackReaderParams.LuaProvider.ReadAsString();
-                var arg0 = callbackReaderParams.LuaProvider.ReadAsString(-2);
+                var arg0 = callbackReaderParams.LuaProvider.ReadAsString(LuaWrap.SECOND_ITEM);
+                //var arg1 = callbackReaderParams.LuaProvider.SafeReadString();
+                //var arg0 = callbackReaderParams.LuaProvider.SafeReadString(LuaWrap.SECOND_ITEM);
 
                 return callbackReaderParams.Callback(arg0, arg1);
             }

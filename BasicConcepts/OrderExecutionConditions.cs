@@ -1,8 +1,8 @@
 ﻿namespace BasicConcepts 
 { 
-    public enum OrderExecutionModes
+    public enum OrderExecutionConditions
     {
-        Undefined,
+        Session,
         GoodTillCancelled,
         GoodTillDate,
         FillOrKill,

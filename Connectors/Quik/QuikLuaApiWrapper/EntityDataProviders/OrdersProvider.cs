@@ -56,10 +56,7 @@ namespace Quik.EntityProviders
 
         public override Order? Create(ref OrderRequestContainer request)
         {
-            if (!request.HasData)
-            {
-                $"{nameof(OrderRequestContainer)} request is missing essential parameters".DebugPrintWarning();
-            }
+            base.Create(ref request);
 
             lock (_requestInProgressLock)
             {
@@ -87,7 +84,7 @@ namespace Quik.EntityProviders
                 var order = new Order()
                 {
                     Security = sec,
-                    ExecutionMode = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
+                    ExecutionCondition = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
                     Expiry = OrdersWrapper.Expiry ?? default,
                     IsLimit = flags.HasFlag(OrderFlags.IsLimitOrder),
                     TransactionId = OrdersWrapper.TransactionId,                    
@@ -108,6 +105,8 @@ namespace Quik.EntityProviders
         }
         public override void Update(Order entity)
         {
+            base.Update(entity);
+
             lock (_requestInProgressLock)
             {
                 _updateParams.Arg0 = entity.Security.ClassCode;
@@ -165,15 +164,15 @@ namespace Quik.EntityProviders
             return _securityResolver.Resolve(ref request);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static OrderExecutionModes FromMoexExecutionMode(MoexOrderExecutionModes mode)
+        private static OrderExecutionConditions FromMoexExecutionMode(MoexOrderExecutionModes mode)
         {
             return mode switch
             {
-                MoexOrderExecutionModes.FillOrKill => OrderExecutionModes.FillOrKill,
-                MoexOrderExecutionModes.CancelRest => OrderExecutionModes.CancelRest,
-                MoexOrderExecutionModes.GoodTillCanceled => OrderExecutionModes.GoodTillCancelled,
-                MoexOrderExecutionModes.GoodTillDate => OrderExecutionModes.GoodTillDate,
-                _ => OrderExecutionModes.Undefined
+                MoexOrderExecutionModes.FillOrKill => OrderExecutionConditions.FillOrKill,
+                MoexOrderExecutionModes.CancelRest => OrderExecutionConditions.CancelRest,
+                MoexOrderExecutionModes.GoodTillCanceled => OrderExecutionConditions.GoodTillCancelled,
+                MoexOrderExecutionModes.GoodTillDate => OrderExecutionConditions.GoodTillDate,
+                _ => OrderExecutionConditions.Session
             };
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using BasicConcepts;
@@ -7,10 +8,11 @@ namespace Quik.Lua
 {
     internal struct LuaWrap
     {
-        public readonly string ThreadName = "Callback Thread"; 
+        public readonly string ThreadName = "Callback Thread";
+        public static readonly object SyncRoot = new();
 
-        private const int LAST_ITEM = -1;
-        private const int SECOND_ITEM = -2;
+        public const int LAST_ITEM = -1;
+        public const int SECOND_ITEM = -2;
 
         #region Initialization
         private readonly IntPtr _state;
@@ -47,6 +49,75 @@ namespace Quik.Lua
             return _state.ToString();
         }
 
+        internal string? SafeReadString(int i)
+        {
+            if (Api.lua_isstring(_state, i) <= 0)
+            {
+                return null;
+            }
+
+            Api.lua_pushnil(_state);
+            Api.lua_copy(_state, i-1, LAST_ITEM);
+
+            var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
+
+            var result = len > 0
+                ? Marshal.PtrToStringAnsi(pstr, (int)len)
+                : string.Empty;
+
+            Api.lua_settop(_state, SECOND_ITEM);
+
+            return result;
+        }
+        internal string? SafeReadString()
+        {
+            if (Api.lua_isstring(_state, LAST_ITEM) <= 0)
+            {
+                return null;
+            }
+
+            Api.lua_pushnil(_state);
+            Api.lua_copy(_state, SECOND_ITEM, LAST_ITEM);
+
+            var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
+
+            var result = len > 0
+                ? Marshal.PtrToStringAnsi(pstr, (int)len)
+                : string.Empty;
+
+            Api.lua_settop(_state, SECOND_ITEM);
+
+            return result;
+        }
+        internal long SafeReadLong()
+        {
+            if (Api.lua_isinteger(_state, LAST_ITEM) <= 0)
+            {
+                return 0L;
+            }
+
+            Api.lua_pushnil(_state);
+            Api.lua_copy(_state, SECOND_ITEM, LAST_ITEM);
+
+            long result = Api.lua_tointegerx(_state, LAST_ITEM, IntPtr.Zero);
+            Api.lua_settop(_state, SECOND_ITEM);
+            return result;
+        }
+        internal Decimal5 SafeReadDecimal5()
+        {
+            if (Api.lua_isnumber(_state, LAST_ITEM) <= 0)
+            {
+                return default;
+            }
+
+            Api.lua_pushnil(_state);
+            Api.lua_copy(_state, SECOND_ITEM, LAST_ITEM);
+
+            Decimal5 result = Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
+            Api.lua_settop(_state, SECOND_ITEM);
+            return result;
+        }
+
         internal string ReadValueSafe(LuaTypes type, IntPtr pStack, int i)
         {
             Api.lua_pushnil(pStack);
@@ -72,25 +143,28 @@ namespace Quik.Lua
                 return; 
             }
 
-            Debug.Print(comment != null
-                ? $"========= {ThreadName} {_state} {comment} ========="
-                : $"========= {ThreadName} {_state} =========");
-
-
-            for (int i = -1; i > -6; i--)
+            lock (SyncRoot)
             {
-                var type = (LuaTypes)Api.lua_type(_state, i);
+                Debug.Print(comment != null
+                        ? $"========= {ThreadName} {_state} {comment} ========="
+                        : $"========= {ThreadName} {_state} =========");
 
-                var value = type switch
+
+                for (int i = -1; i > -6; i--)
                 {
-                    LuaTypes.Boolean => $"Bool {ReadValueSafe(type, _state, i)}",
-                    LuaTypes.Number => $"Number {ReadValueSafe(type, _state, i)}",
-                    LuaTypes.String => $"String {ReadValueSafe(type, _state, i)}",
-                    LuaTypes.Table => $"Table Size:{ReadValueSafe(type, _state, i)}",
-                    _ => type.ToString()        //возможно баг связан с попаданием сюда, когда наверху лежит nil
-                };
+                    var type = (LuaTypes)Api.lua_type(_state, i);
 
-                Debug.Print($"[{-i}] [{value}]");
+                    var value = type switch
+                    {
+                        LuaTypes.Boolean => $"Bool {ReadValueSafe(type, _state, i)}",
+                        LuaTypes.Number => $"Number {ReadValueSafe(type, _state, i)}",
+                        LuaTypes.String => $"String {ReadValueSafe(type, _state, i)}",
+                        LuaTypes.Table => $"Table Size:{ReadValueSafe(type, _state, i)}",
+                        _ => type.ToString()        //возможно баг связан с попаданием сюда, когда наверху лежит nil
+                    };
+
+                    Debug.Print($"[{-i}] [{value}]");
+                } 
             }
         }
         /// <summary>
@@ -100,7 +174,7 @@ namespace Quik.Lua
         /// <returns></returns>
         internal bool TryFetchDecimalFromTable(string columnName, out Decimal5 result)
         {
-            PrintStack("Beginning TryFetchDecimalFromTable " + columnName);
+            //PrintStack("Beginning TryFetchDecimalFromTable " + columnName);
 
             // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
             // 2 строчки создадут только 1 ячейку памяти
@@ -109,7 +183,7 @@ namespace Quik.Lua
 
             if (TryPopDecimal(out result))
             {
-                PrintStack("Completed TryFetchDecimalFromTable success " + columnName);
+                //PrintStack("Completed TryFetchDecimalFromTable success " + columnName);
                 return true;
             }
             else
@@ -226,7 +300,7 @@ namespace Quik.Lua
             if (Api.lua_isnumber(_state, LAST_ITEM) > 0)
             {
                 value = Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
-                Api.lua_settop(_state, -2);
+                Api.lua_settop(_state, SECOND_ITEM);
                 return true;
             }
 
@@ -505,9 +579,6 @@ namespace Quik.Lua
                 PopFromStack();
                 throw QuikApiException.ParseExceptionMsg(columnName, "number");
             }
-            PrintStack("ReadRowValueNumber completed. " + columnName);
-
-            return null;
         }
         /// <summary>
         /// Reads value of a field of the table on top of the stack
@@ -564,8 +635,6 @@ namespace Quik.Lua
         }
         internal bool ExecFunction(string name, int returnType, string arg0, string arg1)
         {
-            PrintStack($"ExecFunction {name}({arg0}, {arg1})");
-
             Api.lua_getglobal(_state, name);
             Api.lua_pushstring(_state, arg0);
             Api.lua_pushstring(_state, arg1);

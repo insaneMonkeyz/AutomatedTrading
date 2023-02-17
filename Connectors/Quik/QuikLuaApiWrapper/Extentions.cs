@@ -13,6 +13,10 @@ namespace Quik
         {
             Debug.Print($"- {className}.{methodName}");
         }
+        public static void Trace(this object obj, [CallerMemberName] string methodName = "UNRESOLVED_METHOD")
+        {
+            Debug.Print($"- {obj.GetType().Name}.{methodName}");
+        }
         public static bool TryConvertToMoexExpiry(this string date, out DateTimeOffset result)
         {
             result = default;
@@ -47,6 +51,17 @@ namespace Quik
                 "" => Currencies.Unknown,
                 _ => throw new NotImplementedException($"Currency '{code}' is not supported.")
             };
+        }
+        public static void DebugPrintException(this Exception e)
+        {
+            
+            var text = "=======================================================================\n" +
+                      $"                     {e.GetType()}\n" +
+                       "=======================================================================\n" +
+                       $"{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}\n" +
+                       "=======================================================================";
+
+            Debug.Print(text);
         }
         public static void DebugPrintWarning(this string msg, [CallerMemberName] string? caller = null)
         {

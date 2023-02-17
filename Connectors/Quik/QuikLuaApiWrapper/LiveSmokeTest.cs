@@ -16,20 +16,44 @@ namespace Quik
 {
     internal class LiveSmokeTest
     {
-        private static class OrderbookProbes
+        private class OrderbookProbes
         {
-            public static bool NewBookReceived;
-            public static bool OrderBookUpdated;
-            public static bool OrderBookCreated;
+            public bool NewBookReceived;
+            public bool OrderBookUpdated;
+            public bool OrderBookCreated;
+
+            public void Initialize()
+            {
+                OrderbooksProvider.Instance.NewEntity = (book) =>
+                {
+                    NewBookReceived = true;
+                };
+                OrderbooksProvider.Instance.EntityChanged = (book) =>
+                {
+                    OrderBookUpdated = true;
+                };
+            }
         }
-        private static class SecurityProbes
+        private class SecurityProbes
         {
-            public static bool GetClasses;
-            public static bool GetSecuritiesOfType;
-            public static bool GetSecurityOfKnownClass;
-            public static bool GetSecurityOfUnknownClass;
-            public static bool SecurityUpdatesReceived;
-            public static bool NewSecurityReceived;
+            public bool GetClasses;
+            public bool GetSecuritiesOfType;
+            public bool GetSecurityOfKnownClass;
+            public bool GetSecurityOfUnknownClass;
+            public bool SecurityUpdatesReceived;
+            public bool NewSecurityReceived;
+
+            public void Initialize()
+            {
+                SecuritiesProvider.NewEntity = (sec) =>
+                {
+                    NewSecurityReceived = true;
+                };
+                SecuritiesProvider.EntityChanged = (sec) =>
+                {
+                    SecurityUpdatesReceived = true;
+                };
+            }
         }
 
         private readonly string[] _approvedTickers = new[]
@@ -41,8 +65,9 @@ namespace Quik
             "BRN3",
             "BRH3BRJ3"
         };
-
-        private ExecutionLoop _notificationsLoop;
+        private readonly OrderbookProbes _bookProbes = new();
+        private readonly SecurityProbes _secProbes = new();
+        private readonly ExecutionLoop _notificationsLoop;
 
         public static LiveSmokeTest Instance { get; } = new();
 
@@ -55,30 +80,9 @@ namespace Quik
         {
             SecuritiesProvider.SubscribeCallback();
             OrderbooksProvider.Instance.SubscribeCallback();
-            //AccountsProvider.Instance.SubscribeCallback();
-            //DerivativesBalanceProvider.Instance.SubscribeCallback();
-            //OrdersProvider.Instance.SubscribeCallback();
-            //ExecutionsProvider.Instance.SubscribeCallback();
-        }
-        public void Begin()
-        {
-            SecuritiesProvider.NewEntity = (sec) =>
-            {
-                SecurityProbes.NewSecurityReceived = true;
-            };
-            SecuritiesProvider.EntityChanged = (sec) =>
-            {
-                SecurityProbes.SecurityUpdatesReceived = true;
-            };
 
-            OrderbooksProvider.Instance.NewEntity = (book) =>
-            {
-                SecurityProbes.NewSecurityReceived = true;
-            };
-            OrderbooksProvider.Instance.EntityChanged = (book) =>
-            {
-                SecurityProbes.NewSecurityReceived = true;
-            };
+            _bookProbes.Initialize();
+            _secProbes.Initialize();
 
             OrderbooksProvider.Instance.CreationIsApproved = (ref OrderbookRequestContainer request) =>
             {
@@ -89,18 +93,18 @@ namespace Quik
                 return IsApproved(ref request);
             };
 
-            OrderbooksProvider.Instance.Initialize(_notificationsLoop);
+            //AccountsProvider.Instance.SubscribeCallback();
+            //DerivativesBalanceProvider.Instance.SubscribeCallback();
+            //OrdersProvider.Instance.SubscribeCallback();
+            //ExecutionsProvider.Instance.SubscribeCallback();
+        }
+        public void Begin()
+        {
+            OrderbooksProvider.Instance.Initialize(_notificationsLoop);            
             SecuritiesProvider.Initialize(_notificationsLoop);
 
-            Task.Run(_notificationsLoop.Enter);
-
-            for (int i = 0; i < 5; i++)
-            {
-                Api.lua_pushstring(Quik.Lua, "AUTOMATED TRADING");
-            }
-
-            SecurityProbes.GetClasses = SecuritiesProvider.GetAvailableClasses().Any();
-            SecurityProbes.GetSecuritiesOfType = SecuritiesProvider.GetAvailableSecuritiesOfType(typeof(IFutures)).Any();
+            _secProbes.GetClasses = SecuritiesProvider.GetAvailableClasses().Any();
+            _secProbes.GetSecuritiesOfType = SecuritiesProvider.GetAvailableSecuritiesOfType(typeof(IFutures)).Any();
 
             var securityResolver = EntityResolvers.GetSecurityResolver();
             var brmRequest = new SecurityRequestContainer
@@ -113,8 +117,8 @@ namespace Quik
                 Ticker = "BRN3",
             };
 
-            SecurityProbes.GetSecurityOfUnknownClass = securityResolver.Resolve(ref brmRequest) is Security brm;
-            SecurityProbes.GetSecurityOfKnownClass = securityResolver.Resolve(ref brnRequest) is Security brn;
+            _secProbes.GetSecurityOfUnknownClass = securityResolver.Resolve(ref brmRequest) is Security brm;
+            _secProbes.GetSecurityOfKnownClass = securityResolver.Resolve(ref brnRequest) is Security brn;
 
             var brjBookRequest = new OrderbookRequestContainer
             {
@@ -124,9 +128,9 @@ namespace Quik
                 }
             };
 
-            OrderbookProbes.OrderBookCreated = 
-                OrderbooksProvider.Instance.Create(ref brjBookRequest) 
-                    is OrderBook brjBook;
+            _bookProbes.OrderBookCreated = OrderbooksProvider.Instance.Create(ref brjBookRequest) is not null;
+
+            _notificationsLoop.Enter();
 
             //OrdersProvider.Instance.Initialize();
             //ExecutionsProvider.Instance.Initialize();
@@ -249,19 +253,24 @@ namespace Quik
         public void Complete() 
         {
             _notificationsLoop.Abort();
-            PrintResults(typeof(SecurityProbes));
-            PrintResults(typeof(OrderbookProbes));
+            PrintResults(_secProbes);
+            PrintResults(_bookProbes);
         }
 
-        private static void PrintResults(Type probesContainer)
+        private static void PrintResults(object probesContainer)
         {
             var sb = new StringBuilder();
 
-            foreach (var field in probesContainer.GetFields(BindingFlags.Static))
+            foreach (FieldInfo field in probesContainer.GetType().GetFields().OfType<FieldInfo>())
             {
-                sb.AppendLine(field.Name);
+                static string getString(object host, FieldInfo f)
+                {
+                    return f.GetValue(host)?.ToString() ?? string.Empty;
+                }
+
+                sb.Append(field.Name);
                 sb.Append('=');
-                sb.Append(field.GetValue(null));
+                sb.AppendLine(getString(probesContainer, field));
             }
 
             Debug.Print(sb.ToString());

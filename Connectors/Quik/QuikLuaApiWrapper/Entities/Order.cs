@@ -22,6 +22,7 @@ namespace Quik.Entities
         public Quote Quote { get; init; }
         public List<OrderExecution> Executions { get; } = new(DEFAULT_EXECUTIONS_LIST_SIZE);
 
+        public string ClientCode { get; init; }
         public OrderStates State { get; set; }
         public string? ExchangeAssignedIdString 
         { 
@@ -37,7 +38,7 @@ namespace Quik.Entities
         public bool IsLimit { get; init; }
         public long RemainingSize { get; set; }
         public long ExecutedSize => Quote.Size - RemainingSize;
-        public OrderExecutionModes ExecutionMode { get; init; }
+        public OrderExecutionConditions ExecutionCondition { get; init; }
         public DateTimeOffset Expiry { get; init; }
         public TimeSpan TimeToExpiry { get; }
 
@@ -49,7 +50,7 @@ namespace Quik.Entities
 
         public override string ToString()
         {
-            return $"{State} {ExecutionMode} {Security} {Quote} Executed={ExecutedSize} Remainder={RemainingSize}";
+            return $"{State} {ExecutionCondition} {Security} {Quote} Executed={ExecutedSize} Remainder={RemainingSize}";
         }
     }
 }
