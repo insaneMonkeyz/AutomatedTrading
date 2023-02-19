@@ -1,25 +1,29 @@
 ﻿using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace BasicConcepts
 {
     public struct Decimal5 : IComparable
     {
-        public static readonly Decimal5 MAX_VALUE = new (MANTISSA_MAX_VALUE);
-        public static readonly Decimal5 MIN_VALUE = new (MANTISSA_MIN_VALUE);
+        public static readonly Decimal5 MAX_VALUE = new() { mantissa = MANTISSA_MAX_VALUE };
+        public static readonly Decimal5 MIN_VALUE = new() { mantissa = MANTISSA_MIN_VALUE };
 
+        private const long POSITIVE = 1;
+        private const long NEGATIVE = -1;
         private const long EXPONENT = 5;
+        private const long DECIMAL_NUMERAL_SYSTEM_BASE = 10;
         private const long DECIMAL_EXPONENT = EXPONENT << 16;
         private const long MULTIPLIER = 100_000;
         private const long DIVIDER = MULTIPLIER * MULTIPLIER;
-        private const long MANTISSA_MAX_VALUE = 9_999_999_999_999_999;
+        private const long MANTISSA_MAX_VALUE =  9_999_999_999_999_999;
         private const long MANTISSA_MIN_VALUE = -9_999_999_999_999_999;
 
-        private const long INTEGER_MAX_VALUE = 100_000_000_000;
-        private const long INTEGER_MIN_VALUE = -100_000_000_000;
+        private const long INTEGER_MAX_VALUE =  99_999_999_999;
+        private const long INTEGER_MIN_VALUE = -99_999_999_999;
 
         private const ulong DECIMAL_EXPONENT_MASK = 0x000F0000;
-        private const ulong DECIMAL_SIGN_MASK = 0x80000000;
+        private const ulong DECIMAL_SIGN_MASK     = 0x80000000;
 
         private const long ZERO_CHAR_OFFSET = '0';
         private const  int MAX_STRING_LEN = 21;
@@ -57,12 +61,12 @@ namespace BasicConcepts
         }
         public Decimal5(long value)
         {
-            if (value >= INTEGER_MAX_VALUE)
+            if (value > INTEGER_MAX_VALUE)
             {
                 mantissa = MANTISSA_MAX_VALUE;
                 return;
             }
-            if (value <= INTEGER_MIN_VALUE)
+            if (value < INTEGER_MIN_VALUE)
             {
                 mantissa = MANTISSA_MIN_VALUE;
                 return;
@@ -459,226 +463,325 @@ namespace BasicConcepts
             }
         }
 
+        public static bool TryParse(nint pointer, out Decimal5 result)
+        {
+            result = ParseInternal(pointer, out Exception? e);
+
+            return e is null;
+        }
+        public static Decimal5 Parse(nint pointer)
+        {
+            var result = ParseInternal(pointer, out Exception? e);
+
+            return e is null ? result : throw e;
+        }
         public static bool TryParse(string? value, out Decimal5 result)
         {
-            result = default;
+            result = ParseInternal(value, out Exception? e);
 
-            if (value == null)
-            {
-                return false;
-            }
-
-            int sign = 1;
-            int decimalLengthDeviation = default;
-            bool isSeparated = default;
-            long mantissa = default;
-
-            for (int i = 0; i < value.Length; i++)
-            {
-                switch (value[i])
-                {
-                    case ' ':
-                        break;
-
-                    case '\t':
-                        if (mantissa != 0)
-                            return false;
-                        break;
-
-                    case '-':
-                        if (mantissa > 0)
-                            return false;
-                        else 
-                            sign = -1;
-                        break;
-
-                    case '0':
-                        mantissa *= 10;
-                        break;
-
-                    case '1':
-                        mantissa = mantissa * 10 + 1;
-                        break;
-
-                    case '2':
-                        mantissa = mantissa * 10 + 2;
-                        break;
-
-                    case '3':
-                        mantissa = mantissa * 10 + 3;
-                        break;
-
-                    case '4':
-                        mantissa = mantissa * 10 + 4;
-                        break;
-
-                    case '5':
-                        mantissa = mantissa * 10 + 5;
-                        break;
-
-                    case '6':
-                        mantissa = mantissa * 10 + 6;
-                        break;
-
-                    case '7':
-                        mantissa = mantissa * 10 + 7;
-                        break;
-
-                    case '8':
-                        mantissa = mantissa * 10 + 8;
-                        break;
-
-                    case '9':
-                        mantissa = mantissa * 10 + 9;
-                        break;
-
-                    case '.':
-                        if (isSeparated) return false;
-                        decimalLengthDeviation = value.Length - i - 6;
-                        isSeparated = true;
-                        break;
-
-                    case ',':
-                        if (isSeparated) return false;
-                        decimalLengthDeviation = value.Length - i - 6;
-                        isSeparated = true;
-                        break;
-
-                    default:
-                        return false;
-                }
-            }
-
-            if (decimalLengthDeviation > 0)
-            {
-                var pow = (long)pow10[decimalLengthDeviation];
-                var round = mantissa % pow;
-
-                mantissa += round >= (long)roundToNearest[decimalLengthDeviation]
-                         ? pow - round
-                         : 0;
-                mantissa /= pow;
-            }
-            else if(decimalLengthDeviation < 0)
-            {
-                mantissa *= (long)pow10[decimalLengthDeviation * -1];
-            }
-            else if(!isSeparated)
-            {
-                mantissa *= MULTIPLIER;
-            }
-
-            result = new Decimal5() { mantissa = mantissa * sign };
-
-            return !(mantissa > MANTISSA_MAX_VALUE || mantissa < MANTISSA_MIN_VALUE);
+            return e is null;
         }
-        public static Decimal5 Parse(string value)
+        public static Decimal5 Parse(string? value)
         {
-            const string EXCEPTION_MSG = "Input string was not in a correct format.";
+            var result = ParseInternal(value, out Exception? e);
 
-            int sign = 1;
-            int decimalLengthDeviation = default;
-            bool isSeparated = default;
-            long mantissa = default;
+            return e is null ? result : throw e;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Decimal5 ParseInternal(string? value, out Exception? exception)
+        {
+            if (value is null)
+            {
+                exception = new ArgumentNullException(nameof(value));
+                return default;
+            }
+
+            static FormatException getException(string subj)
+            {
+                return new FormatException($"Cannot parse Decimal5 value from string '{subj}'");
+            }
+
+            exception = default;
+
+            const long NOT_SEPARATED = 0;
+            const long     SEPARATED = 1;
+
+            long sign = POSITIVE;
+            long decimalPartIncrement = NOT_SEPARATED;
+            long decimalPartLenght = 0;
+            long mantissa = 0;
 
             for (int i = 0; i < value.Length; i++)
             {
-                switch (value[i])
+                char c = value[i];
+
+                if (c is >= '0' and <= '9')
                 {
-                    case ' ':
-                        break;
+                    mantissa = mantissa * DECIMAL_NUMERAL_SYSTEM_BASE + (c - ZERO_CHAR_OFFSET);
+
+                    decimalPartLenght += decimalPartIncrement;
+
+                    continue;
+                }
+
+                switch (c)
+                {
+                    case ' ': break;
 
                     case '\t':
-                        if (mantissa != 0)
-                            throw new FormatException(EXCEPTION_MSG);
-                        break;
+                        {
+                            if (mantissa != 0)
+                            {
+                                exception = getException(value);
+                                return default;
+                            }
+                            break;
+                        }
+
+                    case '+':
+                        {
+                            if (mantissa > 0 || sign == NEGATIVE)
+                            {
+                                exception = getException(value);
+                                return default;
+                            }
+
+                            break;
+                        }
 
                     case '-':
-                        if (mantissa > 0)
-                            throw new FormatException(EXCEPTION_MSG);
-                        else
-                            sign = -1;
-                        break;
+                        {
+                            if (mantissa > 0)
+                            {
+                                exception = getException(value);
+                                return default;
+                            }
+                            else
+                            {
+                                sign = NEGATIVE;
+                            }
 
-                    case '0':
-                        mantissa *= 10;
-                        break;
-
-                    case '1':
-                        mantissa = mantissa * 10 + 1;
-                        break;
-
-                    case '2':
-                        mantissa = mantissa * 10 + 2;
-                        break;
-
-                    case '3':
-                        mantissa = mantissa * 10 + 3;
-                        break;
-
-                    case '4':
-                        mantissa = mantissa * 10 + 4;
-                        break;
-
-                    case '5':
-                        mantissa = mantissa * 10 + 5;
-                        break;
-
-                    case '6':
-                        mantissa = mantissa * 10 + 6;
-                        break;
-
-                    case '7':
-                        mantissa = mantissa * 10 + 7;
-                        break;
-
-                    case '8':
-                        mantissa = mantissa * 10 + 8;
-                        break;
-
-                    case '9':
-                        mantissa = mantissa * 10 + 9;
-                        break;
+                            break; 
+                        }
 
                     case '.':
-                        if (isSeparated) throw new FormatException(EXCEPTION_MSG);;
-                        decimalLengthDeviation = value.Length - i - 6;
-                        isSeparated = true;
-                        break;
-
                     case ',':
-                        if (isSeparated) throw new FormatException(EXCEPTION_MSG);;
-                        decimalLengthDeviation = value.Length - i - 6;
-                        isSeparated = true;
-                        break;
+                        {
+                            if (decimalPartIncrement == SEPARATED)
+                            {
+                                exception = getException(value);
+                                return default;
+                            }
+
+                            decimalPartIncrement = SEPARATED;
+
+                            break; 
+                        }
 
                     default:
-                        throw new FormatException(EXCEPTION_MSG);;
+                        exception = getException(value);
+                        return default;
                 }
             }
 
-            if (decimalLengthDeviation > 0)
+            if (decimalPartLenght > 0)
             {
-                var pow = (long)pow10[decimalLengthDeviation];
-                var round = mantissa % pow;
+                var roundexp = decimalPartLenght - EXPONENT;
 
-                mantissa += round >= (long)roundToNearest[decimalLengthDeviation]
-                         ? pow - round
-                         : 0;
-                mantissa /= pow;
+                // when the number has more than 5 decimal digits
+                if (roundexp > 0)
+                {
+                    var roundmultiplier = (long)pow10[roundexp];
+                    var rest = mantissa % roundmultiplier;
+                    var middlevalue = (long)roundToNearest[roundexp];
+                    var round = roundmultiplier - rest;
+
+                    // mantissa is 199
+                    // rest is 99
+                    // middlevalue is 50
+                    // round is 1
+                    if (middlevalue >= round)
+                    {
+                        // add missing bit to round to the nearest greater number
+                        mantissa += round;
+                    }
+                    else
+                    {
+                        // discard rest to floor to the nearest
+                        mantissa -= rest;
+                    }
+
+                    mantissa /= roundmultiplier;
+                }
+                else
+                {
+                    mantissa *= (long)pow10[roundexp * NEGATIVE];
+                }
             }
-            else if (decimalLengthDeviation < 0)
-            {
-                mantissa *= (long)pow10[decimalLengthDeviation * -1];
-            }
-            else if (!isSeparated)
+            else
             {
                 mantissa *= MULTIPLIER;
             }
 
-            if(mantissa > MANTISSA_MAX_VALUE || mantissa < MANTISSA_MIN_VALUE)
+            if (mantissa is > MANTISSA_MAX_VALUE or < MANTISSA_MIN_VALUE)
             {
-                throw new FormatException(EXCEPTION_MSG);;
+                exception = new ArgumentOutOfRangeException($"Value {value} is too big to be represented as {nameof(Decimal5)}");
+                return default;
+            }
+
+            return new Decimal5() { mantissa = mantissa * sign };
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Decimal5 ParseInternal(nint pValue, out Exception? exception)
+        {
+            if (pValue == default)
+            {
+                exception = new ArgumentException("Pointer is not set");
+                return default;
+            }
+
+            static FormatException getException()
+            {
+                return new FormatException($"Cannot parse Decimal5 value from string at a given address. Format is incorrect");
+            }
+
+            exception = default;
+
+            const long NOT_SEPARATED = 0;
+            const long SEPARATED = 1;
+
+            long sign = POSITIVE;
+            long decimalPartIncrement = NOT_SEPARATED;
+            long decimalPartLenght = 0;
+            long mantissa = 0;
+
+            unsafe
+            {
+                int i = 0;
+                char* pChar = (char*)pValue;
+                char c = pChar[i];
+
+                while (c != '\0')
+                {
+                    if (c is >= '0' and <= '9')
+                    {
+                        mantissa = mantissa * DECIMAL_NUMERAL_SYSTEM_BASE + (c - ZERO_CHAR_OFFSET);
+
+                        decimalPartLenght += decimalPartIncrement;
+                    }
+                    else
+                    {
+                        switch (c)
+                        {
+                            case ' ': break;
+
+                            case '\t':
+                                {
+                                    if (mantissa != 0)
+                                    {
+                                        exception = getException();
+                                        return default;
+                                    }
+                                    break;
+                                }
+
+                            case '+':
+                                {
+                                    if (mantissa > 0 || sign == NEGATIVE)
+                                    {
+                                        exception = getException();
+                                        return default;
+                                    }
+
+                                    break;
+                                }
+
+                            case '-':
+                                {
+                                    if (mantissa > 0)
+                                    {
+                                        exception = getException();
+                                        return default;
+                                    }
+                                    else
+                                    {
+                                        sign = NEGATIVE;
+                                    }
+
+                                    break;
+                                }
+
+                            case '.':
+                            case ',':
+                                {
+                                    if (decimalPartIncrement == SEPARATED)
+                                    {
+                                        exception = getException();
+                                        return default;
+                                    }
+
+                                    decimalPartIncrement = SEPARATED;
+
+                                    break;
+                                }
+
+                            default:
+                                exception = getException();
+                                return default;
+                        } 
+                    }
+
+                    ++i;
+                    c = pChar[i];
+                }
+            }
+
+            if (decimalPartLenght > 0)
+            {
+                var roundexp = decimalPartLenght - EXPONENT;
+
+                // when the number has more than 5 decimal digits
+                if (roundexp > 0)
+                {
+                    var roundmultiplier = (long)pow10[roundexp];
+                    var rest = mantissa % roundmultiplier;
+                    var middlevalue = (long)roundToNearest[roundexp];
+                    var round = roundmultiplier - rest;
+
+                    // mantissa is 199
+                    // rest is 99
+                    // middlevalue is 50
+                    // round is 1
+                    if (middlevalue >= round)
+                    {
+                        // add missing bit to round to the nearest greater number
+                        mantissa += round;
+                    }
+                    else
+                    {
+                        // discard rest to floor to the nearest
+                        mantissa -= rest;
+                    }
+
+                    mantissa /= roundmultiplier;
+                }
+                else
+                {
+                    mantissa *= (long)pow10[roundexp * NEGATIVE];
+                }
+            }
+            else
+            {
+                mantissa *= MULTIPLIER;
+            }
+
+            if (mantissa is > MANTISSA_MAX_VALUE or < MANTISSA_MIN_VALUE)
+            {
+                var attemptValue = ((decimal)mantissa) / MULTIPLIER;
+                exception = new ArgumentOutOfRangeException($"Attempted to parse a number {attemptValue:0.###############} that is too big to be represented as {nameof(Decimal5)}");
+                return default;
             }
 
             return new Decimal5() { mantissa = mantissa * sign };
@@ -691,12 +794,14 @@ namespace BasicConcepts
         }
         public override  int GetHashCode()
         {
-            return 1337 + mantissa.GetHashCode();
+            return 652132164 ^ mantissa.GetHashCode();
         }
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
-            return mantissa.CompareTo(((Decimal5)obj).mantissa);
+            return obj is Decimal5 d
+                ? (int)(mantissa - d.mantissa)
+                : -1;
         }
     }
 }
