@@ -4,7 +4,7 @@ using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.QuikApiWrappers;
 
 using static Quik.Quik;
-using BasicConcepts;
+using TradingConcepts;
 using System.Runtime.CompilerServices;
 using Quik.Lua;
 

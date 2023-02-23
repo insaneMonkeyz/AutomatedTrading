@@ -1,4 +1,4 @@
-﻿using BasicConcepts;
+﻿using TradingConcepts;
 
 namespace Quik.Entities
 {

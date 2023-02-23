@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BasicConcepts;
+using TradingConcepts;
 using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders;
 using Quik.Lua;
+using Quik.EntityDataProviders.QuikApiWrappers;
+using System.Diagnostics;
 
 namespace Quik
 {
@@ -18,16 +20,24 @@ namespace Quik
 
         public static void Initialize()
         {
-            Quik.Lua.RegisterCallback(_defaultCallback, DerivativesPositionsWrapper.CALLBACK_METHOD);
-            Quik.Lua.RegisterCallback(_defaultCallback, ExecutionWrapper.CALLBACK_METHOD);
-            Quik.Lua.RegisterCallback(_defaultCallback, OrdersWrapper.CALLBACK_METHOD);
+            Debugger.Launch();
+            Quik.Lua.RegisterCallback(_defaultCallback, TransactionWrapper.CALLBACK_METHOD);
+            //Quik.Lua.RegisterCallback(_defaultCallback, DerivativesPositionsWrapper.CALLBACK_METHOD);
+            //Quik.Lua.RegisterCallback(_defaultCallback, ExecutionWrapper.CALLBACK_METHOD);
+            //Quik.Lua.RegisterCallback(_defaultCallback, OrdersWrapper.CALLBACK_METHOD);
 
-            SecuritiesProvider.SubscribeCallback();
-            OrderbooksProvider.Instance.SubscribeCallback();
+            //SecuritiesProvider.SubscribeCallback();
+            //OrderbooksProvider.Instance.SubscribeCallback();
         }
 
         public static void Begin()
         {
+            var saloop = new ExecutionLoop();
+            saloop.Execute += delegate { };
+            saloop.Enter();
+
+            return;
+
             var bookreq = new OrderbookRequestContainer
             {
                 SecurityRequest = new()
@@ -72,13 +82,12 @@ namespace Quik
 
         public static int Callback(nint state)
         {
-            int x = 0;
+            TransactionWrapper.SetContext(state);
 
-            for (int i = 0; i < 100; i++)
-            {
-                x += 178334543 % 7;
-            }
-
+            Debug.Print($"Transaction reply OrderId={TransactionWrapper.ExchangeAssignedOrderId.ToString() ?? "N/A"} " +
+                        $"Status={TransactionWrapper.Status} " +
+                        $"ErrorSite={TransactionWrapper.ErrorSource}\n" +
+                        $"ResultDescription={TransactionWrapper.ResultDescription}");
             return 1;
         }
     }

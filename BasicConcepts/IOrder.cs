@@ -1,16 +1,12 @@
-﻿using BasicConcepts.SecuritySpecifics;
+﻿using TradingConcepts.SecuritySpecifics;
 
-namespace BasicConcepts
+namespace TradingConcepts
 {
-    public interface IOrder : IExpiring
+    public interface IOrder : IOrderSubmission
     {
-        long TransactionId { get; }
+        DateTimeOffset Submitted { get; }
         long ExchangeAssignedId { get; }
-        OrderExecutionConditions ExecutionCondition { get; }
         OrderStates State { get; }
-        ISecurity Security { get; }
-        IQuote Quote { get; }
-        bool IsLimit { get; }
         long RemainingSize { get; }
         long ExecutedSize { get; }
         IEnumerable<IOrderExecution> Executions { get; }

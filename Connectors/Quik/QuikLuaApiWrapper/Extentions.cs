@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using BasicConcepts;
+using TradingConcepts;
 using Quik.Entities;
 using Quik.EntityProviders;
 

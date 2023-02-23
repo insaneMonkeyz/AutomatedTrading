@@ -1,4 +1,4 @@
-﻿using BasicConcepts;
+﻿using TradingConcepts;
 using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;

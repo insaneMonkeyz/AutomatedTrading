@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using BasicConcepts;
+using TradingConcepts;
 
 namespace Quik.Entities
 {

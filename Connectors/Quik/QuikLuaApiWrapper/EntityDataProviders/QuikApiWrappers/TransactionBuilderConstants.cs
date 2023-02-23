@@ -4,6 +4,9 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
 {
     internal partial class TransactionBuilder
     {
+        public const string TABLE_NAME = "trans_reply";
+        public const string CALLBACK_METHOD = "OnTransReply";
+
         //TRANSACTION
         private const string TRANSACTION_ID_PARAM = "TRANS_ID";
         private const string CLASS_CODE_PARAM = "CLASSCODE";

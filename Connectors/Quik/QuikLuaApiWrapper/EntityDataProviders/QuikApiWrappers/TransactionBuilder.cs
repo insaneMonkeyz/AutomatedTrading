@@ -1,14 +1,14 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
-using BasicConcepts;
-using BasicConcepts.SecuritySpecifics;
+using TradingConcepts;
+using TradingConcepts.SecuritySpecifics;
 using Quik.Entities;
 
 namespace Quik.EntityDataProviders.QuikApiWrappers
 {
     internal partial class TransactionBuilder
     {
-        public static string MakeNewOrder(DerivativesTradingAccount account, Order order)
+        public static string MakeNewOrder(Order order)
         {
             var operation = order.Quote.Operation == Operations.Buy
                 ? BUY_OPERATION_PARAM
@@ -70,7 +70,7 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
 
                 $"{EXPIRY_DATE_PARAM}={expiry};" +
 
-                $"{ACCOUNT_PARAM}={account.AccountCode};" +
+                $"{ACCOUNT_PARAM}={order.AccountCode};" +
 
                 $"{CLIENT_CODE_PARAM}={order.ClientCode};" +
 

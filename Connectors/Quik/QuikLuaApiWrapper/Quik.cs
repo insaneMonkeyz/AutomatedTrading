@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using BasicConcepts;
+using TradingConcepts;
 using Quik.Entities;
 using Quik.EntityProviders;
 using Quik.EntityProviders.RequestContainers;
@@ -38,7 +38,8 @@ namespace Quik
                 Lua.RegisterCallback(_main, "main");
                 Lua.RegisterCallback(_onStop, "OnStop");
 
-                LiveSmokeTest.Instance.Initialize();
+                //LiveSmokeTest.Instance.Initialize();
+                BugLab.Initialize();
             }
             catch (Exception ex)
             {
@@ -58,7 +59,8 @@ namespace Quik
 #if TRACE
                     Extentions.Trace(nameof(Quik));
 #endif
-                    LiveSmokeTest.Instance.Complete(); 
+                    BugLab.Begin();
+                    //LiveSmokeTest.Instance.Complete(); 
                 }
             }
             catch (Exception e)

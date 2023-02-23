@@ -1,4 +1,4 @@
-﻿namespace BasicConcepts.SecuritySpecifics.Options
+﻿namespace TradingConcepts.SecuritySpecifics.Options
 {
     public interface IOption : IDerivative, IExpiring
     {

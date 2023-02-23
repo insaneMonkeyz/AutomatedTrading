@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace BasicConcepts
+namespace TradingConcepts.CommonImplementations
 {
-    [StructLayout(LayoutKind.Explicit, Size = Quote.STRUCT_SIZE_BYTES)]
+    [StructLayout(LayoutKind.Explicit, Size = STRUCT_SIZE_BYTES)]
     public struct Quote : IQuote
     {
         public const int STRUCT_SIZE_BYTES = sizeof(long) * 3;
@@ -63,7 +63,7 @@ namespace BasicConcepts
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(_operation,_price, _size);
+            return HashCode.Combine(_operation, _price, _size);
         }
         public override string ToString()
         {

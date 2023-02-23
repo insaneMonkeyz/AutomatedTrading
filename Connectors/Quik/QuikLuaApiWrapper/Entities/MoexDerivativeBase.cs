@@ -1,5 +1,5 @@
-﻿using BasicConcepts;
-using BasicConcepts.SecuritySpecifics;
+﻿using TradingConcepts;
+using TradingConcepts.SecuritySpecifics;
 
 namespace Quik.Entities
 {

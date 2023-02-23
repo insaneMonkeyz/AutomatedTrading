@@ -1,4 +1,4 @@
-﻿using BasicConcepts.SecuritySpecifics;
+﻿using TradingConcepts.SecuritySpecifics;
 
 namespace Quik.Entities
 {

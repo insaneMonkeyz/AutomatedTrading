@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using BasicConcepts;
+using TradingConcepts;
 
 namespace Quik.Lua
 {

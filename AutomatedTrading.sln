@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Strategies", "Strategies\St
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{AD452C09-AF8D-4E41-BDD9-60D44D00EE5C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicConcepts", "BasicConcepts\BasicConcepts.csproj", "{863AA5C1-1CF5-42B0-98B1-AFBE1728AE1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TradingConcepts", "BasicConcepts\TradingConcepts.csproj", "{863AA5C1-1CF5-42B0-98B1-AFBE1728AE1A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Connectors", "Connectors", "{02EB15A2-5F25-40D2-89A9-DBCCC7DD3470}"
 EndProject

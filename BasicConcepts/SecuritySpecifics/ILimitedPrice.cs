@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BasicConcepts.SecuritySpecifics
+namespace TradingConcepts.SecuritySpecifics
 {
     public interface ILimitedPrice
     {

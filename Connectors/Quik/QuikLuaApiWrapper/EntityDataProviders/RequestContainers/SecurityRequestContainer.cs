@@ -1,4 +1,4 @@
-﻿using BasicConcepts;
+﻿using TradingConcepts;
 using Quik.Entities;
 
 namespace Quik.EntityProviders.RequestContainers

@@ -1,4 +1,4 @@
-﻿namespace BasicConcepts
+﻿namespace TradingConcepts
 {
     public interface ISecurity
     {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Quik.EntityProviders.QuikApiWrappers;
+using Quik.Lua;
 
 namespace Quik.EntityDataProviders.QuikApiWrappers
 {
@@ -21,7 +23,7 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
         private const string FLAGS = "flags";
         private const string ERROR_CODE = "error_code";
         private const string ERROR_SITE = "error_source";
-        private const string EXCHANGE_RESPONSE_RECEPTION_TIMESTAMP = "gate_reply_time";
+        private const string RESPONSE_RECEPTION_TIMESTAMP = "gate_reply_time";
         #endregion
 
         #region Optional
@@ -56,13 +58,49 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
             UserRefusedToContinue = 16
         }
 
-        public enum ErrorSource : long
+        public enum ErrorSite : long
         {
             None = 0,
             Quik = 1,
             QuikServer = 2,
             LimitsSupervisor = 3,
             Exchange = 4
+        }
+
+        private static LuaWrap _context;
+
+        public static void SetContext(LuaWrap lua)
+        {
+            _context = lua;
+        }
+
+        public static long Id
+        {
+            get => _context.ReadRowValueLong(ID);
+        }
+        public static ErrorSite ErrorSource
+        {
+            get => (ErrorSite)_context.ReadRowValueLong(ERROR_SITE);
+        }
+        public static TransactionStatus Status
+        {
+            get => (TransactionStatus)_context.ReadRowValueLong(STATUS);
+        }
+        public static string? ResultDescription
+        {
+            get => _context.ReadRowValueString(RESULT_DESCRIPTION);
+        }
+        public static DateTimeOffset Timestamp
+        {
+            get => TimeWrapper.GetTime(_context, TIMESTAMP).GetValueOrDefault();
+        }
+        public static DateTimeOffset ResponseReceptionTimestamp
+        {
+            get => TimeWrapper.GetTime(_context, RESPONSE_RECEPTION_TIMESTAMP).GetValueOrDefault();
+        }
+        public static long? ExchangeAssignedOrderId
+        {
+            get => _context.TryFetchLongFromTable(EXCHANGE_ORDER_ID, out long result) ? result : null;
         }
     }
 }

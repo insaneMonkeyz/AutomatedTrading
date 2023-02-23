@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace BasicConcepts
+namespace TradingConcepts
 {
     public struct Decimal5 : IComparable
     {

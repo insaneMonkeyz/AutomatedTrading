@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using BasicConcepts;
+using TradingConcepts;
 
 namespace QuikLuaWrapperTests
 {

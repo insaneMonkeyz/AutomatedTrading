@@ -1,4 +1,4 @@
-﻿namespace BasicConcepts.SecuritySpecifics
+﻿namespace TradingConcepts.SecuritySpecifics
 {
     public interface IStock
     {

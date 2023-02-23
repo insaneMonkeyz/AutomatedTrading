@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
 	  <LangVersion>11</LangVersion>
     <Nullable>enable</Nullable>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseOutputPath>E:\Work\FFIN QUIK</BaseOutputPath>
+	  <LangVersion>Preview</LangVersion>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
   </PropertyGroup>
 
@@ -16,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\BasicConcepts\BasicConcepts.csproj" />
+    <ProjectReference Include="..\..\..\BasicConcepts\TradingConcepts.csproj" />
   </ItemGroup>
 
 </Project>

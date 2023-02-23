@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using BasicConcepts;
+using TradingConcepts;
 
 namespace Core.AppComponents.BusinessLogicConcepts
 {

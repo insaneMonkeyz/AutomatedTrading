@@ -1,5 +1,5 @@
 ﻿using System;
-using BasicConcepts;
+using TradingConcepts;
 
 namespace Core.AppComponents.BusinessLogicConcepts
 {

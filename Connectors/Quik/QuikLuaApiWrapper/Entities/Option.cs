@@ -1,6 +1,6 @@
-﻿using BasicConcepts;
-using BasicConcepts.SecuritySpecifics;
-using BasicConcepts.SecuritySpecifics.Options;
+﻿using TradingConcepts;
+using TradingConcepts.SecuritySpecifics;
+using TradingConcepts.SecuritySpecifics.Options;
 
 namespace Quik.Entities
 {

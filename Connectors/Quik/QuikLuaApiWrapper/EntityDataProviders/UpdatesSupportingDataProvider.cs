@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using BasicConcepts;
+using TradingConcepts;
 using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;

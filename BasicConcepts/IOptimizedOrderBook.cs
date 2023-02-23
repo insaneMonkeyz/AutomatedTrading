@@ -1,4 +1,6 @@
-﻿namespace BasicConcepts
+﻿using TradingConcepts.CommonImplementations;
+
+namespace TradingConcepts
 {
 
     public delegate void QuotesReader(Quote[] bids, Quote[] asks, long marketDepth);

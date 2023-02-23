@@ -1,4 +1,4 @@
-﻿namespace BasicConcepts
+﻿namespace TradingConcepts
 {
     [Flags]
     public enum OrderStates : long

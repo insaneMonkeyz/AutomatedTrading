@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-using BasicConcepts;
+using TradingConcepts;
 
 using Quik.Entities;
 using Quik.EntityProviders.Attributes;

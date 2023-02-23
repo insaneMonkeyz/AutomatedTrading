@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BasicConcepts;
+using TradingConcepts;
+using TradingConcepts.CommonImplementations;
 
 namespace Quik.Entities
 {
@@ -14,7 +15,7 @@ namespace Quik.Entities
         private Security _security;
         private string? _exchangeAssignedIdString;
 
-        public Security Security
+        public required Security Security
         {
             get => _security;
             init => _security = value ?? throw new ArgumentNullException(nameof(value));
@@ -22,6 +23,7 @@ namespace Quik.Entities
         public Quote Quote { get; init; }
         public List<OrderExecution> Executions { get; } = new(DEFAULT_EXECUTIONS_LIST_SIZE);
 
+        public string AccountCode { get; init; }
         public string ClientCode { get; init; }
         public OrderStates State { get; set; }
         public string? ExchangeAssignedIdString 
@@ -41,10 +43,11 @@ namespace Quik.Entities
         public OrderExecutionConditions ExecutionCondition { get; init; }
         public DateTimeOffset Expiry { get; init; }
         public TimeSpan TimeToExpiry { get; }
+        public DateTimeOffset Submitted { get; set; }
 
-        IQuote IOrder.Quote => Quote;
-        ISecurity IOrder.Security => _security;
         IEnumerable<IOrderExecution> IOrder.Executions => Executions;
+        ISecurity IOrderSubmission.Security => Security;
+        IQuote IOrderSubmission.Quote => Quote;
 
         public event Action Updated = delegate { };
 
