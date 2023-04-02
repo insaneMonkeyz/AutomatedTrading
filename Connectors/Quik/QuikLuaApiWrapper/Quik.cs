@@ -5,6 +5,10 @@ using Quik.Entities;
 using Quik.EntityProviders;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
+using TradingConcepts.CommonImplementations;
+using Core.Tools;
+using Quik.EntityDataProviders.QuikApiWrappers;
+using Quik.EntityDataProviders;
 
 namespace Quik
 {
@@ -38,8 +42,9 @@ namespace Quik
                 Lua.RegisterCallback(_main, "main");
                 Lua.RegisterCallback(_onStop, "OnStop");
 
+                SecuritiesProvider.SubscribeCallback();
+                TransactionsProvider.Instance.SubscribeCallback();
                 //LiveSmokeTest.Instance.Initialize();
-                BugLab.Initialize();
             }
             catch (Exception ex)
             {
@@ -59,7 +64,6 @@ namespace Quik
 #if TRACE
                     Extentions.Trace(nameof(Quik));
 #endif
-                    BugLab.Begin();
                     //LiveSmokeTest.Instance.Complete(); 
                 }
             }
@@ -94,8 +98,49 @@ namespace Quik
                 //
                 //==========================================================================
 
+
+                // WHEN STATE OF CACHED ENTITY CHANGES
+                // THE HASH USED TO RETRIEVE THIS ENTITY WILL REMAIN THE SAME
+                // MATHCING STAGE WILL FAIL
+
+
+                //LiveSmokeTest.Instance.Begin();
+                var loop = new ExecutionLoop();
+                SecuritiesProvider.Initialize(loop);
+                TransactionsProvider.Instance.Initialize(loop);
+
+                var req = new SecurityRequestContainer
+                {
+                    ClassCode = MoexSpecifics.FUTURES_CLASS_CODE,
+                    Ticker = "SiM3"
+                };
+                var sec = SecuritiesProvider.Create(ref req) ?? throw new Exception();
+                var submission = new MoexOrderSubmission(sec)
+                {
+                    ClientCode = "SPBFUT00UJA",
+                    AccountCode = "U7A0016",
+                    TransactionId = TransactionIdGenerator.CreateId(),
+                    Quote = new Quote
+                    {
+                        Operation = Operations.Sell,
+                        Price = 79001,
+                        Size = 1
+                    }
+                };
+
+                var order = new Order(submission)
+                {
+                    ExchangeAssignedIdString = "1892948291012802690"
+                };
+
+                order.AddIntermediateState(OrderStates.Registering);
+                order.SetSingleState(OrderStates.Active);
+
                 Debugger.Launch();
-                LiveSmokeTest.Instance.Begin();
+
+                // check if transaction reply comes together with new order callback
+
+                TransactionsProvider.Instance.Cancel(order);
             }
             catch (Exception ex)
             {

@@ -1,71 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Core.Tools;
+using Quik.Entities;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.Lua;
+using TradingConcepts;
 
 namespace Quik.EntityDataProviders.QuikApiWrappers
 {
-    internal class TransactionWrapper
+    internal partial class TransactionWrapper
     {
-        public const string NAME = "trans_reply";
-        public const string CALLBACK_METHOD = "OnTransReply";
-
-        #region General
-        private const string ID = "trans_id";
-        private const string UNIQUE_ID = "uid";
-        private const string SERVER_TRANSACTION_ID = "server_trans_id";
-        private const string STATUS = "status";
-        private const string RESULT_DESCRIPTION = "result_msg";
-        private const string TIMESTAMP = "date_time";
-        private const string FLAGS = "flags";
-        private const string ERROR_CODE = "error_code";
-        private const string ERROR_SITE = "error_source";
-        private const string RESPONSE_RECEPTION_TIMESTAMP = "gate_reply_time";
-        #endregion
-
-        #region Optional
-        //NULLABLE
-        private const string ORDER_ID = "order_num";
-        private const string PRICE = "price";
-        private const string SIZE = "quantity";
-        private const string REST = "balance";
-        private const string FIRM_ID = "firm_id";
-        private const string ACCOUNT = "account";
-        private const string CLIENT_CODE = "client_code";
-        private const string CLASS_CODE = "class_code";
-        private const string TICKER = "sec_code";
-        private const string EXCHANGE_ORDER_ID = "exchange_code";
-        #endregion
-
-        public enum TransactionStatus : long
-        {
-            SentFromQuikToServer = 0,
-            ReceivedByServer = 1,
-            ExchangeUnavailable = 2,
-            Completed = 3,
-            RejectedByQuik = 4,
-            RejectedByQuikServer = 5,
-            NotEnoughMoney = 6,
-            NotSupportedByQiuk = 10,
-            InvalidDigitalSignature = 11,
-            TimeoutExpired = 12,
-            CrossExecution = 13,
-            RejectedByBroker = 14,
-            AcceptedAsException = 15,
-            UserRefusedToContinue = 16
-        }
-
-        public enum ErrorSite : long
-        {
-            None = 0,
-            Quik = 1,
-            QuikServer = 2,
-            LimitsSupervisor = 3,
-            Exchange = 4
-        }
+        private const string ORDER_NOT_ACTIVE_ERROR = "Order is not active";
 
         private static LuaWrap _context;
 
@@ -98,9 +47,148 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
         {
             get => TimeWrapper.GetTime(_context, RESPONSE_RECEPTION_TIMESTAMP).GetValueOrDefault();
         }
-        public static long? ExchangeAssignedOrderId
+        public static string? ExchangeAssignedOrderId
         {
-            get => _context.TryFetchLongFromTable(EXCHANGE_ORDER_ID, out long result) ? result : null;
+            get => _context.ReadRowValueString(EXCHANGE_ORDER_ID);
+        }
+        public static string? ClassCode
+        {
+            get => _context.ReadRowValueString(CLASS_CODE);
+        }
+        public static long RemainingSize
+        {
+            get => _context.TryFetchLongFromTable(REST, out long result) ? result : 0;
+        }
+
+        public static string? CancelOrder(Order order)
+        {
+            if (order.State != OrderStates.Active)
+            {
+                return ORDER_NOT_ACTIVE_ERROR;
+            }
+
+            return SendTransaction(5, () =>
+            {
+                Quik.Lua.SetTableValue(TRANSACTION_ID_PARAM, TransactionIdGenerator.CreateId().ToString());
+                Quik.Lua.SetTableValue(CLASS_CODE_PARAM, order.Security.ClassCode);
+                Quik.Lua.SetTableValue(ORDER_ID_PARAM, order.ExchangeAssignedIdString);
+                Quik.Lua.SetTableValue(TICKER_PARAM, order.Security.Ticker);
+                Quik.Lua.SetTableValue(ACTION_PARAM, ACTION_CANCEL_ORDER_PARAM);
+            });
+        }
+        public static string? PlaceNewOrder(MoexOrderSubmission submission)
+        {
+            if (submission.ClientCode is null)
+            {
+                throw new ArgumentException($"{nameof(submission.ClientCode)} of the order is not set");
+            }
+
+            var exectype = string.Empty;
+            var execondition = string.Empty;
+            var expiry = string.Empty;
+            var price = string.Empty;
+
+            var operation = submission.Quote.Operation == Operations.Buy
+                ? BUY_OPERATION_PARAM
+                : SELL_OPERATION_PARAM;
+
+            if (submission.IsMarket)
+            {
+                exectype = ORDER_TYPE_MARKET_PARAM;
+            }
+            else
+            {
+                exectype = ORDER_TYPE_LIMIT_PARAM;
+                price = submission.Quote.Price.ToString((uint)submission.Security.PricePrecisionScale);
+            }
+
+            switch (submission.ExecutionCondition)
+            {
+                case OrderExecutionConditions.FillOrKill:
+                    {
+                        execondition = FILL_OR_KILL_ORDER_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.CancelRest:
+                    {
+                        execondition = CANCEL_BALANCE_ORDER_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.Session:
+                    {
+                        execondition = QUEUE_ORDER_PARAM;
+                        expiry = ORDER_TODAY_EXPIRY_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.GoodTillCancelled:
+                    {
+                        execondition = QUEUE_ORDER_PARAM;
+                        expiry = ORDER_GTC_EXPIRY_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.GoodTillDate:
+                    {
+                        execondition = QUEUE_ORDER_PARAM;
+                        expiry = submission.Expiry.ToString("yyyyMMdd");
+                        break;
+                    }
+                default:
+                    throw new NotImplementedException(
+                    $"Add support for {nameof(OrderExecutionConditions)}.{submission.ExecutionCondition} case");
+            }
+
+            return SendTransaction(12, () =>
+            {
+                Quik.Lua.SetTableValue(EXECUTION_CONDITION_PARAM, execondition);
+                Quik.Lua.SetTableValue(TRANSACTION_ID_PARAM, submission.TransactionId.ToString());
+                Quik.Lua.SetTableValue(ORDER_TYPE_PARAM, exectype);
+                Quik.Lua.SetTableValue(CLIENT_CODE_PARAM, submission.ClientCode);
+                Quik.Lua.SetTableValue(EXPIRY_DATE_PARAM, expiry);
+                Quik.Lua.SetTableValue(CLASS_CODE_PARAM, submission.Security.ClassCode);
+                Quik.Lua.SetTableValue(OPERATION_PARAM, operation);
+                Quik.Lua.SetTableValue(ACCOUNT_PARAM, submission.AccountCode);
+                Quik.Lua.SetTableValue(TICKER_PARAM, submission.Security.Ticker);
+                Quik.Lua.SetTableValue(ACTION_PARAM, ACTION_NEW_ORDER_PARAM);
+                Quik.Lua.SetTableValue(PRICE_PARAM, price);
+                Quik.Lua.SetTableValue(SIZE_PARAM, submission.Quote.Size.ToString());
+            });
+        }
+        public static string? ChangeOrder(Order order, Decimal5 newprice, int newsize)
+        {
+            if (order.State != OrderStates.Active)
+            {
+                return ORDER_NOT_ACTIVE_ERROR;
+            }
+
+            return SendTransaction(8, () =>
+            {
+                Quik.Lua.SetTableValue(TRANSACTION_ID_PARAM, TransactionIdGenerator.CreateId().ToString());
+                Quik.Lua.SetTableValue(MOVE_ORDER_PRICE_PARAM, newprice.ToString((uint)order.Security.PricePrecisionScale));
+                Quik.Lua.SetTableValue(MOVE_ORDER_SIZE_PARAM, newsize.ToString());
+                Quik.Lua.SetTableValue(MOVE_ORDER_ID_PARAM, order.ExchangeAssignedIdString);
+                Quik.Lua.SetTableValue(CLASS_CODE_PARAM, order.Security.ClassCode);
+                Quik.Lua.SetTableValue(TICKER_PARAM, order.Security.Ticker);
+                Quik.Lua.SetTableValue(ACTION_PARAM, ACTION_MOVE_ORDER_PARAM);
+                Quik.Lua.SetTableValue(MODE_PARAM, MOVE_ORDER_NEW_SIZE_MODE);
+            });
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string? SendTransaction(int tableSize, Action completeTable)
+        {
+            lock (Quik.SyncRoot)
+            {
+                string? result = null;
+
+                if (Quik.Lua.ExecFunction(SEND_TRANSACTION_METHOD, Api.TYPE_STRING, tableSize, completeTable))
+                {
+                    result = Quik.Lua.PopString();
+                }
+
+                Quik.Lua.PopFromStack();
+
+                return result; 
+            }
         }
     }
 }

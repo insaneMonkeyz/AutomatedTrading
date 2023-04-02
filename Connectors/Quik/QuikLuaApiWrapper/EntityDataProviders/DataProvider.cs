@@ -91,7 +91,6 @@ namespace Quik.EntityProviders
 #if TRACE
                 this.Trace();
 #endif
-
                 lock (_callbackLock)
                 {
                     var request = CreateRequestFrom(state);

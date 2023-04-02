@@ -48,7 +48,8 @@ namespace Quik.Entities
 
         public override string ToString()
         {
-            return $"{AccountCode} Total funds: {AccountCurrency} {TotalFunds.ToString(2u)}; Floating income {AccountCurrency} {FloatingIncome.ToString(2u)};";
+            return $"{AccountCode} Total funds: {AccountCurrency} {TotalFunds.ToString(2u, separateThousands: true)}; " +
+                             $"Floating income: {AccountCurrency} {FloatingIncome.ToString(2u, separateThousands: true)};";
         }
     }
 }

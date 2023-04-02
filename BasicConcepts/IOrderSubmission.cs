@@ -4,11 +4,11 @@ namespace TradingConcepts
 {
     public interface IOrderSubmission : IExpiring
     {
-        string AccountCode { get; }
-        long TransactionId { get; }
-        ISecurity Security { get; }
-        IQuote Quote { get; }
-        bool IsLimit { get; }
-        OrderExecutionConditions ExecutionCondition { get; }
+        string AccountCode { get; init; }
+        long TransactionId { get; init; }
+        ISecurity Security { get; init; }
+        IQuote Quote { get; init; }
+        bool IsMarket { get; init; }
+        OrderExecutionConditions ExecutionCondition { get; init; }
     }
 }

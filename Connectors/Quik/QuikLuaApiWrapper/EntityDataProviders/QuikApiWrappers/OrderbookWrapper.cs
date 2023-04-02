@@ -2,6 +2,7 @@
 using TradingConcepts;
 using Quik.Entities;
 using Quik.Lua;
+using TradingConcepts.CommonImplementations;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {

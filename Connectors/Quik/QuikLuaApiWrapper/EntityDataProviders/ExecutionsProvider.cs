@@ -7,6 +7,7 @@ using static Quik.Quik;
 using TradingConcepts;
 using System.Runtime.CompilerServices;
 using Quik.Lua;
+using TradingConcepts.CommonImplementations;
 
 namespace Quik.EntityProviders
 {
@@ -69,6 +70,7 @@ namespace Quik.EntityProviders
             var request = new OrderRequestContainer
             {
                 ClassCode = ExecutionWrapper.ClassCode,
+                TransactionId = ExecutionWrapper.TransactionId,
                 ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId
             };
             return _orderResolver.Resolve(ref request);

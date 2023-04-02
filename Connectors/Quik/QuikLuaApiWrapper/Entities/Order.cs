@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,52 +9,106 @@ using TradingConcepts.CommonImplementations;
 
 namespace Quik.Entities
 {
-    internal class Order : IOrder, INotifyEntityUpdated
+    internal class Order : MoexOrderSubmission, IOrder, INotifyEntityUpdated
     {
         private const int DEFAULT_EXECUTIONS_LIST_SIZE = 10;
 
-        private Security _security;
         private string? _exchangeAssignedIdString;
 
-        public required Security Security
-        {
-            get => _security;
-            init => _security = value ?? throw new ArgumentNullException(nameof(value));
-        }
-        public Quote Quote { get; init; }
         public List<OrderExecution> Executions { get; } = new(DEFAULT_EXECUTIONS_LIST_SIZE);
+        IEnumerable<IOrderExecution> IOrder.Executions => this.Executions;
 
-        public string AccountCode { get; init; }
-        public string ClientCode { get; init; }
-        public OrderStates State { get; set; }
+        public OrderStates State { get; private set; }
         public string? ExchangeAssignedIdString 
         { 
             get => _exchangeAssignedIdString; 
-            internal set
+            set
             {
                 _exchangeAssignedIdString = value ?? throw new ArgumentNullException(nameof(value));
                 ExchangeAssignedId = long.Parse(value);
             }
         }
         public long ExchangeAssignedId { get; private set; }
-        public long TransactionId { get; init; }
-        public bool IsLimit { get; init; }
         public long RemainingSize { get; set; }
         public long ExecutedSize => Quote.Size - RemainingSize;
-        public OrderExecutionConditions ExecutionCondition { get; init; }
-        public DateTimeOffset Expiry { get; init; }
-        public TimeSpan TimeToExpiry { get; }
-        public DateTimeOffset Submitted { get; set; }
-
-        IEnumerable<IOrderExecution> IOrder.Executions => Executions;
-        ISecurity IOrderSubmission.Security => Security;
-        IQuote IOrderSubmission.Quote => Quote;
+        public DateTimeOffset Submitted { get; } = DateTimeOffset.Now;
 
         public event Action Updated = delegate { };
+
+        [SetsRequiredMembers]
+        public Order(MoexOrderSubmission submission) : base(submission.Security)
+        {
+            base.ExecutionCondition = submission.ExecutionCondition;
+            base.TransactionId = submission.TransactionId;
+            base.AccountCode = submission.AccountCode;
+            base.ClientCode = submission.ClientCode;
+            base.IsMarket = submission.IsMarket;
+            base.Expiry = submission.Expiry;
+            base.Quote = submission.Quote;
+        }
+
+        public void SetSingleState(OrderStates state)
+        {
+            lock (this)
+            {
+#if DEBUG
+                switch (state)
+                {
+                    case OrderStates.Registering:
+                    case OrderStates.Changing:
+                    case OrderStates.Cancelling:
+                        throw new InvalidOperationException($"State {state} is not single");
+                }
+
+                EnsureStateCanBeSet(state);
+#endif
+                State = state; 
+            }
+        }
+
+        public void AddIntermediateState(OrderStates state)
+        {
+            lock (this)
+            {
+#if DEBUG
+                switch (state)
+                {
+                    case OrderStates.None:
+                    case OrderStates.Rejected:
+                    case OrderStates.Done:
+                    case OrderStates.OnHold:
+                    case OrderStates.Active:
+                        throw new InvalidOperationException($"State {state} is not intermediate");
+                }
+
+                EnsureStateCanBeSet(state);
+#endif
+
+                State |= state; 
+            }
+        }
 
         public override string ToString()
         {
             return $"{State} {ExecutionCondition} {Security} {Quote} Executed={ExecutedSize} Remainder={RemainingSize}";
+        }
+
+        private void EnsureStateCanBeSet(OrderStates newState)
+        {
+            var state = State;
+
+            bool isInvalid = newState == OrderStates.Registering && !state.HasFlag(OrderStates.None)
+                          || newState == OrderStates.Cancelling && !state.HasFlag(OrderStates.Active)
+                          || newState == OrderStates.Changing && !state.HasFlag(OrderStates.Active)
+                          || newState == OrderStates.Active && !(state.HasFlag(OrderStates.Registering) || state.HasFlag(OrderStates.OnHold))
+                          || newState == OrderStates.OnHold && !state.HasFlag(OrderStates.Active)
+                          || newState == OrderStates.Rejected && !(state.HasFlag(OrderStates.Active) || state.HasFlag(OrderStates.None));
+
+
+            if (isInvalid)
+            {
+                throw new InvalidOperationException($"Cannot set {newState} order state when base state is {state}");
+            }
         }
     }
 }

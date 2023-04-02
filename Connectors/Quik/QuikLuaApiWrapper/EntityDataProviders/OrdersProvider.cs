@@ -10,6 +10,7 @@ using Quik.Lua;
 
 using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MultiGetMethod2Params<Quik.Lua.LuaWrap, Quik.Entities.Order?>;
 using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.Lua.LuaWrap>;
+using TradingConcepts.CommonImplementations;
 
 namespace Quik.EntityProviders
 {
@@ -56,6 +57,11 @@ namespace Quik.EntityProviders
 
         public override Order? Create(ref OrderRequestContainer request)
         {
+            if (string.IsNullOrEmpty(request.ExchangeAssignedId))
+            {
+                return null;
+            }
+
             base.Create(ref request);
 
             lock (_requestInProgressLock)
@@ -81,13 +87,14 @@ namespace Quik.EntityProviders
                 }
 
                 var flags = OrdersWrapper.Flags;
-                var order = new Order()
+
+                var submission = new MoexOrderSubmission(sec)
                 {
-                    Security = sec,
+                    AccountCode = OrdersWrapper.Account,
                     ExecutionCondition = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
                     Expiry = OrdersWrapper.Expiry ?? default,
-                    IsLimit = flags.HasFlag(OrderFlags.IsLimitOrder),
-                    TransactionId = OrdersWrapper.TransactionId,                    
+                    IsMarket = !flags.HasFlag(OrderFlags.IsLimitOrder),
+                    TransactionId = OrdersWrapper.TransactionId,
                     Quote = new Quote
                     {
                         Price = OrdersWrapper.Price,
@@ -97,6 +104,8 @@ namespace Quik.EntityProviders
                             : Operations.Buy
                     }
                 };
+
+                var order = new Order(submission);
 
                 Update(order, state);
 
@@ -134,9 +143,15 @@ namespace Quik.EntityProviders
                 var flags = OrdersWrapper.Flags;
 
                 entity.RemainingSize = OrdersWrapper.Rest;
-                entity.State = flags.HasFlag(OrderFlags.IsAlive)
-                    ? OrderStates.Active
-                    : OrderStates.Done; 
+
+                if (flags.HasFlag(OrderFlags.IsAlive))
+                {
+                    entity.SetSingleState(OrderStates.Active);
+                }
+                else
+                {
+                    entity.SetSingleState(OrderStates.Done);
+                }
             }
         }
 
@@ -148,6 +163,7 @@ namespace Quik.EntityProviders
 
                 return new()
                 {
+                    TransactionId = OrdersWrapper.TransactionId,
                     ExchangeAssignedId = OrdersWrapper.ExchangeOrderId,
                     ClassCode = OrdersWrapper.ClassCode
                 }; 

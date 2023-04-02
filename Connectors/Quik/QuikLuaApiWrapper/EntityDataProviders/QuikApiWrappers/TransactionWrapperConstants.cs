@@ -2,10 +2,38 @@
 
 namespace Quik.EntityDataProviders.QuikApiWrappers
 {
-    internal partial class TransactionBuilder
+    internal partial class TransactionWrapper
     {
-        public const string TABLE_NAME = "trans_reply";
+        public const string NAME = "trans_reply";
         public const string CALLBACK_METHOD = "OnTransReply";
+        public const string SEND_TRANSACTION_METHOD = "sendTransaction";
+
+        #region General
+        private const string ID = "trans_id";
+        private const string UNIQUE_ID = "uid";
+        private const string SERVER_TRANSACTION_ID = "server_trans_id";
+        private const string STATUS = "status";
+        private const string RESULT_DESCRIPTION = "result_msg";
+        private const string TIMESTAMP = "date_time";
+        private const string FLAGS = "flags";
+        private const string ERROR_CODE = "error_code";
+        private const string ERROR_SITE = "error_source";
+        private const string RESPONSE_RECEPTION_TIMESTAMP = "gate_reply_time";
+        #endregion
+
+        #region Optional
+        //NULLABLE
+        private const string ORDER_ID = "order_num";
+        private const string PRICE = "price";
+        private const string SIZE = "quantity";
+        private const string REST = "balance";
+        private const string FIRM_ID = "firm_id";
+        private const string ACCOUNT = "account";
+        private const string CLIENT_CODE = "client_code";
+        private const string CLASS_CODE = "class_code";
+        private const string TICKER = "sec_code";
+        private const string EXCHANGE_ORDER_ID = "exchange_code";
+        #endregion
 
         //TRANSACTION
         private const string TRANSACTION_ID_PARAM = "TRANS_ID";
@@ -15,7 +43,7 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
         private const string CLIENT_CODE_PARAM = "CLIENT_CODE";
         private const string ACTION_PARAM = "ACTION";
         private const string OPERATION_PARAM = "OPERATION";
-        private const string EXECUTION_TYPE_PARAM = "TYPE";
+        private const string ORDER_TYPE_PARAM = "TYPE";
         private const string EXECUTION_CONDITION_PARAM = "EXECUTION_CONDITION";
         private const string SIZE_PARAM = "QUANTITY";
         private const string MODE_PARAM = "MODE";
@@ -26,9 +54,9 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
         private const string BASE_CONTRACT_PARAM = "BASE_CONTRACT";
         private const string KILL_ACTIVE_ORDERS_PARAM = "KILL_ACTIVE_ORDERS";
 
-        private const string MOVE_ORDER_OLD_ID_PARAM = "FIRST_ORDER_NUMBER";
-        private const string MOVE_ORDER_OLD_SIZE_PARAM = "FIRST_ORDER_NEW_QUANTITY";
-        private const string MOVE_ORDER_OLD_PRICE_PARAM = "FIRST_ORDER_NEW_PRICE";
+        private const string MOVE_ORDER_ID_PARAM = "FIRST_ORDER_NUMBER";
+        private const string MOVE_ORDER_SIZE_PARAM = "FIRST_ORDER_NEW_QUANTITY";
+        private const string MOVE_ORDER_PRICE_PARAM = "FIRST_ORDER_NEW_PRICE";
         private const string MOVE_ORDER_NEW_ID_PARAM = "SECOND_ORDER_NUMBER";
         private const string MOVE_ORDER_NEW_SIZE_PARAM = "SECOND_ORDER_NEW_QUANTITY";
         private const string MOVE_ORDER_NEW_PRICE_PARAM = "SECOND_ORDER_NEW_PRICE";
@@ -79,5 +107,34 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
 
         private const string ORDER_TYPE_LIMIT_PARAM = "L";
         private const string ORDER_TYPE_MARKET_PARAM = "M";
+
+        private const string MOVE_ORDER_MODE_SAME_SIZE = "0";
+        private const string MOVE_ORDER_NEW_SIZE_MODE = "1";
+        public enum TransactionStatus : long
+        {
+            SentFromQuikToServer = 0,
+            ReceivedByServer = 1,
+            ExchangeUnavailable = 2,
+            Completed = 3,
+            RejectedByQuik = 4,
+            RejectedByQuikServer = 5,
+            NotEnoughMoney = 6,
+            NotSupportedByQiuk = 10,
+            InvalidDigitalSignature = 11,
+            TimeoutExpired = 12,
+            CrossExecution = 13,
+            RejectedByBroker = 14,
+            AcceptedAsException = 15,
+            UserRefusedToContinue = 16
+        }
+
+        public enum ErrorSite : long
+        {
+            None = 0,
+            Quik = 1,
+            QuikServer = 2,
+            LimitsSupervisor = 3,
+            Exchange = 4
+        }
     }
 }

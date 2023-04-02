@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using TradingConcepts;
 
@@ -13,6 +14,7 @@ namespace Quik.Lua
 
         public const int LAST_ITEM = -1;
         public const int SECOND_ITEM = -2;
+        public const int THIRD_ITEM = -3;
 
         #region Initialization
         private readonly IntPtr _state;
@@ -116,6 +118,14 @@ namespace Quik.Lua
             Decimal5 result = Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
             Api.lua_settop(_state, SECOND_ITEM);
             return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void SetTableValue(string column, string value)
+        {
+            Api.lua_pushstring(_state, column);
+            Api.lua_pushstring(_state, value);
+            Api.lua_settable(_state, THIRD_ITEM);
         }
 
         internal string ReadValueSafe(LuaTypes type, IntPtr pStack, int i)
@@ -617,6 +627,29 @@ namespace Quik.Lua
             return Api.lua_pcallk(_state, 2, 2, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
                 && Api.lua_type(_state, LAST_ITEM) == returnType2
                 && Api.lua_type(_state, SECOND_ITEM) == returnType1;
+        }
+        internal bool ExecFunction(string name, int returnType, int tableSize, Action completeTable)
+        {
+            Api.lua_getglobal(_state, name);
+            Api.lua_createtable(_state, tableSize, 0);
+
+            completeTable();
+
+            return Api.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType;
+        }
+        internal bool ExecFunction(string name, int returnType, IReadOnlyDictionary<string,string> table)
+        {
+            Api.lua_getglobal(_state, name);
+            Api.lua_createtable(_state, table.Count, 0);
+
+            foreach (var item in table)
+            {
+                SetTableValue(item.Key, item.Value);
+            }
+
+            return Api.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType;
         }
         internal bool ExecFunction(string name, int returnType)
         {

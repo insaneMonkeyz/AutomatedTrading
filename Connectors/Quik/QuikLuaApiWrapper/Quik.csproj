@@ -18,6 +18,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\BasicConcepts\TradingConcepts.csproj" />
+    <ProjectReference Include="..\..\..\Tools\Tools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Bugs\" />
   </ItemGroup>
 
 </Project>

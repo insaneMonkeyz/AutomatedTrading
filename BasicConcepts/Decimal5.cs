@@ -340,7 +340,7 @@ namespace TradingConcepts
             return val1 / (decimal)val2;
         }
 
-        public string ToString(uint precision)
+        public string ToString(uint precision, bool separateThousands = false)
         {
             unsafe
             {
@@ -397,7 +397,7 @@ namespace TradingConcepts
                         ? (char)(digit + ZERO_CHAR_OFFSET) 
                         : '0';
 
-                    if (bufferPos == nextSpacePos && rest > 0)
+                    if (separateThousands && bufferPos == nextSpacePos && rest > 0)
                     {
                         bufferPos--;
                         nextSpacePos -= 4;
