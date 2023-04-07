@@ -13,10 +13,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KeraLua" Version="1.3.3" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\..\BasicConcepts\TradingConcepts.csproj" />
     <ProjectReference Include="..\..\..\Tools\Tools.csproj" />
   </ItemGroup>
@@ -29,6 +25,10 @@
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>QuikLuaWrapperTests</_Parameter1>
 		</AssemblyAttribute>
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="ZeroLog" Version="2.1.0" />
 	</ItemGroup>
 
 </Project>
