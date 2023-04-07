@@ -7,6 +7,7 @@ using TradingConcepts;
 
 namespace Quik.Lua
 {
+    internal delegate void CompleteTable<TArg>(ref TArg args) where TArg : struct;
     internal struct LuaWrap
     {
         public readonly string ThreadName = "Callback Thread";
@@ -632,6 +633,17 @@ namespace Quik.Lua
             return Api.lua_pcallk(_state, 2, 2, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
                 && Api.lua_type(_state, LAST_ITEM) == returnType2
                 && Api.lua_type(_state, SECOND_ITEM) == returnType1;
+        }
+        internal bool ExecFunction<TTableArgs>(string name, int returnType, int tableSize, CompleteTable<TTableArgs> completeTable, ref TTableArgs tableArgs )
+            where TTableArgs : struct
+        {
+            Api.lua_getglobal(_state, name);
+            Api.lua_createtable(_state, tableSize, 0);
+
+            completeTable(ref tableArgs);
+
+            return Api.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType;
         }
         internal bool ExecFunction(string name, int returnType, int tableSize, Action completeTable)
         {

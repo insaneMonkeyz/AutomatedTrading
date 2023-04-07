@@ -5,6 +5,7 @@ using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
 using TradingConcepts;
+using static Quik.EntityDataProviders.QuikApiWrappers.TransactionWrapper;
 
 namespace Quik.EntityDataProviders
 {
@@ -27,7 +28,68 @@ namespace Quik.EntityDataProviders
 
         public Order PlaceNew(MoexOrderSubmission submission)
         {
-            var error = TransactionWrapper.PlaceNewOrder(submission);
+            if (submission.ClientCode is null)
+            {
+                throw new ArgumentException($"{nameof(submission.ClientCode)} of the order is not set");
+            }
+
+            var newOrderArgs = new NewOrderArgs();
+
+            var exectype = string.Empty;
+            var execondition = string.Empty;
+            var expiry = string.Empty;
+            var price = string.Empty;
+
+            var operation = submission.Quote.Operation == Operations.Buy
+                ? BUY_OPERATION_PARAM
+                : SELL_OPERATION_PARAM;
+
+            if (submission.IsMarket)
+            {
+                exectype = ORDER_TYPE_MARKET_PARAM;
+            }
+            else
+            {
+                exectype = ORDER_TYPE_LIMIT_PARAM;
+                price = submission.Quote.Price.ToString((uint)submission.Security.PricePrecisionScale);
+            }
+
+            switch (submission.ExecutionCondition)
+            {
+                case OrderExecutionConditions.FillOrKill:
+                    {
+                        execondition = FILL_OR_KILL_ORDER_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.CancelRest:
+                    {
+                        execondition = CANCEL_BALANCE_ORDER_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.Session:
+                    {
+                        execondition = QUEUE_ORDER_PARAM;
+                        expiry = ORDER_TODAY_EXPIRY_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.GoodTillCancelled:
+                    {
+                        execondition = QUEUE_ORDER_PARAM;
+                        expiry = ORDER_GTC_EXPIRY_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.GoodTillDate:
+                    {
+                        execondition = QUEUE_ORDER_PARAM;
+                        expiry = submission.Expiry.ToString("yyyyMMdd");
+                        break;
+                    }
+                default:
+                    throw new NotImplementedException(
+                    $"Add support for {nameof(OrderExecutionConditions)}.{submission.ExecutionCondition} case");
+            }
+
+            var error = TransactionWrapper.PlaceNewOrder(ref newOrderArgs);
             var order = new Order(submission);
 
             if (error != null)
@@ -53,7 +115,18 @@ namespace Quik.EntityDataProviders
         }
         public void Cancel(Order order)
         {
-            var error = TransactionWrapper.CancelOrder(order);
+            if (order.State != OrderStates.Active)
+            {
+                $"Order is not active: {order}".DebugPrintWarning();
+                return;
+            }
+
+            var args = new CancelOrderArgs
+            {
+                Order = order
+            };
+
+            var error = TransactionWrapper.CancelOrder(ref args);
 
             if (error != null)
             {
@@ -66,7 +139,20 @@ namespace Quik.EntityDataProviders
         }
         public void Change(Order order, Decimal5 newprice, long newsize)
         {
-            var error = TransactionWrapper.ChangeOrder(order, newprice, newsize);
+            if (order.State != OrderStates.Active)
+            {
+                $"Order is not active: {order}".DebugPrintWarning();
+                return;
+            }
+
+            var changeArgs = new ChangeOrderArgs
+            {
+                Order = order,
+                NewPrice = newprice,
+                NewSize = newsize
+            };
+
+            var error = ChangeOrder(ref changeArgs);
 
             if (error != null)
             {

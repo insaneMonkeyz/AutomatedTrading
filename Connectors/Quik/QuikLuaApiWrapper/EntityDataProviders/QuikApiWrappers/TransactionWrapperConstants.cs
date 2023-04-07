@@ -92,21 +92,21 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
         private const string IS_SET_PARAM = "YES";
         private const string IS_NOT_SET_PARAM = "NO";
 
-        private const string BUY_OPERATION_PARAM = "B";
-        private const string SELL_OPERATION_PARAM = "S";
+        public const string BUY_OPERATION_PARAM = "B";
+        public const string SELL_OPERATION_PARAM = "S";
 
-        private const string QUEUE_ORDER_PARAM = "PUT_IN_QUEUE";
-        private const string FILL_OR_KILL_ORDER_PARAM = "FILL_OR_KILL";
-        private const string CANCEL_BALANCE_ORDER_PARAM = "KILL_BALANCE";
+        public const string QUEUE_ORDER_PARAM = "PUT_IN_QUEUE";
+        public const string FILL_OR_KILL_ORDER_PARAM = "FILL_OR_KILL";
+        public const string CANCEL_BALANCE_ORDER_PARAM = "KILL_BALANCE";
 
         private const string STOP_ORDER_PARAM = "SIMPLE_STOP_ORDER";
         private const string TAKE_PROFIT_ORDER_PARAM = "TAKE_PROFIT_STOP_ORDER";
 
-        private const string ORDER_GTC_EXPIRY_PARAM = "GTC";
-        private const string ORDER_TODAY_EXPIRY_PARAM = "TODAY";
+        public const string ORDER_GTC_EXPIRY_PARAM = "GTC";
+        public const string ORDER_TODAY_EXPIRY_PARAM = "TODAY";
 
-        private const string ORDER_TYPE_LIMIT_PARAM = "L";
-        private const string ORDER_TYPE_MARKET_PARAM = "M";
+        public const string ORDER_TYPE_LIMIT_PARAM = "L";
+        public const string ORDER_TYPE_MARKET_PARAM = "M";
 
         private const string MOVE_ORDER_MODE_SAME_SIZE = "0";
         private const string MOVE_ORDER_NEW_SIZE_MODE = "1";
