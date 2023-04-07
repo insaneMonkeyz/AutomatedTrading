@@ -23,9 +23,15 @@ namespace Quik.EntityProviders.Resolvers
             return base.GetFromCache(ref request);
         }
 
-        public TSecurity? Resolve<TSecurity>(string ticker) where TSecurity : ISecurity
+        public ISecurity? Resolve<TSecurity>(string ticker) where TSecurity : ISecurity
         {
-            throw new NotImplementedException();
+            var request = new SecurityRequestContainer
+            {
+                Ticker = ticker,
+                ClassCode = MoexSpecifics.SecurityTypesToClassCodes[typeof(TSecurity)]
+            };
+
+            return base.Resolve(ref request);
         }
 
         public override Security? Resolve(ref SecurityRequestContainer request)

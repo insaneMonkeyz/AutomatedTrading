@@ -52,9 +52,10 @@ namespace Quik
         }
         TSecurity? IQuik.GetSecurity<TSecurity>(string ticker) where TSecurity : default
         {
-            return EntityResolvers
-                .GetSecurityResolver()
-                .Resolve<TSecurity>(ticker);
+            return 
+                (TSecurity?)EntityResolvers
+                    .GetSecurityResolver()
+                    .Resolve<TSecurity>(ticker);
         }
 
         IOrder IQuik.PlaceNewOrder(MoexOrderSubmission submission)
