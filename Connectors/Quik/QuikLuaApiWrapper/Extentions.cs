@@ -96,6 +96,19 @@ namespace Quik
         {
             return new QuikApiException($"Can't parse essential parameter '{property}' to build a security.");
         }
+        public static ValueTuple<TValue,TAttribute>? GetValueByAttribute<TValue, TAttribute>(this Type type) where TAttribute : Attribute
+        {
+            var property = type
+                .GetProperties()
+                .FirstOrDefault(p => p.HasAttribute<TAttribute>());
+
+            if (property == default)
+            {
+                return default;
+            }
+
+            return ((TValue)property.GetValue(null, null), property.GetCustomAttribute<TAttribute>());
+        }
         public static PropertyInfo? GetTaggedProperty<TAttribute>(this Type type) where TAttribute : Attribute
         {
             return type
@@ -111,6 +124,13 @@ namespace Quik
         public static bool HasAttribute<TAttribute>(this MemberInfo subj) where TAttribute : Attribute
         {
             return subj.CustomAttributes.Any(a => a.AttributeType == typeof(TAttribute));
+        }
+        public static void ForEach<T>(this IEnumerable<T> collection, Action<T> action)
+        {
+            foreach (var item in collection)
+            {
+                action(item);
+            }
         }
     }
 }

@@ -1,50 +1,51 @@
 ﻿using System.Diagnostics;
-using System.Text;
-using TradingConcepts;
+using Core.Tools;
+
 using Quik.Entities;
+using Quik.EntityDataProviders;
 using Quik.EntityProviders;
+using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
+
+using TradingConcepts;
 using TradingConcepts.CommonImplementations;
-using Core.Tools;
-using Quik.EntityDataProviders.QuikApiWrappers;
-using Quik.EntityDataProviders;
+using TradingConcepts.SecuritySpecifics;
 
 namespace Quik
 {
-    public delegate void CallbackSubscriber(LuaFunction handler, string quikTableName);
+    internal delegate void CallbackSubscriber(LuaFunction handler, string quikTableName);
 
-    public class Quik
+    internal partial class Quik : IDisposable
     {
         internal static readonly object SyncRoot = new();
+
 #if DEBUG
         internal static LuaWrap Lua { get; private set; }
 #else
         internal static LuaWrap Lua;
 #endif
+        private bool _disposed;
 
-        // https://stackoverflow.com/questions/9957544/callbackoncollecteddelegate-in-globalkeyboardhook-was-detected
-        private static readonly LuaFunction _onStop = OnStop;
-        private static readonly LuaFunction _main = Main;
+        private readonly Dictionary<string, LuaFunction> _usedCallbacks;
+        private readonly IQuikDataConsumer[] _components;
+        private readonly ExecutionLoop _executionLoop = new();
 
-        /// <summary>
-        /// Entry Point. This method gets called from the lua wrapper of the Quik trading terminal
-        /// </summary>
-        /// <param name="L">Pointer to the Lua state object</param>
-        /// <returns></returns>
+        private const string DLL_NAME = "NativeToManagedProxy";
+
         public int Initialize(IntPtr luaState)
         {
+#if TRACE
+            this.Trace();
+#endif
             Lua = new(luaState, "Initializing thread");
 
             try
             {
-                Lua.TieProxyLibrary("NativeToManagedProxy");
-                Lua.RegisterCallback(_main, "main");
-                Lua.RegisterCallback(_onStop, "OnStop");
+                Lua.TieProxyLibrary(DLL_NAME);
 
-                SecuritiesProvider.SubscribeCallback();
-                TransactionsProvider.Instance.SubscribeCallback();
-                //LiveSmokeTest.Instance.Initialize();
+                _usedCallbacks.ForEach(c => Lua.RegisterCallback(c.Value, c.Key));
+                   _components.ForEach(c => c.SubscribeCallback());
             }
             catch (Exception ex)
             {
@@ -55,29 +56,11 @@ namespace Quik
             return 0;
         }
 
-        private static int OnStop(IntPtr state)
+        private int Main(IntPtr state)
         {
-            try
-            {
-                lock (SyncRoot)
-                {
 #if TRACE
-                    Extentions.Trace(nameof(Quik));
+            this.Trace();
 #endif
-                    //LiveSmokeTest.Instance.Complete(); 
-                }
-            }
-            catch (Exception e)
-            {
-                $"{e.Message}\n{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
-                return -1;
-            }
-
-            return 1;
-        }
-
-        private static int Main(IntPtr state)
-        {
             Lua = new(state, "Main thread");
 
             for (int i = 0; i < 5; i++)
@@ -98,49 +81,14 @@ namespace Quik
                 //
                 //==========================================================================
 
-
                 // WHEN STATE OF CACHED ENTITY CHANGES
                 // THE HASH USED TO RETRIEVE THIS ENTITY WILL REMAIN THE SAME
                 // MATHCING STAGE WILL FAIL
 
-
-                //LiveSmokeTest.Instance.Begin();
-                var loop = new ExecutionLoop();
-                SecuritiesProvider.Initialize(loop);
-                TransactionsProvider.Instance.Initialize(loop);
-
-                var req = new SecurityRequestContainer
-                {
-                    ClassCode = MoexSpecifics.FUTURES_CLASS_CODE,
-                    Ticker = "SiM3"
-                };
-                var sec = SecuritiesProvider.Create(ref req) ?? throw new Exception();
-                var submission = new MoexOrderSubmission(sec)
-                {
-                    ClientCode = "SPBFUT00UJA",
-                    AccountCode = "U7A0016",
-                    TransactionId = TransactionIdGenerator.CreateId(),
-                    Quote = new Quote
-                    {
-                        Operation = Operations.Sell,
-                        Price = 79001,
-                        Size = 1
-                    }
-                };
-
-                var order = new Order(submission)
-                {
-                    ExchangeAssignedIdString = "1892948291012802690"
-                };
-
-                order.AddIntermediateState(OrderStates.Registering);
-                order.SetSingleState(OrderStates.Active);
-
-                Debugger.Launch();
-
                 // check if transaction reply comes together with new order callback
 
-                TransactionsProvider.Instance.Cancel(order);
+                _components.ForEach(c => c.Initialize(_executionLoop));
+                _executionLoop.Enter();
             }
             catch (Exception ex)
             {
@@ -149,5 +97,96 @@ namespace Quik
             }
             return 1;
         }
+        private int OnClose(IntPtr state)
+        {
+            return OnStop(state);
+        }
+        private int OnStop(IntPtr state)
+        {
+            try
+            {
+#if TRACE
+                this.Trace();
+#endif
+                Dispose();
+            }
+            catch (Exception e)
+            {
+                $"{e.Message}\n{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
+                return -1;
+            }
+
+            return 1;
+        }
+        private int OnCleanUp(IntPtr state)
+        {
+#if TRACE
+            this.Trace();
+#endif
+            return 1;
+        }
+        private int OnConnedted(IntPtr state)
+        {
+#if TRACE
+            this.Trace();
+#endif
+            return 1;
+        }
+        private int OnDisonnedted(IntPtr state)
+        {
+#if TRACE
+            this.Trace();
+#endif
+            return 1;
+        }
+
+        #region Singleton
+        internal static Quik Instance { get; } = new();
+        private Quik()
+        {
+            _usedCallbacks = new()
+            {
+                { "main", Main },
+                { "OnStop", OnStop },
+                { "OnClose", OnClose },
+                { "OnCleanUp", OnCleanUp },
+                { "OnConnedted", OnConnedted },
+                { "OnDisonnedted", OnDisonnedted },
+            };
+
+            _components = SingletonInstanceAttribute.GetInstances<IQuikDataConsumer>();
+        }
+        #endregion
+
+        #region IDisposable
+        protected void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _executionLoop.Abort();
+                _components.ForEach(c => c.Dispose());
+            }
+
+            _usedCallbacks.ForEach(c => Lua.UnregisterCallback(c.Key));
+
+            Lua.UnregisterCallback(DLL_NAME);
+
+            _disposed = true;
+        }
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+        ~Quik()
+        {
+            Dispose(disposing: false);
+        } 
+        #endregion
     }
 }

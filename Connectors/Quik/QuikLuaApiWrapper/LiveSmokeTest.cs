@@ -45,11 +45,11 @@ namespace Quik
 
             public void Initialize()
             {
-                SecuritiesProvider.NewEntity = (sec) =>
+                SecuritiesProvider.Instance.NewEntity = (sec) =>
                 {
                     NewSecurityReceived = true;
                 };
-                SecuritiesProvider.EntityChanged = (sec) =>
+                SecuritiesProvider.Instance.EntityChanged = (sec) =>
                 {
                     SecurityUpdatesReceived = true;
                 };
@@ -78,7 +78,7 @@ namespace Quik
 
         public void Initialize()
         {
-            SecuritiesProvider.SubscribeCallback();
+            SecuritiesProvider.Instance.SubscribeCallback();
             OrderbooksProvider.Instance.SubscribeCallback();
 
             _bookProbes.Initialize();
@@ -88,7 +88,7 @@ namespace Quik
             {
                 return IsApproved(ref request.SecurityRequest);
             };
-            SecuritiesProvider.CreationIsApproved = (ref SecurityRequestContainer request) =>
+            SecuritiesProvider.Instance.CreationIsApproved = (ref SecurityRequestContainer request) =>
             {
                 return IsApproved(ref request);
             };
@@ -101,10 +101,10 @@ namespace Quik
         public void Begin()
         {
             OrderbooksProvider.Instance.Initialize(_notificationsLoop);            
-            SecuritiesProvider.Initialize(_notificationsLoop);
+            SecuritiesProvider.Instance.Initialize(_notificationsLoop);
 
-            _secProbes.GetClasses = SecuritiesProvider.GetAvailableClasses().Any();
-            _secProbes.GetSecuritiesOfType = SecuritiesProvider.GetAvailableSecuritiesOfType(typeof(IFutures)).Any();
+            _secProbes.GetClasses = SecuritiesProvider.Instance.GetAvailableClasses().Any();
+            _secProbes.GetSecuritiesOfType = SecuritiesProvider.Instance.GetAvailableSecuritiesOfType(typeof(IFutures)).Any();
 
             var securityResolver = EntityResolvers.GetSecurityResolver();
             var brmRequest = new SecurityRequestContainer

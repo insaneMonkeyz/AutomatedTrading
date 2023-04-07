@@ -26,12 +26,12 @@ namespace Quik.EntityProviders
                 if (_securityResolver == null)
                 {
                     var map = new SecuritiesToClasscodesMap(
-                        SecuritiesProvider.GetAvailableClasses,
-                        SecuritiesProvider.GetAvailableSecuritiesOfType);
+                        SecuritiesProvider.Instance.GetAvailableClasses,
+                        SecuritiesProvider.Instance.GetAvailableSecuritiesOfType);
 
-                    SecuritiesProvider.OnInitialized += map.Initialize;
+                    SecuritiesProvider.Instance.OnInitialized += map.Initialize;
 
-                    _securityResolver = new SecurityResolver(SecuritiesProvider.Create, map);
+                    _securityResolver = new SecurityResolver(SecuritiesProvider.Instance.Create, map);
                 }
 
                 return _securityResolver;

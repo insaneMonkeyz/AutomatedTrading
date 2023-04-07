@@ -64,7 +64,7 @@ namespace Quik
 
             var loop = new ExecutionLoop();
 
-            SecuritiesProvider.Initialize(loop);
+            SecuritiesProvider.Instance.Initialize(loop);
             OrderbooksProvider.Instance.Initialize(loop);
 
             while (DateTime.Now < DateTime.Now.AddDays(1))

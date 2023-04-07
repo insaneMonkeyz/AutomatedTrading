@@ -53,11 +53,14 @@ namespace Quik.EntityProviders
 
         public void Dispose()
         {
-            if(_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
 
             _disposed = true;
+            IsEnabled = false;
             _entitiesToSend.Clear();
-            IsEnabled= false;
         }
     }
 }

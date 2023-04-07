@@ -3,11 +3,10 @@
     internal class ExecutionLoop
     {
         private bool _running = false;
-        private Thread? _thread;
 
         public event Action? Execute;
-        public event Action? Starting;
-        public event Action? Stopping;
+        public event Action Starting = delegate { };
+        public event Action Stopping = delegate { };
 
         public virtual void Enter()
         {
@@ -27,7 +26,7 @@
 
         private void Loop()
         {
-            Starting?.Invoke();
+            Starting();
 
             while (_running)
             {
@@ -43,7 +42,7 @@
                 }
             }
 
-            Stopping?.Invoke();
+            Stopping();
         }
     }
 }

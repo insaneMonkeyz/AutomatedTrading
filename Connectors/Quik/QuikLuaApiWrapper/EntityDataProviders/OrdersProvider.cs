@@ -47,6 +47,9 @@ namespace Quik.EntityProviders
 
         public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
+#if TRACE
+            this.Trace();
+#endif
             _updateParams.Callback.Invoke = Update;
             _createParams.Callback.Invoke = Create;
             _updateParams.Callback.Arg1 = Quik.Lua;
@@ -57,6 +60,9 @@ namespace Quik.EntityProviders
 
         public override Order? Create(ref OrderRequestContainer request)
         {
+#if TRACE
+            this.Trace();
+#endif
             if (string.IsNullOrEmpty(request.ExchangeAssignedId))
             {
                 return null;
@@ -74,6 +80,9 @@ namespace Quik.EntityProviders
         }
         protected override Order? Create(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (OrdersWrapper.Lock)
             {
                 OrdersWrapper.Set(state);
@@ -114,6 +123,9 @@ namespace Quik.EntityProviders
         }
         public override void Update(Order entity)
         {
+#if TRACE
+            this.Trace();
+#endif
             base.Update(entity);
 
             lock (_requestInProgressLock)
@@ -127,6 +139,9 @@ namespace Quik.EntityProviders
         }
         protected override void Update(Order entity, LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (OrderbookWrapper.Lock)
             {
                 OrdersWrapper.Set(state);
@@ -157,6 +172,9 @@ namespace Quik.EntityProviders
 
         protected override OrderRequestContainer CreateRequestFrom(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (OrdersWrapper.Lock)
             {
                 OrdersWrapper.Set(state);
@@ -172,6 +190,9 @@ namespace Quik.EntityProviders
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Security? ResolveSecurityOfOrder(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             var request = new SecurityRequestContainer
             {
                 ClassCode = OrdersWrapper.ClassCode,

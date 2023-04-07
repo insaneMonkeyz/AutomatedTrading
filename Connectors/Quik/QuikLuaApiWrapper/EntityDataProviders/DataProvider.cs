@@ -18,41 +18,27 @@ namespace Quik.EntityProviders
     /// Type of container used to request dependent entities, 
     /// such as an Order for OrderExecution
     /// </typeparam>
-    internal abstract class DataProvider<TEntity, TRequestContainer> : IDisposable
+    internal abstract class DataProvider<TEntity, TRequestContainer> : QuikDataConsumer<TEntity>
         where TRequestContainer : struct, IRequestContainer<TEntity>
         where TEntity : class
     {
-        protected IEntityEventSignalizer<TEntity> _eventSignalizer = new DirectEntitySignalizer<TEntity>();
         protected readonly object _requestInProgressLock = new();
-        protected readonly object _callbackLock = new();
-        private readonly LuaFunction _onNewDataCallback;
-        private bool _disposed;
-        private bool _initialized;
+        protected bool _initialized;
 
-        protected abstract string QuikCallbackMethod { get; }
         protected abstract string AllEntitiesTable { get; }
         protected abstract Action<LuaWrap> SetWrapper { get; }
 
         public AllowEntityCreationFilter<TRequestContainer> CreationIsApproved = delegate { return true; };
         public EntityEventHandler<TEntity> NewEntity = delegate { };
 
-        public void SubscribeCallback()
-        {
-#if TRACE
-            this.Trace();
-#endif
-            Quik.Lua.RegisterCallback(_onNewDataCallback, QuikCallbackMethod);
-        }
-        public virtual void Initialize(ExecutionLoop entityNotificationLoop)
+        public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
 #if TRACE
             this.Trace();
 #endif
             SetWrapper(Quik.Lua);
-            _eventSignalizer = new EventSignalizer<TEntity>(entityNotificationLoop)
-            {
-                IsEnabled = true
-            };
+            base.Initialize(entityNotificationLoop);
+            _initialized = true;
         }
 
         public virtual List<TEntity> GetAllEntities()
@@ -60,8 +46,9 @@ namespace Quik.EntityProviders
 #if TRACE
             this.Trace();
 #endif
+#if DEBUG
             EnsureInitialized();
-
+#endif
             lock (_requestInProgressLock)
             {
                 return TableWrapper.ReadWholeTable(AllEntitiesTable, Create); 
@@ -72,7 +59,9 @@ namespace Quik.EntityProviders
 #if TRACE
             this.Trace();
 #endif
+#if DEBUG
             EnsureInitialized();
+#endif
 
             if (!request.HasData)
             {
@@ -84,7 +73,7 @@ namespace Quik.EntityProviders
         protected abstract TEntity? Create(LuaWrap state);
         protected abstract TRequestContainer CreateRequestFrom(LuaWrap state);
 
-        protected virtual int OnNewData(IntPtr state)
+        protected override int OnNewData(IntPtr state)
         {
             try
             {
@@ -118,44 +107,13 @@ namespace Quik.EntityProviders
             }
         }
 
-        protected DataProvider()
-        {
-            _onNewDataCallback = OnNewData;
-        }
-
         #region IDisposable
-        protected virtual void DisposeInternal() { }
-        protected virtual void Dispose(bool disposing)
+        protected override void DisposeManaged()
         {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    DisposeInternal();
-                    _eventSignalizer.Dispose();
-                    NewEntity = default;
-                    CreationIsApproved = default;
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                _disposed = true;
-            }
+            NewEntity = default;
+            CreationIsApproved = default;
         }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~DataProvider()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        } 
+        protected override void DisposeUnmanaged() { }
         #endregion
     }
 }

@@ -7,7 +7,6 @@ namespace NativeToManagedProxy
     #pragma managed
     int Initialize(void* luaStack)
     {
-        auto quik = gcnew Quik::Quik();
-        return quik->Initialize((IntPtr)luaStack);
+        return Quik::Loader::Initialize((IntPtr)luaStack);
     }
 }

@@ -1,39 +1,28 @@
 ﻿using Quik.Entities;
 using Quik.EntityDataProviders.QuikApiWrappers;
 using Quik.EntityProviders;
+using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
 using TradingConcepts;
 
 namespace Quik.EntityDataProviders
 {
-    internal class TransactionsProvider
+    internal sealed class TransactionsProvider : QuikDataConsumer<Order>
     {
-        protected readonly object _callbackLock = new();
-        private readonly LuaFunction _onNewDataCallback;
+        protected override string QuikCallbackMethod => TransactionWrapper.CALLBACK_METHOD;
 
         private EntityResolver<OrderRequestContainer, Order>? _ordersResolver;
-        private IEntityEventSignalizer<Order> _eventSignalizer = new DirectEntitySignalizer<Order>();
 
         public EntityEventHandler<Order> OrderChanged = delegate { };
-
-        public void SubscribeCallback()
-        {
-#if TRACE
-            this.Trace();
-#endif
-            Quik.Lua.RegisterCallback(_onNewDataCallback, TransactionWrapper.CALLBACK_METHOD);
-        }
-        public virtual void Initialize(ExecutionLoop entityNotificationLoop)
+    
+        public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
 #if TRACE
             this.Trace();
 #endif
             _ordersResolver = EntityResolvers.GetOrdersResolver();
-            _eventSignalizer = new EventSignalizer<Order>(entityNotificationLoop)
-            {
-                IsEnabled = true
-            };
+            base.Initialize(entityNotificationLoop);
         }
 
         public Order PlaceNew(MoexOrderSubmission submission)
@@ -75,7 +64,7 @@ namespace Quik.EntityDataProviders
                 order.AddIntermediateState(OrderStates.Cancelling);
             }
         }
-        public void Change(Order order, Decimal5 newprice, int newsize)
+        public void Change(Order order, Decimal5 newprice, long newsize)
         {
             var error = TransactionWrapper.ChangeOrder(order, newprice, newsize);
 
@@ -103,8 +92,7 @@ namespace Quik.EntityDataProviders
                 order.SetSingleState(OrderStates.Done);
             }
         }
-
-        private int OnTransactionReply(nint state)
+        protected override int OnNewData(nint state)
         {
             try
             {
@@ -163,11 +151,9 @@ namespace Quik.EntityDataProviders
         }
 
         #region Singleton
+        [SingletonInstance]
         public static TransactionsProvider Instance { get; } = new();
-        private TransactionsProvider()
-        {
-            _onNewDataCallback = OnTransactionReply;
-        } 
+        private TransactionsProvider() { }
         #endregion
     }
 }

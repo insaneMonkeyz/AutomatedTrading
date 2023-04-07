@@ -1,147 +1,107 @@
-﻿using TradingConcepts;
-using TradingConcepts.SecuritySpecifics;
-using TradingConcepts.SecuritySpecifics.Options;
+﻿using System.Runtime.CompilerServices;
+
 using Quik.Entities;
+using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
-using GetItemParams = Quik.EntityProviders.QuikApiWrappers.TableWrapper.GetParamExParams;
+using TradingConcepts;
+using TradingConcepts.SecuritySpecifics;
+using TradingConcepts.SecuritySpecifics.Options;
+
+using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string?, string?, Quik.EntityProviders.RequestContainers.SecurityRequestContainer>;
 using GetCsv1Param = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method1Param<System.Collections.Generic.IEnumerable<System.String>>;
 using GetCsvNoParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MethodNoParams<System.Collections.Generic.IEnumerable<System.String>>;
+using GetItemParams = Quik.EntityProviders.QuikApiWrappers.TableWrapper.GetParamExParams;
 using GetSecurityParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method2Params<Quik.Entities.Security?>;
-using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string?, string?, Quik.EntityProviders.RequestContainers.SecurityRequestContainer>;
 
 namespace Quik.EntityProviders
 {
-    internal static class SecuritiesProvider
+    internal sealed class SecuritiesProvider : QuikDataConsumer<Security>
     {
-        private static readonly Dictionary<Type, Func<Security?>> _securityTypeToCreateMethod = new(4)
-        {
-            { typeof(IStock), CreateStock },
-            { typeof(IFutures), CreateFutures },
-            { typeof(IOption), CreateOption },
-            { typeof(ICalendarSpread), CreateCalendarSpread }
-        };
-        private static readonly Dictionary<string, Func<Security?>> _classcodeToCreateMethod = new(4)
-        {
-            { SecurityWrapper.STOCK_CLASS_CODE, CreateStock },
-            { SecurityWrapper.FUTURES_CLASS_CODE, CreateFutures },
-            { SecurityWrapper.OPTIONS_CLASS_CODE, CreateOption },
-            { SecurityWrapper.CALENDAR_SPREADS_CLASS_CODE, CreateCalendarSpread }
-        };
-        private static readonly Dictionary<Type, string> _securityTypeToClassCode = new()
-        {
-            { typeof(IStock), SecurityWrapper.STOCK_CLASS_CODE },
-            { typeof(IFutures), SecurityWrapper.FUTURES_CLASS_CODE },
-            { typeof(IOption), SecurityWrapper.OPTIONS_CLASS_CODE },
-            { typeof(ICalendarSpread), SecurityWrapper.CALENDAR_SPREADS_CLASS_CODE },
-        };
-        private static readonly Dictionary<string, Type> _classCodeToSecurityType = new()
-        {
-            { SecurityWrapper.STOCK_CLASS_CODE, typeof(IStock) },
-            { SecurityWrapper.FUTURES_CLASS_CODE, typeof(IFutures) },
-            { SecurityWrapper.OPTIONS_CLASS_CODE, typeof(IOption) },
-            { SecurityWrapper.CALENDAR_SPREADS_CLASS_CODE, typeof(ICalendarSpread) },
-        };
+        private readonly Dictionary<Type, Func<Security?>> _securityTypeToCreateMethod;
+        private readonly Dictionary<string, Func<Security?>> _classcodeToCreateMethod;
+        private readonly Dictionary<Type, string> _securityTypeToClassCode;
+        private readonly Dictionary<string, Type> _classCodeToSecurityType;
 
-        private static GetCsv1Param _securitiesCsvRequest = new()
-        {
-            Action = GetCsvValues,
-            Method = SecurityWrapper.GET_SECURITIES_OF_A_CLASS_METHOD,
-            ReturnType = Api.TYPE_STRING,
-            Arg0 = string.Empty,
-            DefaultValue = Enumerable.Empty<string>()
-        };
-        private static GetCsvNoParams _classesCsvRequest = new()
-        {
-            Action = GetCsvValues,
-            Method = SecurityWrapper.GET_CLASSES_LIST_METHOD,
-            ReturnType = Api.TYPE_STRING,
-            DefaultValue = Enumerable.Empty<string>()
-        };
-        private static GetSecurityParams _getSecurityRequest = new()
+        private GetCsv1Param _securitiesCsvRequest;
+        private GetCsvNoParams _classesCsvRequest;
+        private GetSecurityParams _getSecurityRequest = new()
         {
             Method = SecurityWrapper.GET_METOD,
             ReturnType = Api.TYPE_TABLE,
             Arg0 = string.Empty,
             Arg1 = string.Empty
         };
-        private static GetItemParams _getSecurityParamRequest = new()
+        private GetItemParams _getSecurityParamRequest = new()
         {
             Ticker = string.Empty,
             ClassCode = string.Empty,
             Parameter = string.Empty
         };
-        private static CallbackParameters _requestContainerCreationArgs = new()
+        private CallbackParameters _requestContainerCreationArgs = new()
         {
             Callback = SecurityRequestContainer.Create
         };
 
-        private static readonly LuaFunction _onNewDataCallback = OnNewData;
-        private static bool _initialized;
-        private static readonly object _callbackLock = new();
-        private static readonly object _userRequestLock = new();
-        private static EntityResolver<SecurityRequestContainer, Security> _entityResolver = NoResolver<SecurityRequestContainer, Security>.Instance;
+        private bool _initialized;
+        private readonly object _userRequestLock = new();
+        private EntityResolver<SecurityRequestContainer, Security> _entityResolver = NoResolver<SecurityRequestContainer, Security>.Instance;
 
-        private static IEntityEventSignalizer<Security> _eventSignalizer = new DirectEntitySignalizer<Security>();
+        public AllowEntityCreationFilter<SecurityRequestContainer> CreationIsApproved = delegate { return true; };
+        public EntityEventHandler<Security> EntityChanged = delegate { };
+        public EntityEventHandler<Security> NewEntity = delegate { };
 
-        public static AllowEntityCreationFilter<SecurityRequestContainer> CreationIsApproved = delegate { return true; };
-        public static EntityEventHandler<Security> EntityChanged = delegate { };
-        public static EntityEventHandler<Security> NewEntity = delegate { };
-        public static event Action OnInitialized = delegate { };
+        public event Action OnInitialized = delegate { };
 
-        public static void Initialize(ExecutionLoop entityNotificationLoop)
+        protected override string QuikCallbackMethod => SecurityWrapper.CALLBACK_METHOD;
+
+        public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             lock (_callbackLock)
             {
                 SecurityWrapper.Set(Quik.Lua);
                 _entityResolver = EntityResolvers.GetSecurityResolver();
-                _eventSignalizer = new EventSignalizer<Security>(entityNotificationLoop)
-                {
-                    IsEnabled = true
-                };
+                base.Initialize(entityNotificationLoop);
                 _initialized = true;
 
                 OnInitialized(); 
             }
         }
-        public static void SubscribeCallback()
-        {
-            Quik.Lua.RegisterCallback(_onNewDataCallback, SecurityWrapper.CALLBACK_METHOD);
-        }
 
-        public static Decimal5? GetBuyMarginRequirements(Security security)
+        public Decimal5? GetBuyMarginRequirements(Security security)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
+#if DEBUG
             EnsureInitialized();
-            
+#endif
             return TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_BUY_MARGIN_REQUIREMENTS);
         }
-        public static Decimal5? GetSellMarginRequirements(Security security)
+        public Decimal5? GetSellMarginRequirements(Security security)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
+#if DEBUG
             EnsureInitialized();
-
+#endif
             return TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_SELL_MARGIN_REQUIREMENTS);
         }
 
-        public static IEnumerable<string> GetAvailableSecuritiesOfType(string classcode)
+        public IEnumerable<string> GetAvailableSecuritiesOfType(string classcode)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
-            EnsureInitialized();
-
+#if DEBUG
+            EnsureInitialized(); 
+#endif
             lock (_userRequestLock)
             {
                 _securitiesCsvRequest.Arg0 = classcode;
@@ -149,13 +109,14 @@ namespace Quik.EntityProviders
                 return FunctionsWrappers.ReadSpecificEntry(ref _securitiesCsvRequest); 
             }
         }
-        public static IEnumerable<string> GetAvailableSecuritiesOfType(Type type)
+        public IEnumerable<string> GetAvailableSecuritiesOfType(Type type)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
+#if DEBUG
             EnsureInitialized();
-
+#endif
             lock (_userRequestLock)
             {
                 _securitiesCsvRequest.Arg0 = _securityTypeToClassCode[type];
@@ -163,25 +124,27 @@ namespace Quik.EntityProviders
                 return FunctionsWrappers.ReadSpecificEntry(ref _securitiesCsvRequest); 
             }
         }
-        public static IEnumerable<string> GetAvailableClasses()
+        public IEnumerable<string> GetAvailableClasses()
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
+#if DEBUG
             EnsureInitialized();
-
+#endif
             lock (_userRequestLock)
             {
                 return FunctionsWrappers.ReadSpecificEntry(ref _classesCsvRequest); 
             }
         }
-        public static Security? Create(ref SecurityRequestContainer request)
+        public Security? Create(ref SecurityRequestContainer request)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
+#if DEBUG
             EnsureInitialized();
-
+#endif
             if (!request.HasData)
             {
                 return null;
@@ -196,13 +159,14 @@ namespace Quik.EntityProviders
                 return FunctionsWrappers.ReadSpecificEntry(ref _getSecurityRequest);
             }
         }
-        public static void Update(Security security)
+        public void Update(Security security)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
+#if DEBUG
             EnsureInitialized();
-
+#endif
             lock (_userRequestLock)
             {
                 security.PriceStepValue = TableWrapper.FetchDecimal5ParamEx(security, SecurityWrapper.PARAM_PRICE_STEP_VALUE);
@@ -215,10 +179,10 @@ namespace Quik.EntityProviders
             }
         }
 
-        private static Security? CreateCalendarSpread()
+        private Security? CreateCalendarSpread()
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -239,10 +203,10 @@ namespace Quik.EntityProviders
 
             return null;
         }
-        private static Security? CreateOption()
+        private Security? CreateOption()
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -264,10 +228,10 @@ namespace Quik.EntityProviders
 
             return null;
         }
-        private static Security? CreateFutures()
+        private Security? CreateFutures()
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             if (TryCreateSecurityParamsContainer(out SecurityParamsContainer container))
             {
@@ -286,20 +250,20 @@ namespace Quik.EntityProviders
 
             return null;
         }
-        private static Security? CreateStock()
+        private Security? CreateStock()
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             return TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
                 ? new Stock(ref container)
                 : null;
         }
         
-        private static bool TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
+        private bool TryCreateSecurityParamsContainer(out SecurityParamsContainer container)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             container = new ()
             {
@@ -322,10 +286,10 @@ namespace Quik.EntityProviders
 
             return true;
         }
-        private static IEnumerable<string> GetCsvValues()
+        private IEnumerable<string> GetCsvValues()
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             var csv = Quik.Lua.ReadAsString();
 
@@ -333,19 +297,19 @@ namespace Quik.EntityProviders
                 ? Enumerable.Empty<string>()
                 : csv.Split(',', StringSplitOptions.RemoveEmptyEntries);
         }
-        private static Security? ResolveUnderlying(string? classCode, string? secCode)
+        private Security? ResolveUnderlying(string? classCode, string? secCode)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             var request = SecurityRequestContainer.Create(classCode, secCode);
             return _entityResolver.Resolve(ref request);
         }
 
-        private static int OnNewData(IntPtr state)
+        protected override int OnNewData(IntPtr state)
         {
 #if TRACE
-            Extentions.Trace(nameof(SecuritiesProvider));
+            this.Trace();
 #endif
             lock (_callbackLock)
             {
@@ -381,12 +345,64 @@ namespace Quik.EntityProviders
             }
         }
 
-        private static void EnsureInitialized([CallerMemberName] string? method = null)
+        private void EnsureInitialized([CallerMemberName] string? method = null)
         {
             if (!_initialized)
             {
                 throw new InvalidOperationException($"Calling {method ?? "METHOD_NOT_PROVIDED"} from {nameof(SecuritiesProvider)} before it was initialized.");
             }
         }
+
+        #region Singleton
+        [SingletonInstance(rank: 500)]
+        public static SecuritiesProvider Instance { get; } = new();
+        private SecuritiesProvider()
+        {
+            _securityTypeToCreateMethod = new(4)
+            {
+                { typeof(IStock), CreateStock },
+                { typeof(IFutures), CreateFutures },
+                { typeof(IOption), CreateOption },
+                { typeof(ICalendarSpread), CreateCalendarSpread }
+            };
+            _classcodeToCreateMethod = new(4)
+            {
+                { SecurityWrapper.STOCK_CLASS_CODE, CreateStock },
+                { SecurityWrapper.FUTURES_CLASS_CODE, CreateFutures },
+                { SecurityWrapper.OPTIONS_CLASS_CODE, CreateOption },
+                { SecurityWrapper.CALENDAR_SPREADS_CLASS_CODE, CreateCalendarSpread }
+            };
+            _securityTypeToClassCode = new()
+            {
+                { typeof(IStock), SecurityWrapper.STOCK_CLASS_CODE },
+                { typeof(IFutures), SecurityWrapper.FUTURES_CLASS_CODE },
+                { typeof(IOption), SecurityWrapper.OPTIONS_CLASS_CODE },
+                { typeof(ICalendarSpread), SecurityWrapper.CALENDAR_SPREADS_CLASS_CODE },
+            };
+            _classCodeToSecurityType = new()
+            {
+                { SecurityWrapper.STOCK_CLASS_CODE, typeof(IStock) },
+                { SecurityWrapper.FUTURES_CLASS_CODE, typeof(IFutures) },
+                { SecurityWrapper.OPTIONS_CLASS_CODE, typeof(IOption) },
+                { SecurityWrapper.CALENDAR_SPREADS_CLASS_CODE, typeof(ICalendarSpread) },
+            };
+
+            _classesCsvRequest = new()
+            {
+                Action = GetCsvValues,
+                Method = SecurityWrapper.GET_CLASSES_LIST_METHOD,
+                ReturnType = Api.TYPE_STRING,
+                DefaultValue = Enumerable.Empty<string>()
+            };
+            _securitiesCsvRequest = new()
+            {
+                Action = GetCsvValues,
+                Method = SecurityWrapper.GET_SECURITIES_OF_A_CLASS_METHOD,
+                ReturnType = Api.TYPE_STRING,
+                Arg0 = string.Empty,
+                DefaultValue = Enumerable.Empty<string>()
+            };
+        }
+        #endregion
     }
 }

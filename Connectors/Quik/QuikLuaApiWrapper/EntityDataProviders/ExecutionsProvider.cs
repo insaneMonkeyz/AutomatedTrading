@@ -21,11 +21,17 @@ namespace Quik.EntityProviders
 
         public override OrderExecution? Create(ref OrderExecutionRequestContainer request)
         {
+#if TRACE
+            this.Trace();
+#endif
             throw new NotImplementedException("Need to implement 'SearchItems' from quik API in order " +
                 "to be able to fetch random order executions from server.");
         }
         protected override OrderExecution? Create(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (ExecutionWrapper.Lock)
             {
                 ExecutionWrapper.Set(state);
@@ -57,6 +63,9 @@ namespace Quik.EntityProviders
         }
         protected override OrderExecutionRequestContainer CreateRequestFrom(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             return new OrderExecutionRequestContainer
             {
                 TradeId = ExecutionWrapper.TradeId,
@@ -67,6 +76,9 @@ namespace Quik.EntityProviders
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Order? ResolveOrderOfExecution(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             var request = new OrderRequestContainer
             {
                 ClassCode = ExecutionWrapper.ClassCode,
@@ -77,7 +89,7 @@ namespace Quik.EntityProviders
         }
 
         #region Singleton
-        [SingletonInstance]
+        [SingletonInstance(rank: -1)]
         public static ExecutionsProvider Instance { get; } = new();
         private ExecutionsProvider() 
         {

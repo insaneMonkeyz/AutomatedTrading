@@ -15,7 +15,7 @@ namespace Quik.EntityProviders
 {
     internal delegate ISecurity? GetSecurityHandler(SecurityRequestContainer security);
     
-    internal class DerivativesBalanceProvider : UpdatableEntitiesProvider<SecurityBalance, SecurityBalanceRequestContainer>
+    internal sealed class DerivativesBalanceProvider : UpdatableEntitiesProvider<SecurityBalance, SecurityBalanceRequestContainer>
     {
         private static UpdateParams _updateParams = new()
         {
@@ -50,6 +50,9 @@ namespace Quik.EntityProviders
 
         public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
+#if TRACE
+            this.Trace();
+#endif
             _updateParams.Callback.Invoke = Update;
             _createParams.Callback.Invoke = Create;
             _updateParams.Callback.Arg1 = Quik.Lua;
@@ -61,6 +64,9 @@ namespace Quik.EntityProviders
         }
         public override SecurityBalance? Create(ref SecurityBalanceRequestContainer request)
         {
+#if TRACE
+            this.Trace();
+#endif
             base.Create(ref request);
 
             lock (_requestInProgressLock)
@@ -74,6 +80,9 @@ namespace Quik.EntityProviders
         }
         protected override SecurityBalance? Create(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (DerivativesPositionsWrapper.Lock)
             {
                 DerivativesPositionsWrapper.Set(state);
@@ -100,6 +109,9 @@ namespace Quik.EntityProviders
         }
         public override void Update(SecurityBalance entity)
         {
+#if TRACE
+            this.Trace();
+#endif
             base.Update(entity);
 
             lock (_requestInProgressLock)
@@ -114,6 +126,9 @@ namespace Quik.EntityProviders
         }
         protected override void Update(SecurityBalance entity, LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (DerivativesPositionsWrapper.Lock)
             {
                 DerivativesPositionsWrapper.Set(state);
@@ -125,6 +140,9 @@ namespace Quik.EntityProviders
 
         protected override SecurityBalanceRequestContainer CreateRequestFrom(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (DerivativesPositionsWrapper.Lock)
             {
                 DerivativesPositionsWrapper.Set(state);
@@ -140,11 +158,9 @@ namespace Quik.EntityProviders
 
 
         #region Singleton
-        [SingletonInstance]
+        [SingletonInstance(rank: 10)]
         public static DerivativesBalanceProvider Instance { get; } = new();
-        private DerivativesBalanceProvider()
-        {
-        }
+        private DerivativesBalanceProvider() { }
         #endregion
     }
 }

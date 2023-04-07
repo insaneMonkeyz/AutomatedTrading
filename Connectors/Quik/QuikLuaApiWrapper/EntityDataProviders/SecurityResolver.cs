@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
+using TradingConcepts;
 using EntityFetcher = Quik.EntityProviders.ResolveEntityHandler<Quik.EntityProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
 
 namespace Quik.EntityProviders
@@ -20,6 +21,11 @@ namespace Quik.EntityProviders
         {
             CompleteRequest(ref request);
             return base.GetFromCache(ref request);
+        }
+
+        public TSecurity? Resolve<TSecurity>(string ticker) where TSecurity : ISecurity
+        {
+            throw new NotImplementedException();
         }
 
         public override Security? Resolve(ref SecurityRequestContainer request)

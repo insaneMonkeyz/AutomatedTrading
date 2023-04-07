@@ -42,6 +42,9 @@ namespace Quik.EntityProviders
 
         public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
+#if TRACE
+            this.Trace();
+#endif
             _updateParams.Callback.Arg1 = Quik.Lua;
             _createParams.Callback.Arg = Quik.Lua;
             _updateParams.Callback.Invoke = Update;
@@ -52,6 +55,9 @@ namespace Quik.EntityProviders
 
         public override DerivativesTradingAccount? Create(ref AccountRequestContainer request)
         {
+#if TRACE
+            this.Trace();
+#endif
             base.Create(ref request);
 
             lock (_requestInProgressLock)
@@ -64,6 +70,9 @@ namespace Quik.EntityProviders
         }
         protected override DerivativesTradingAccount Create(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (FuturesLimitsWrapper.Lock)
             {
                 FuturesLimitsWrapper.Set(state);
@@ -86,6 +95,9 @@ namespace Quik.EntityProviders
         }
         public    override void Update(DerivativesTradingAccount entity)
         {
+#if TRACE
+            this.Trace();
+#endif
             base.Update(entity);
 
             lock (_requestInProgressLock)
@@ -100,6 +112,9 @@ namespace Quik.EntityProviders
         }
         protected override void Update(DerivativesTradingAccount account, LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (FuturesLimitsWrapper.Lock)
             {
                 FuturesLimitsWrapper.Set(state);
@@ -114,6 +129,9 @@ namespace Quik.EntityProviders
 
         protected override AccountRequestContainer CreateRequestFrom(LuaWrap state)
         {
+#if TRACE
+            this.Trace();
+#endif
             lock (FuturesLimitsWrapper.Lock)
             {
                 FuturesLimitsWrapper.Set(state);
@@ -128,11 +146,9 @@ namespace Quik.EntityProviders
         }
 
         #region Singleton
-        [SingletonInstance]
+        [SingletonInstance(rank: 50)]
         public static AccountsProvider Instance { get; } = new();
-        private AccountsProvider()
-        {
-        } 
+        private AccountsProvider() { }
         #endregion
     }
 }

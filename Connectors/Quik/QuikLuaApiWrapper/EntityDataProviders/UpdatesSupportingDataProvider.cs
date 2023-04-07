@@ -28,7 +28,9 @@ namespace Quik.EntityProviders
 #if TRACE
             this.Trace();
 #endif
-            EnsureInitialized();
+#if DEBUG
+            EnsureInitialized(); 
+#endif
         }
         protected abstract void Update(TEntity entity, LuaWrap state);
 
@@ -37,7 +39,6 @@ namespace Quik.EntityProviders
 #if TRACE
             this.Trace();
 #endif
-
             try
             {
                 lock (_callbackLock)
@@ -70,8 +71,9 @@ namespace Quik.EntityProviders
             }
         }
 
-        protected override void DisposeInternal()
+        protected override void DisposeManaged()
         {
+            base.DisposeManaged();
             EntityChanged = delegate { };
         }
     }

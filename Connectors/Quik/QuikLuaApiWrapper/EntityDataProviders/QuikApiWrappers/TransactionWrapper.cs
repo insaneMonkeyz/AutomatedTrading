@@ -153,7 +153,7 @@ namespace Quik.EntityDataProviders.QuikApiWrappers
                 Quik.Lua.SetTableValue(SIZE_PARAM, submission.Quote.Size.ToString());
             });
         }
-        public static string? ChangeOrder(Order order, Decimal5 newprice, int newsize)
+        public static string? ChangeOrder(Order order, Decimal5 newprice, long newsize)
         {
             if (order.State != OrderStates.Active)
             {

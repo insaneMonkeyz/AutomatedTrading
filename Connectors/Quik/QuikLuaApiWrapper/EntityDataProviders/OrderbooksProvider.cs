@@ -9,11 +9,12 @@ using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrapper
 
 namespace Quik.EntityProviders
 {
-    internal sealed class OrderbooksProvider : IDisposable
+    internal sealed class OrderbooksProvider : QuikDataConsumer<OrderBook>
     {
         public AllowEntityCreationFilter<OrderbookRequestContainer> CreationIsApproved = delegate { return true; };
         public EntityEventHandler<OrderBook> EntityChanged = delegate { };
         public EntityEventHandler<OrderBook> NewEntity = delegate { };
+        protected override string QuikCallbackMethod => OrderbookWrapper.CALLBACK_METHOD;
 
         private CallbackParameters _requestContainerCreationArgs = new()
         {
@@ -24,15 +25,11 @@ namespace Quik.EntityProviders
         private EntityResolver<SecurityRequestContainer, Security> _securitiesResolver 
                   = NoResolver<SecurityRequestContainer, Security>.Instance;
 
-        private readonly LuaFunction _onNewDataCallback;
-        private IEntityEventSignalizer<OrderBook> _eventSignalizer = new DirectEntitySignalizer<OrderBook>();
         private readonly object _requestInProgressLock = new();
-        private readonly object _callbackLock = new();
 
         private bool _initialized;
-        private bool _disposed;
 
-        public void Initialize(ExecutionLoop entityNotificationLoop)
+        public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
 #if TRACE
             Extentions.Trace(nameof(OrderbooksProvider));
@@ -41,19 +38,9 @@ namespace Quik.EntityProviders
             {
                 _bookResolver = EntityResolvers.GetOrderbooksResolver();
                 _securitiesResolver = EntityResolvers.GetSecurityResolver();
-                _eventSignalizer = new EventSignalizer<OrderBook>(entityNotificationLoop)
-                {
-                    IsEnabled = true
-                };
+                base.Initialize(entityNotificationLoop);
                 _initialized = true; 
             }
-        }
-        public void SubscribeCallback()
-        {
-#if TRACE
-            Extentions.Trace(nameof(OrderbooksProvider));
-#endif
-            Quik.Lua.RegisterCallback(_onNewDataCallback, OrderbookWrapper.CALLBACK_METHOD);
         }
 
         public OrderBook? Create(ref OrderbookRequestContainer request)
@@ -61,8 +48,10 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(OrderbooksProvider));
 #endif
-            EnsureInitialized();
-            
+#if DEBUG
+            EnsureInitialized(); 
+#endif
+
             if(_securitiesResolver.Resolve(ref request.SecurityRequest) is not Security security)
             {
                 return null;
@@ -79,12 +68,14 @@ namespace Quik.EntityProviders
 #if TRACE
             Extentions.Trace(nameof(OrderbooksProvider));
 #endif
+#if DEBUG
             EnsureInitialized();
+#endif
 
             return OrderbookWrapper.UpdateOrderBook(book);
         }
 
-        private int OnNewData(IntPtr state)
+        protected override int OnNewData(IntPtr state)
         {
 #if TRACE
             Extentions.Trace(nameof(OrderbooksProvider));
@@ -133,45 +124,7 @@ namespace Quik.EntityProviders
         #region Singleton
         [SingletonInstance]
         public static OrderbooksProvider Instance { get; } = new();
-        private OrderbooksProvider()
-        {
-            _onNewDataCallback = OnNewData;
-        }
-        #endregion
-
-        #region IDisposable
-        private void Dispose(bool disposing)
-        {
-#if TRACE
-            Extentions.Trace(nameof(OrderbooksProvider));
-#endif
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                    _eventSignalizer.Dispose();
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                _disposed = true;
-            }
-        }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~OrderbooksProvider()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        } 
+        private OrderbooksProvider() { }
         #endregion
     }
 }

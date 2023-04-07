@@ -1,4 +1,5 @@
-﻿using TradingConcepts;
+﻿using Quik.Entities;
+using TradingConcepts;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;
 
@@ -22,10 +23,10 @@ namespace Quik
         event Action<ISecurity> SecurityChanged;
         event Action<IOrder> OrderChanged;
 
-        IEnumerable<SecurityDescription<TSecurity>> GetAvailableSecurities<TSecurity>() where TSecurity : ISecurity;
+        IEnumerable<SecurityDescription> GetAvailableSecurities<TSecurity>() where TSecurity : ISecurity;
         TSecurity? GetSecurity<TSecurity>(string ticker) where TSecurity : ISecurity;
 
-        void PlaceNewOrder(IOrderSubmission submission);
+        IOrder PlaceNewOrder(MoexOrderSubmission submission);
         void ChangeOrder(IOrder order, Decimal5 newPrice, long newSize);
         void CancelOrder(IOrder order);
     }

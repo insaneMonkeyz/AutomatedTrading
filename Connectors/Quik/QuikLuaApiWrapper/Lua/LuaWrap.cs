@@ -425,6 +425,11 @@ namespace Quik.Lua
             Api.lua_pushcclosure(_state, function, 0);
             Api.lua_setglobal(_state, alias);
         }
+        internal void UnregisterCallback(string alias)
+        {
+            Api.lua_pushnil(_state);
+            Api.lua_setglobal(_state, alias);
+        }
 
         internal long ReadAsNumber()
         {
