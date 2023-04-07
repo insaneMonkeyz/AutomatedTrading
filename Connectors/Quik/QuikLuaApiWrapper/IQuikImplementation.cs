@@ -32,7 +32,7 @@ namespace Quik
         public event Action<ISecurity> SecurityChanged = delegate { };
         public event Action<IOrder> OrderChanged = delegate { };
 
-        public IEnumerable<SecurityDescription> GetAvailableSecurities<TSecurity>() where TSecurity : ISecurity
+        IEnumerable<SecurityDescription> IQuik.GetAvailableSecurities<TSecurity>() 
         {
             var type = typeof(TSecurity);
 
@@ -49,18 +49,18 @@ namespace Quik
                               _ => throw new NotSupportedException($"Descriptions for type {type} cannot be created. Type not supported")
             };
         }
-        public TSecurity? GetSecurity<TSecurity>(string ticker) where TSecurity : ISecurity
+        TSecurity? IQuik.GetSecurity<TSecurity>(string ticker) where TSecurity : default
         {
             return EntityResolvers
                 .GetSecurityResolver()
                 .Resolve<TSecurity>(ticker);
         }
 
-        public IOrder PlaceNewOrder(MoexOrderSubmission submission)
+        IOrder IQuik.PlaceNewOrder(MoexOrderSubmission submission)
         {
             return TransactionsProvider.Instance.PlaceNew(submission);
         }
-        public void ChangeOrder(IOrder order, Decimal5 newPrice, long newSize)
+        void IQuik.ChangeOrder(IOrder order, Decimal5 newPrice, long newSize)
         {
             if (order is not Order moexOrder)
             {
@@ -69,7 +69,7 @@ namespace Quik
 
             TransactionsProvider.Instance.Change(moexOrder, newPrice, newSize);
         }
-        public void CancelOrder(IOrder order)
+        void IQuik.CancelOrder(IOrder order)
         {
             if (order is not Order moexOrder)
             {

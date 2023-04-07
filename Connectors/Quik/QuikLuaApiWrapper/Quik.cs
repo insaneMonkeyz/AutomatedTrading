@@ -87,6 +87,21 @@ namespace Quik
 
                 // check if transaction reply comes together with new order callback
 
+                DerivativesBalanceProvider.Instance.EntityChanged = (balance) => SecurityBalanceChanged(balance);
+                OrderbooksProvider.Instance.EntityChanged = (book) => OrderBookChanged(book);
+                TransactionsProvider.Instance.OrderChanged = (order) => OrderChanged(order);
+                SecuritiesProvider.Instance.EntityChanged = (sec) => SecurityChanged(sec);
+                AccountsProvider.Instance.EntityChanged = (acc) => AccountChanged(acc);
+                OrdersProvider.Instance.EntityChanged = (order) => OrderChanged(order);
+
+                DerivativesBalanceProvider.Instance.NewEntity = (balance) => NewSecurityBalance(balance);
+                ExecutionsProvider.Instance.NewEntity = (exec) => NewOrderExecution(exec);
+                OrderbooksProvider.Instance.NewEntity = (book) => NewOrderBook(book);
+                SecuritiesProvider.Instance.NewEntity = (sec) => NewSecurity(sec);
+                AccountsProvider.Instance.NewEntity = (acc) => NewAccount(acc);
+                OrdersProvider.Instance.NewEntity = (order) => NewOrder(order);
+
+
                 _components.ForEach(c => c.Initialize(_executionLoop));
                 _executionLoop.Enter();
             }
@@ -127,16 +142,36 @@ namespace Quik
         }
         private int OnConnedted(IntPtr state)
         {
+            try
+            {
 #if TRACE
-            this.Trace();
+                this.Trace();
 #endif
+                if (Lua.ReadAsBool())
+                {
+                    Connected(DateTime.UtcNow);
+                }
+            }
+            catch (Exception e)
+            {
+                e.DebugPrintException();
+            }
+
             return 1;
         }
         private int OnDisonnedted(IntPtr state)
         {
+            try
+            {
 #if TRACE
-            this.Trace();
+                this.Trace();
 #endif
+                ConnectionLost(DateTime.UtcNow);
+            }
+            catch (Exception e)
+            {
+                e.DebugPrintException();
+            }
             return 1;
         }
 
