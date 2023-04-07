@@ -4,6 +4,7 @@ using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
+using Quik.EntityProviders.Resolvers;
 using Quik.Lua;
 using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string?, string?, Quik.EntityProviders.RequestContainers.OrderbookRequestContainer>;
 

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Quik.EntityProviders.RequestContainers;
 
-namespace Quik.EntityProviders
+namespace Quik.EntityProviders.Resolvers
 {
     internal delegate TEntity? ResolveEntityHandler<TRequest, TEntity>(ref TRequest request);
 
@@ -23,7 +23,7 @@ namespace Quik.EntityProviders
         {
             lock (_resolveInProgress)
             {
-                _cache[request.GetHashCode()] = entity; 
+                _cache[request.GetHashCode()] = entity;
             }
         }
         public virtual TEntity? GetFromCache(ref TRequest request)
@@ -36,7 +36,7 @@ namespace Quik.EntityProviders
 
             lock (_resolveInProgress)
             {
-                return GetFromCacheInternal(ref request); 
+                return GetFromCacheInternal(ref request);
             }
         }
         public virtual TEntity? Resolve(ref TRequest request)
@@ -61,7 +61,7 @@ namespace Quik.EntityProviders
                     _cache.Add(request.GetHashCode(), entity);
                 }
 
-                return entity; 
+                return entity;
             }
         }
 

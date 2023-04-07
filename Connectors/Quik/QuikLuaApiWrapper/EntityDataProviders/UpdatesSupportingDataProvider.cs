@@ -3,6 +3,7 @@ using TradingConcepts;
 using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
+using Quik.EntityProviders.Resolvers;
 
 namespace Quik.EntityProviders
 {

@@ -8,6 +8,7 @@ using TradingConcepts;
 using System.Runtime.CompilerServices;
 using Quik.Lua;
 using TradingConcepts.CommonImplementations;
+using Quik.EntityProviders.Resolvers;
 
 namespace Quik.EntityProviders
 {

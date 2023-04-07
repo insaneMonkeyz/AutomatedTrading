@@ -3,6 +3,7 @@ using Quik.EntityDataProviders.QuikApiWrappers;
 using Quik.EntityProviders;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
+using Quik.EntityProviders.Resolvers;
 using Quik.Lua;
 using TradingConcepts;
 using static Quik.EntityDataProviders.QuikApiWrappers.TransactionWrapper;

@@ -11,6 +11,7 @@ using Quik.Lua;
 using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.MultiGetMethod2Params<Quik.Lua.LuaWrap, Quik.Entities.Order?>;
 using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMultiGetMethod2Params<Quik.Entities.Order, Quik.Lua.LuaWrap>;
 using TradingConcepts.CommonImplementations;
+using Quik.EntityProviders.Resolvers;
 
 namespace Quik.EntityProviders
 {

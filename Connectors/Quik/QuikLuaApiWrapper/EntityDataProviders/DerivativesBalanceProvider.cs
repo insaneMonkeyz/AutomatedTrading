@@ -10,6 +10,7 @@ using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Meth
 using System.Diagnostics;
 using Quik.Lua;
 using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.Resolvers;
 
 namespace Quik.EntityProviders
 {

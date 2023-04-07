@@ -8,6 +8,7 @@ using Quik.Entities;
 using Quik.EntityDataProviders;
 using Quik.EntityProviders;
 using Quik.EntityProviders.RequestContainers;
+using Quik.EntityProviders.Resolvers;
 using TradingConcepts;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;

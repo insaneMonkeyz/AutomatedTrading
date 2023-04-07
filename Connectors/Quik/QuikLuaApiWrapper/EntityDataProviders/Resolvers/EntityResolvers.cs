@@ -2,7 +2,7 @@
 using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 
-namespace Quik.EntityProviders
+namespace Quik.EntityProviders.Resolvers
 {
     internal static class EntityResolvers
     {
@@ -35,7 +35,7 @@ namespace Quik.EntityProviders
                 }
 
                 return _securityResolver;
-            } 
+            }
         }
         public static EntityResolver<AccountRequestContainer, DerivativesTradingAccount> GetAccountsResolver()
         {
@@ -53,7 +53,7 @@ namespace Quik.EntityProviders
         {
             return _orderExecutionsResolver ??= new(1_000, default);
         }
-        
+
         public static EntityResolver<TRequest, TEntity> GetResolver<TRequest, TEntity>()
             where TEntity : class
             where TRequest : struct, IRequestContainer<TEntity>

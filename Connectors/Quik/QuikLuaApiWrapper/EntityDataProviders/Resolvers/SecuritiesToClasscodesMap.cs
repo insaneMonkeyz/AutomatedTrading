@@ -1,7 +1,7 @@
 ﻿using ClassGetter = System.Func<System.Collections.Generic.IEnumerable<string>>;
 using SecuritiesByClassGetter = System.Func<string, System.Collections.Generic.IEnumerable<string>>;
 
-namespace Quik.EntityProviders
+namespace Quik.EntityProviders.Resolvers
 {
     internal class SecuritiesToClasscodesMap
     {

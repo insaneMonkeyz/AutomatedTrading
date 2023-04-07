@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 using TradingConcepts;
-using EntityFetcher = Quik.EntityProviders.ResolveEntityHandler<Quik.EntityProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
+using EntityFetcher = Quik.EntityProviders.Resolvers.ResolveEntityHandler<Quik.EntityProviders.RequestContainers.SecurityRequestContainer, Quik.Entities.Security>;
 
-namespace Quik.EntityProviders
+namespace Quik.EntityProviders.Resolvers
 {
     internal class SecurityResolver : EntityResolver<SecurityRequestContainer, Security>
     {
