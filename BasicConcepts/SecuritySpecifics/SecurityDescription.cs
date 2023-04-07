@@ -1,8 +1,8 @@
 ﻿namespace TradingConcepts.SecuritySpecifics
 {
-    public class SecurityDescription<TSecurity> where TSecurity : ISecurity
+    public class SecurityDescription
     {
-        public Type SecurityType { get; } = typeof(TSecurity);
+        public virtual Type SecurityType => typeof(ISecurity);
 
         public required string Ticker { get; init; }
     }

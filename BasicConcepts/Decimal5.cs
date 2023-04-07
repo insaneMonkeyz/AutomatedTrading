@@ -475,29 +475,57 @@ namespace TradingConcepts
 
             return e is null ? result : throw e;
         }
+        public static bool TryParse(ReadOnlySpan<char> buffer, out Decimal5 result)
+        {
+            if (buffer.IsEmpty)
+            {
+                result = default;
+                return true;
+            }
+
+            result = ParseInternal(buffer, out Exception? e);
+
+            return e is null;
+        }
         public static bool TryParse(string? value, out Decimal5 result)
         {
+            if (value is null)
+            {
+                result = default;
+                return false;
+            }
+
             result = ParseInternal(value, out Exception? e);
 
             return e is null;
         }
         public static Decimal5 Parse(string? value)
         {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             var result = ParseInternal(value, out Exception? e);
+
+            return e is null ? result : throw e;
+        }
+        public static Decimal5 Parse(ReadOnlySpan<char> buffer)
+        {
+            if (buffer.IsEmpty)
+            {
+                return default;
+            }
+
+            var result = ParseInternal(buffer, out Exception? e);
 
             return e is null ? result : throw e;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Decimal5 ParseInternal(string? value, out Exception? exception)
+        private static Decimal5 ParseInternal(ReadOnlySpan<char> value, out Exception? exception)
         {
-            if (value is null)
-            {
-                exception = new ArgumentNullException(nameof(value));
-                return default;
-            }
-
-            static FormatException getException(string subj)
+            static FormatException getException(ReadOnlySpan<char> subj)
             {
                 return new FormatException($"Cannot parse Decimal5 value from string '{subj}'");
             }

@@ -24,5 +24,11 @@
   <ItemGroup>
     <Folder Include="Bugs\" />
   </ItemGroup>
+	
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>QuikLuaWrapperTests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 
 </Project>

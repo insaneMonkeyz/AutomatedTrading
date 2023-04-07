@@ -19,18 +19,11 @@ namespace Quik.Entities
 
         public Option(ref SecurityParamsContainer container) : base(ref container)
         {
-            OptionType = GetOptionType(Ticker);
-
-            if (OptionType == OptionTypes.Undefined)
-            {
-                throw new Exception("Failed to figure out option type from ticker " + Ticker);
-            }
+            OptionType = InferOptionType(Ticker);
         }
 
-        private static OptionTypes GetOptionType(string ticker)
+        private static OptionTypes InferOptionType(string ticker)
         {
-            var span = ticker.AsSpan();
-
             // Si65000BL2D
 
             //  01   23456   7  8   9  10
@@ -40,10 +33,10 @@ namespace Quik.Entities
             // [8]A-L inclusive = calls
             // [8]M-X inclusive = puts
 
-            var bIndex = ticker.LastIndexOf('B');
-            var codeIndex = bIndex + 1;
+            var indexOfMarginType = ticker.LastIndexOf('B');
+            var codeIndex = indexOfMarginType + 1;
 
-            if (bIndex > -1 && codeIndex < ticker.Length)
+            if (indexOfMarginType > -1 && codeIndex < ticker.Length)
             {
                 var code = ticker[codeIndex];
 
@@ -61,7 +54,7 @@ namespace Quik.Entities
                 }
             }
 
-            return OptionTypes.Undefined;
+            throw new Exception($"Could not resolve option type from ticker {ticker}");
         }
     }
 }
