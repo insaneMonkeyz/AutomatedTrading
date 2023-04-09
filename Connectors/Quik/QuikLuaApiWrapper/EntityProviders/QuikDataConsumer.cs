@@ -1,4 +1,5 @@
-﻿using Quik.Lua;
+﻿using Quik.EntityProviders.Notification;
+using Quik.Lua;
 
 namespace Quik.EntityProviders
 {

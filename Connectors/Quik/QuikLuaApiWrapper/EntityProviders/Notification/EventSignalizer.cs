@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Quik.EntityProviders
+namespace Quik.EntityProviders.Notification
 {
     internal class EventSignalizer<TEntity> : IEntityEventSignalizer<TEntity>
         where TEntity : class
@@ -12,16 +12,16 @@ namespace Quik.EntityProviders
         private bool _enabled;
         private bool _disposed;
 
-        public bool IsEnabled 
-        { 
-            get => _enabled; 
+        public bool IsEnabled
+        {
+            get => _enabled;
             set
             {
                 if (_enabled ^ value)
                 {
                     if (value)
                     {
-                        _loop.Execute += Signalize; 
+                        _loop.Execute += Signalize;
                     }
                     else
                     {

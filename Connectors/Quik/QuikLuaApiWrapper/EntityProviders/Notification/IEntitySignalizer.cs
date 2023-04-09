@@ -1,4 +1,4 @@
-﻿namespace Quik.EntityProviders
+﻿namespace Quik.EntityProviders.Notification
 {
     internal interface IEntityEventSignalizer<TEntity> : IDisposable
     {

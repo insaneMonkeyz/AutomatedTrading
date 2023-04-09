@@ -1,4 +1,6 @@
-﻿namespace Quik
+﻿using Core;
+
+namespace Quik
 {
     public static class Loader
     {
@@ -7,6 +9,11 @@
         /// </summary>
         /// <param name="L">Pointer to lua state struct</param>
         /// <returns></returns>
-        public static int Initialize(IntPtr luaStack) => Quik.Instance.Initialize(luaStack);
+        public static int Initialize(IntPtr luaStack)
+        {
+            Quik.Instance.Initialize(luaStack);
+            DI.RegisterInstance<IQuik>(Quik.Instance);
+            return 1;
+        }
     }
 }

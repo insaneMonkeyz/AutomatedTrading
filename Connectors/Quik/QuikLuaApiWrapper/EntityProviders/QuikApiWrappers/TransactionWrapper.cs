@@ -12,7 +12,7 @@ using Quik.Lua;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 
-namespace Quik.EntityDataProviders.QuikApiWrappers
+namespace Quik.EntityProviders.QuikApiWrappers
 {
     internal partial class TransactionWrapper
     {

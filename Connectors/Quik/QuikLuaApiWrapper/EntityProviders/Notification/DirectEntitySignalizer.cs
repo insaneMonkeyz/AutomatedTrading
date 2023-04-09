@@ -1,4 +1,4 @@
-﻿namespace Quik.EntityProviders
+﻿namespace Quik.EntityProviders.Notification
 {
     internal class DirectEntitySignalizer<TEntity> : IEntityEventSignalizer<TEntity>
     {

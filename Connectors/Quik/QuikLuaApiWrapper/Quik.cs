@@ -2,7 +2,6 @@
 using Tools;
 
 using Quik.Entities;
-using Quik.EntityDataProviders;
 using Quik.EntityProviders;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;

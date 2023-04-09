@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Quik.EntityDataProviders.QuikApiWrappers
+namespace Quik.EntityProviders.QuikApiWrappers
 {
     internal partial class TransactionWrapper
     {

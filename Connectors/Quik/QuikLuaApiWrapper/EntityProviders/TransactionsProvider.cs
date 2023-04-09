@@ -1,22 +1,20 @@
 ﻿using Quik.Entities;
-using Quik.EntityDataProviders.QuikApiWrappers;
-using Quik.EntityProviders;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
 using TradingConcepts;
 using static Quik.EntityDataProviders.QuikApiWrappers.TransactionWrapper;
 
-namespace Quik.EntityDataProviders
+namespace Quik.EntityProviders
 {
     internal sealed class TransactionsProvider : QuikDataConsumer<Order>
     {
-        protected override string QuikCallbackMethod => TransactionWrapper.CALLBACK_METHOD;
+        protected override string QuikCallbackMethod => CALLBACK_METHOD;
 
         private EntityResolver<OrderRequestContainer, Order>? _ordersResolver;
 
         public EntityEventHandler<Order> OrderChanged = delegate { };
-    
+
         public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
 #if TRACE
@@ -89,7 +87,7 @@ namespace Quik.EntityDataProviders
                         $"Add support for {nameof(OrderExecutionConditions)}.{submission.ExecutionCondition} case");
             }
 
-            var error = TransactionWrapper.PlaceNewOrder(ref newOrderArgs);
+            var error = PlaceNewOrder(ref newOrderArgs);
             var order = new Order(submission);
 
             if (error != null)
@@ -126,7 +124,7 @@ namespace Quik.EntityDataProviders
                 Order = order
             };
 
-            var error = TransactionWrapper.CancelOrder(ref args);
+            var error = CancelOrder(ref args);
 
             if (error != null)
             {
@@ -166,10 +164,10 @@ namespace Quik.EntityDataProviders
 
         private void Update(Order order)
         {
-            order.ExchangeAssignedIdString = TransactionWrapper.ExchangeAssignedOrderId;
-            order.RemainingSize = TransactionWrapper.RemainingSize;
-            
-            if(order.RemainingSize > 0)
+            order.ExchangeAssignedIdString = ExchangeAssignedOrderId;
+            order.RemainingSize = RemainingSize;
+
+            if (order.RemainingSize > 0)
             {
                 order.SetSingleState(OrderStates.Active);
             }
@@ -187,19 +185,19 @@ namespace Quik.EntityDataProviders
 #endif
                 lock (_callbackLock)
                 {
-                    TransactionWrapper.SetContext(state);
+                    SetContext(state);
 
-                    var status = TransactionWrapper.Status;
+                    var status = Status;
 
-                    if (status != TransactionWrapper.TransactionStatus.Completed)
+                    if (status != TransactionStatus.Completed)
                     {
-                        _log.Warn($"Transaction rejected by {TransactionWrapper.ErrorSource}. {status}\n{TransactionWrapper.ResultDescription}");
+                        _log.Warn($"Transaction rejected by {ErrorSource}. {status}\n{ResultDescription}");
                         return 1;
                     }
 
-                    var transactionId = TransactionWrapper.Id;
+                    var transactionId = Id;
 
-                    if (TransactionWrapper.ClassCode is not string classcode)
+                    if (ClassCode is not string classcode)
                     {
                         _log.Warn($"Cannot process transaction {transactionId} callback. Class Code of security of the order is not set");
                         return 1;

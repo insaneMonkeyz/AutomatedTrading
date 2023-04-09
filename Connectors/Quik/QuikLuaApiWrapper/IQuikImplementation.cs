@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using Quik.Entities;
-using Quik.EntityDataProviders;
 using Quik.EntityProviders;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
