@@ -90,8 +90,7 @@ namespace Quik.EntityProviders
 
                 if (ResolveSecurityOfOrder(state) is not Security sec)
                 {
-                    $"Coudn't resolve security {OrdersWrapper.Ticker} to create an order."
-                        .DebugPrintWarning();
+                    _log.Error($"Coudn't resolve security {OrdersWrapper.Ticker} to create an order.");
 
                     return null;
                 }
@@ -153,7 +152,7 @@ namespace Quik.EntityProviders
                 }
                 else
                 {
-                    $"Order id was not assigned to {entity} because it was not provided in the feed".DebugPrintWarning();
+                    _log.Warn($"Order id was not assigned to {entity} because it was not provided in the feed");
                 }
 
                 var flags = OrdersWrapper.Flags;

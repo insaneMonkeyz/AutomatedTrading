@@ -189,7 +189,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static T ReadSpecificEntry<T>(ref Method2Params<T> param)
         {
-            param.Method.DebugPrintQuikFunctionCall(param.Arg0, param.Arg1);
+            param.Method.LogQuikFunctionCall(param.Arg0, param.Arg1);
 
             T result = param.DefaultValue;
 
@@ -207,7 +207,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static T ReadSpecificEntry<T>(ref Method1Param<T> param)
         {
-            param.Method.DebugPrintQuikFunctionCall(param.Arg0);
+            param.Method.LogQuikFunctionCall(param.Arg0);
 
             T result = param.DefaultValue;
 
@@ -225,7 +225,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static T ReadSpecificEntry<T>(ref MethodNoParams<T> param)
         {
-            param.Method.DebugPrintQuikFunctionCall();
+            param.Method.LogQuikFunctionCall();
 
             T result = param.DefaultValue;
 

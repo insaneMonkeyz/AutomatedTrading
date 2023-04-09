@@ -4,6 +4,7 @@ using TradingConcepts;
 
 namespace Quik.Entities
 {
+    // TODO: Remove if unused
     internal class QuikTable
     {
         public string Name { get; }

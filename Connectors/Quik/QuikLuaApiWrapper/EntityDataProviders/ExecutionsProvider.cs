@@ -1,14 +1,15 @@
-﻿using Quik.Entities;
-using Quik.EntityProviders.Attributes;
-using Quik.EntityProviders.RequestContainers;
-using Quik.EntityProviders.QuikApiWrappers;
+﻿using System.Runtime.CompilerServices;
 
-using static Quik.Quik;
-using TradingConcepts;
-using System.Runtime.CompilerServices;
-using Quik.Lua;
-using TradingConcepts.CommonImplementations;
+using Quik.Entities;
+using Quik.EntityProviders.Attributes;
+using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
+using Quik.Lua;
+
+using Tools.Logging;
+
+using TradingConcepts.CommonImplementations;
 
 namespace Quik.EntityProviders
 {
@@ -39,8 +40,7 @@ namespace Quik.EntityProviders
 
                 if (ResolveOrderOfExecution(state) is not Order order)
                 {
-                    $"Coudn't resolve order with id={ExecutionWrapper.ExchangeOrderId ?? "null"} to create an execution entity."
-                        .DebugPrintWarning();
+                    _log.Error($"Coudn't resolve order with id={ExecutionWrapper.ExchangeOrderId ?? "null"} to create an execution entity.");
 
                     return null;
                 }

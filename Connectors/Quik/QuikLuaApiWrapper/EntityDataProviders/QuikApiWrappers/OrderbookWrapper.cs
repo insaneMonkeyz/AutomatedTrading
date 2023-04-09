@@ -26,7 +26,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             lock (Quik.SyncRoot)
             {
-                GET_METOD.DebugPrintQuikFunctionCall(book.Security.ClassCode, book.Security.Ticker);
+                GET_METOD.LogQuikFunctionCall(book.Security.ClassCode, book.Security.Ticker);
 
                 bool updated = false;
 

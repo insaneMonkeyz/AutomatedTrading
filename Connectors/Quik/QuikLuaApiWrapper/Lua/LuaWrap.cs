@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using TradingConcepts;
 
 namespace Quik.Lua
@@ -18,6 +19,7 @@ namespace Quik.Lua
         public const int THIRD_ITEM = -3;
 
         #region Initialization
+        private readonly Log _log = LogManagement.GetLogger<LuaWrap>();
         private readonly IntPtr _state;
         public LuaWrap(IntPtr lua, string threadName)
         {
@@ -156,7 +158,9 @@ namespace Quik.Lua
 
             lock (SyncRoot)
             {
-                Debug.Print(comment != null
+                var sb = new StringBuilder();
+
+                sb.AppendLine(comment != null
                         ? $"========= {ThreadName} {_state} {comment} ========="
                         : $"========= {ThreadName} {_state} =========");
 
@@ -174,8 +178,10 @@ namespace Quik.Lua
                         _ => type.ToString()        //возможно баг связан с попаданием сюда, когда наверху лежит nil
                     };
 
-                    Debug.Print($"[{-i}] [{value}]");
-                } 
+                    sb.AppendLine($"[{-i}] [{value}]");
+                }
+
+                _log.Debug(sb.ToString());
             }
         }
         /// <summary>

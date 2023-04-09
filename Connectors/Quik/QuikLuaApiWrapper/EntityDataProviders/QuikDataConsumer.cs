@@ -6,13 +6,17 @@ namespace Quik.EntityProviders
     {
         protected abstract string QuikCallbackMethod { get; }
 
+        protected readonly Log _log;
         protected readonly object _callbackLock = new();
         protected IEntityEventSignalizer<TEntity> _eventSignalizer = new DirectEntitySignalizer<TEntity>();
         protected LuaFunction _onNewDataCallback;
         private bool _disposed;
 
+        protected const string CALLBACK_EXCEPTION_MSG = "";
+
         public QuikDataConsumer()
         {
+            _log = LogManagement.GetLogger(this.GetType().Name);
             _onNewDataCallback = OnNewData;
         }
 
@@ -74,9 +78,6 @@ namespace Quik.EntityProviders
         }
         ~QuikDataConsumer()
         {
-#if TRACE
-            this.Trace("Destructor");
-#endif
             Dispose(disposing: false);
         }
     }

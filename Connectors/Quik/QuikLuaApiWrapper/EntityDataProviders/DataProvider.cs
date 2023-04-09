@@ -1,8 +1,8 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
+using Tools.Logging;
 
 namespace Quik.EntityProviders
 {
@@ -65,7 +65,7 @@ namespace Quik.EntityProviders
 
             if (!request.HasData)
             {
-                $"{request.GetType().Name} request is missing essential parameters".DebugPrintWarning();
+                _log.Error($"{request.GetType().Name} request is missing essential parameters");
             }
 
             return null;
@@ -94,7 +94,7 @@ namespace Quik.EntityProviders
             }
             catch (Exception e)
             {
-                $"{e.Message}\n{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
+                _log.Error(CALLBACK_EXCEPTION_MSG, e);
                 return -1;
             }
         }

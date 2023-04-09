@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using Core.Tools;
+using Tools;
 
 using Quik.Entities;
 using Quik.EntityDataProviders;
@@ -7,7 +7,7 @@ using Quik.EntityProviders;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
-
+using Tools.Logging;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 using TradingConcepts.SecuritySpecifics;
@@ -30,18 +30,20 @@ namespace Quik
         private readonly Dictionary<string, LuaFunction> _usedCallbacks;
         private readonly IQuikDataConsumer[] _components;
         private readonly ExecutionLoop _executionLoop = new();
+        private readonly TextWriter _logWriter = new StreamWriter("Quik.log", append: true);
+        private readonly Log _log;
 
         private const string DLL_NAME = "NativeToManagedProxy";
 
         public int Initialize(IntPtr luaState)
         {
-#if TRACE
-            this.Trace();
-#endif
-            Lua = new(luaState, "Initializing thread");
-
             try
             {
+#if TRACE
+                this.Trace();
+#endif
+                Lua = new(luaState, "Initializing thread");
+
                 Lua.TieProxyLibrary(DLL_NAME);
 
                 _usedCallbacks.ForEach(c => Lua.RegisterCallback(c.Value, c.Key));
@@ -49,7 +51,7 @@ namespace Quik
             }
             catch (Exception ex)
             {
-                ex.Message.DebugPrintWarning();
+                _log.Error(nameof(Initialize), ex);
                 return -1;
             }
 
@@ -107,7 +109,7 @@ namespace Quik
             }
             catch (Exception ex)
             {
-                ex.DebugPrintException();
+                _log.Error(nameof(Main), ex);
                 return -1;
             }
             return 1;
@@ -127,17 +129,25 @@ namespace Quik
             }
             catch (Exception e)
             {
-                $"{e.Message}\n{e.StackTrace ?? "NO_STACKTRACE_PROVIDED"}".DebugPrintWarning();
-                return -1;
+                _log.Error(nameof(OnStop), e);
             }
 
             return 1;
         }
         private int OnCleanUp(IntPtr state)
         {
+            try
+            {
 #if TRACE
-            this.Trace();
+                this.Trace();
 #endif
+                // TODO : Clean objects cache
+            }
+            catch (Exception e)
+            {
+                _log.Error(nameof(OnCleanUp), e);
+            }
+
             return 1;
         }
         private int OnConnedted(IntPtr state)
@@ -154,7 +164,7 @@ namespace Quik
             }
             catch (Exception e)
             {
-                e.DebugPrintException();
+                _log.Error(nameof(OnConnedted), e);
             }
 
             return 1;
@@ -170,7 +180,7 @@ namespace Quik
             }
             catch (Exception e)
             {
-                e.DebugPrintException();
+                _log.Error(nameof(OnDisonnedted), e);
             }
             return 1;
         }
@@ -190,6 +200,7 @@ namespace Quik
             };
 
             _components = SingletonInstanceAttribute.GetInstances<IQuikDataConsumer>();
+            _log = LogManagement.GetLogger<Quik>(); 
         }
         #endregion
 
@@ -210,7 +221,8 @@ namespace Quik
             _usedCallbacks.ForEach(c => Lua.UnregisterCallback(c.Key));
 
             Lua.UnregisterCallback(DLL_NAME);
-
+            LogManagement.Dispose();
+            _logWriter.Dispose();
             _disposed = true;
         }
         public void Dispose()

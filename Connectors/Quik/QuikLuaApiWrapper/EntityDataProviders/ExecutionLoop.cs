@@ -2,6 +2,7 @@
 {
     internal class ExecutionLoop
     {
+        private readonly Log _log = LogManagement.GetLogger<ExecutionLoop>();
         private bool _running = false;
 
         public event Action? Execute;
@@ -36,9 +37,9 @@
                     Execute();
 #pragma warning restore CS8602
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    ex.ToString().DebugPrintWarning();
+                    _log.Error("Exception in execution loop", e);
                 }
             }
 

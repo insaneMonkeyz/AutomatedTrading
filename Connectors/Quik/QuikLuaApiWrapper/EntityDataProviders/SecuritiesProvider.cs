@@ -279,8 +279,7 @@ namespace Quik.EntityProviders
 
             if (!container.StateIsCorrect)
             {
-                "Failed to create security. Essential parameters missing or incorrect"
-                    .DebugPrintWarning();
+                _log.Error("Failed to create security. Essential parameters missing or incorrect");
 
                 return false;
             }
@@ -339,7 +338,7 @@ namespace Quik.EntityProviders
                 }
                 catch (Exception e)
                 {
-                    e.DebugPrintException();
+                    _log.Error(CALLBACK_EXCEPTION_MSG, e);
 
                     return 0;
                 }

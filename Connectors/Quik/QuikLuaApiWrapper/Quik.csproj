@@ -28,7 +28,7 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="ZeroLog" Version="2.1.0" />
+	  <Using Include="Tools.Logging" />
 	</ItemGroup>
 
 </Project>

@@ -4,7 +4,6 @@ using Quik.EntityProviders;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
-using Quik.Lua;
 using TradingConcepts;
 using static Quik.EntityDataProviders.QuikApiWrappers.TransactionWrapper;
 
@@ -87,7 +86,7 @@ namespace Quik.EntityDataProviders
                     }
                 default:
                     throw new NotImplementedException(
-                    $"Add support for {nameof(OrderExecutionConditions)}.{submission.ExecutionCondition} case");
+                        $"Add support for {nameof(OrderExecutionConditions)}.{submission.ExecutionCondition} case");
             }
 
             var error = TransactionWrapper.PlaceNewOrder(ref newOrderArgs);
@@ -96,7 +95,7 @@ namespace Quik.EntityDataProviders
             if (error != null)
             {
                 order.SetSingleState(OrderStates.Rejected);
-                $"Order {order} placement rejected\n{error}".DebugPrintWarning();
+                _log.Warn($"Order {order} placement rejected\n{error}");
             }
             else
             {
@@ -118,7 +117,7 @@ namespace Quik.EntityDataProviders
         {
             if (order.State != OrderStates.Active)
             {
-                $"Order is not active: {order}".DebugPrintWarning();
+                _log.Warn($"Cannot cancel inactive order {order}");
                 return;
             }
 
@@ -131,7 +130,7 @@ namespace Quik.EntityDataProviders
 
             if (error != null)
             {
-                $"Order {order} cancellation rejected\n{error}".DebugPrintWarning();
+                _log.Warn($"Order {order} cancellation rejected\n  {error}");
             }
             else
             {
@@ -142,7 +141,7 @@ namespace Quik.EntityDataProviders
         {
             if (order.State != OrderStates.Active)
             {
-                $"Order is not active: {order}".DebugPrintWarning();
+                _log.Warn($"Cannot change inactive order {order}");
                 return;
             }
 
@@ -157,7 +156,7 @@ namespace Quik.EntityDataProviders
 
             if (error != null)
             {
-                $"Order {order} changing rejected\n{error}".DebugPrintWarning();
+                _log.Warn($"Order {order} changing rejected\n{error}");
             }
             else
             {
@@ -165,7 +164,7 @@ namespace Quik.EntityDataProviders
             }
         }
 
-        private void Update(Order order, LuaWrap lua)
+        private void Update(Order order)
         {
             order.ExchangeAssignedIdString = TransactionWrapper.ExchangeAssignedOrderId;
             order.RemainingSize = TransactionWrapper.RemainingSize;
@@ -194,20 +193,22 @@ namespace Quik.EntityDataProviders
 
                     if (status != TransactionWrapper.TransactionStatus.Completed)
                     {
-                        $"Transaction rejected by {TransactionWrapper.ErrorSource}. {status}\n{TransactionWrapper.ResultDescription}".DebugPrintWarning();
+                        _log.Warn($"Transaction rejected by {TransactionWrapper.ErrorSource}. {status}\n{TransactionWrapper.ResultDescription}");
                         return 1;
                     }
 
+                    var transactionId = TransactionWrapper.Id;
+
                     if (TransactionWrapper.ClassCode is not string classcode)
                     {
-                        "Class Code of security of the order is not set".DebugPrintWarning();
+                        _log.Warn($"Cannot process transaction {transactionId} callback. Class Code of security of the order is not set");
                         return 1;
                     }
 
                     var orderLookup = new OrderRequestContainer
                     {
                         ClassCode = classcode,
-                        TransactionId = TransactionWrapper.Id,
+                        TransactionId = transactionId,
 
                         // do not set the exchange assigned id
                         // this is a transaction reply, so when the order was created, it was cached without such id
@@ -218,7 +219,7 @@ namespace Quik.EntityDataProviders
 
                     if (order != null)
                     {
-                        Update(order, state);
+                        Update(order);
 
                         orderLookup.ExchangeAssignedId = order.ExchangeAssignedIdString;
 
@@ -231,7 +232,7 @@ namespace Quik.EntityDataProviders
             }
             catch (Exception e)
             {
-                e.ToString().DebugPrintWarning();
+                _log.Error(CALLBACK_EXCEPTION_MSG, e);
             }
 
             return 1;

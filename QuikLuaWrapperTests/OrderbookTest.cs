@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradingConcepts;
+﻿using Quik;
+using Tools.Logging;
 
 namespace QuikLuaWrapperTests
 {
@@ -12,6 +8,30 @@ namespace QuikLuaWrapperTests
         [Test]
         public void CopyingCorrectness()
         {
+            this.Trace();
+            this.Trace();
+            var common = LogManagement.GetLogger(typeof(QuikApiOrderbookTest));
+            var dedicated = LogManagement.GetDebugDedicatedFileLogger<QuikApiOrderbookTest>();
+
+            dedicated.Info("Happy birthday Nick Gurr");
+            try
+            {
+                throw new ArgumentException("hat");
+            }
+            catch (Exception e)
+            {
+                dedicated.Fatal("Deez nuts", e);
+                common.Error("This is the message I was trying to convey",e);
+                this.Error("cmon");
+                this.Fatal("this is gonna kill you someday");
+            }
+            common.Debug("Deez nuts");
+
+            LogManagement.Dispose();
+
+            //throw new Exception(Directory.GetCurrentDirectory());
+
+
             //IOptimizedOrderBook orderbook = Quik.GetOrderbook(null);
 
             //var q1 = new Quote()

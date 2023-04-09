@@ -4,19 +4,14 @@ using System.Runtime.CompilerServices;
 using TradingConcepts;
 using Quik.Entities;
 using Quik.EntityProviders;
+using System.Xml.Linq;
 
 namespace Quik
 {
-    internal static class Extentions
+    internal static class Extensions
     {
-        public static void Trace(string className, [CallerMemberName] string methodName = "UNRESOLVED_METHOD")
-        {
-            Debug.Print($"- {className}.{methodName}");
-        }
-        public static void Trace(this object obj, [CallerMemberName] string methodName = "UNRESOLVED_METHOD")
-        {
-            Debug.Print($"- {obj.GetType().Name}.{methodName}");
-        }
+        private static Log _log = LogManagement.GetLogger<Quik>();
+
         public static bool TryConvertToMoexExpiry(this string date, out DateTimeOffset result)
         {
             result = default;
@@ -33,8 +28,7 @@ namespace Quik
                 }
                 catch (Exception e)
                 {
-                    $"Exception while trying to convert a string representation of a Date '{date}'. {e}"
-                        .DebugPrintWarning();
+                    _log.Error($"Exception while trying to convert a string representation of a Date '{date}'", e);
                 }
             }
 
@@ -77,7 +71,7 @@ namespace Quik
 
             Debug.Print(text);
         }
-        public static void DebugPrintQuikFunctionCall(this string func, params string[] args)
+        public static void LogQuikFunctionCall(this string func, params string[] args)
         {
             if (!GlobalParameters.TraceQuikFunctionCalls)
             {
@@ -88,9 +82,7 @@ namespace Quik
                 ? string.Join(',', args)
                 : string.Empty;
 
-            var text = $"## CALLING QUIK FUNCTION {func}({arguments});";
-
-            Debug.Print(text);
+            _log.Debug($"## CALLING QUIK FUNCTION {func}({arguments});");
         }
         public static QuikApiException ToSecurityParsingException(this string property)
         {
@@ -124,13 +116,6 @@ namespace Quik
         public static bool HasAttribute<TAttribute>(this MemberInfo subj) where TAttribute : Attribute
         {
             return subj.CustomAttributes.Any(a => a.AttributeType == typeof(TAttribute));
-        }
-        public static void ForEach<T>(this IEnumerable<T> collection, Action<T> action)
-        {
-            foreach (var item in collection)
-            {
-                action(item);
-            }
         }
     }
 }

@@ -9,6 +9,7 @@ namespace Quik.EntityProviders.Resolvers
         private SecuritiesByClassGetter _getSecuritiesOfClass;
         private Dictionary<string, IEnumerable<string>>? _securitiesByClasscode;
         private Dictionary<string, string>? _classcodeBySecurity;
+        private readonly Log _log = LogManagement.GetLogger<SecuritiesToClasscodesMap>();
 
         private static readonly IEnumerable<string> _emptyResult = Enumerable.Empty<string>();
 
@@ -50,9 +51,9 @@ namespace Quik.EntityProviders.Resolvers
 
                 return classcode;
             }
-            catch (NullReferenceException)
+            catch (NullReferenceException e)
             {
-                "Forgot to initialize classcode maps".DebugPrintWarning();
+                _log.Error($"Forgot to initialize classcode maps. Classcode of security {ticker} will not be resolved", e);
                 return null;
             }
         }
@@ -64,9 +65,9 @@ namespace Quik.EntityProviders.Resolvers
                         ? securities
                         : _emptyResult;
             }
-            catch (NullReferenceException)
+            catch (NullReferenceException e)
             {
-                "Forgot to initialize securities by classcode map".DebugPrintWarning();
+                _log.Error("Forgot to initialize securities by classcode map", e);
                 return _emptyResult;
             }
         }

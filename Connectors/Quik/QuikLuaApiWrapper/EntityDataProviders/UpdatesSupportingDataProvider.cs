@@ -67,7 +67,7 @@ namespace Quik.EntityProviders
             }
             catch (Exception e)
             {
-                e.DebugPrintException();
+                _log.Error(CALLBACK_EXCEPTION_MSG, e);
                 return -1;
             }
         }

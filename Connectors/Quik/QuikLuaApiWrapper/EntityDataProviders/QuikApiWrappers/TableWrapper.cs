@@ -31,6 +31,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
         public const char TIME_VALUE = '5';
         public const char DATE_VALUE = '6';
 
+        private static readonly Log _log = LogManagement.GetLogger(nameof(TableWrapper));
+
         public struct GetParamExParams
         {
             public string ClassCode;
@@ -68,7 +70,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static string? FetchParamEx(ref GetParamExParams param)
         {
-            GET_PARAM_EX_METHOD.DebugPrintQuikFunctionCall(param.ClassCode, param.Ticker, param.Parameter);
+            GET_PARAM_EX_METHOD.LogQuikFunctionCall(param.ClassCode, param.Ticker, param.Parameter);
 
             string? result = null;
 
@@ -85,8 +87,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
                     }
                     else if (type == NO_VALUE)
                     {
-                        ($"Value of parameter {param.Parameter} was not present for security " +
-                            $"'{param.ClassCode}:{param.Ticker}'").DebugPrintWarning();
+                        _log.Warn($"Value of parameter {param.Parameter} was not present for security '{param.ClassCode}:{param.Ticker}'");
                     }
                     else
                     {
@@ -114,8 +115,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
             if (!Decimal5.TryParse(TableWrapper.FetchParamEx(ref @params), out Decimal5 value))
             {
-                $"Parameter '{param}' of security {security.ClassCode}:{security.Ticker} was not set"
-                    .DebugPrintWarning();
+                _log.Warn($"Parameter '{param}' of security {security.ClassCode}:{security.Ticker} was not set");
 
                 return null;
             }

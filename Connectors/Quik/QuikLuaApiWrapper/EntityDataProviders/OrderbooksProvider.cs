@@ -1,11 +1,10 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
-using Quik.Lua;
+using Tools.Logging;
 using CallbackParameters = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.ReadCallbackArgs<string?, string?, Quik.EntityProviders.RequestContainers.OrderbookRequestContainer>;
 
 namespace Quik.EntityProviders
@@ -33,7 +32,7 @@ namespace Quik.EntityProviders
         public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
 #if TRACE
-            Extentions.Trace(nameof(OrderbooksProvider));
+            this.Trace(nameof(OrderbooksProvider));
 #endif
             lock (_callbackLock)
             {
@@ -47,7 +46,7 @@ namespace Quik.EntityProviders
         public OrderBook? Create(ref OrderbookRequestContainer request)
         {
 #if TRACE
-            Extentions.Trace(nameof(OrderbooksProvider));
+            this.Trace(nameof(OrderbooksProvider));
 #endif
 #if DEBUG
             EnsureInitialized(); 
@@ -67,7 +66,7 @@ namespace Quik.EntityProviders
         public bool Update(OrderBook book)
         {
 #if TRACE
-            Extentions.Trace(nameof(OrderbooksProvider));
+            this.Trace(nameof(OrderbooksProvider));
 #endif
 #if DEBUG
             EnsureInitialized();
@@ -79,7 +78,7 @@ namespace Quik.EntityProviders
         protected override int OnNewData(IntPtr state)
         {
 #if TRACE
-            Extentions.Trace(nameof(OrderbooksProvider));
+            this.Trace(nameof(OrderbooksProvider));
 #endif
             lock (_callbackLock)
             {
@@ -107,7 +106,7 @@ namespace Quik.EntityProviders
                 }
                 catch (Exception e)
                 {
-                    e.DebugPrintException();
+                    _log.Error(CALLBACK_EXCEPTION_MSG, e);
 
                     return 0;
                 }

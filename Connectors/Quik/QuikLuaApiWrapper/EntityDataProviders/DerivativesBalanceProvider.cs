@@ -11,6 +11,7 @@ using System.Diagnostics;
 using Quik.Lua;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.Resolvers;
+using Tools.Logging;
 
 namespace Quik.EntityProviders
 {
@@ -95,7 +96,7 @@ namespace Quik.EntityProviders
 
                 if (_securitiesResolver.Resolve(ref resolveSecurityRequest) is not ISecurity security)
                 {
-                    $"Coudn't create SecurityBalance entity. Failed to resolve security {resolveSecurityRequest.Ticker} belongs to".DebugPrintWarning();
+                    _log.Error($"Coudn't create SecurityBalance entity. Failed to resolve account that security {resolveSecurityRequest.Ticker} belongs to");
                     return default;
                 }
 

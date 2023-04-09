@@ -8,10 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Unity" Version="5.11.10" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\BasicConcepts\TradingConcepts.csproj" />
   </ItemGroup>
 

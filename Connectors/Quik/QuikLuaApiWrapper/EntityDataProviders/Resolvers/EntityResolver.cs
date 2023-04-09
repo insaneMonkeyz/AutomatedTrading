@@ -12,6 +12,7 @@ namespace Quik.EntityProviders.Resolvers
         private readonly object _resolveInProgress = new();
         private readonly Dictionary<int, TEntity> _cache;
         private readonly ResolveEntityHandler<TRequest, TEntity>? _fetchFromQuik;
+        private readonly Log _log = LogManagement.GetLogger(typeof(EntityResolver<TRequest, TEntity>));
 
         public EntityResolver(int initialCacheSize, ResolveEntityHandler<TRequest, TEntity?> fetchFromQuik)
         {
@@ -30,7 +31,7 @@ namespace Quik.EntityProviders.Resolvers
         {
             if (!request.HasData)
             {
-                $"Can't resolve the entity. The request {request} is incomplete".DebugPrintWarning();
+                _log.Warn($"Can't resolve the entity. The request {request} is incomplete");
                 return default;
             }
 
@@ -43,7 +44,7 @@ namespace Quik.EntityProviders.Resolvers
         {
             if (!request.HasData)
             {
-                $"Can't resolve the entity. The request {request} is incomplete".DebugPrintWarning();
+                _log.Warn($"Can't resolve the entity. The request {request} is incomplete");
                 return default;
             }
 
