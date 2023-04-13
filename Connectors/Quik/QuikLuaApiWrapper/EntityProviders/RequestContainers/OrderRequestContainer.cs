@@ -10,15 +10,16 @@ namespace Quik.EntityProviders.RequestContainers
 
         public bool HasData
         {
-            get => TransactionId != default && !string.IsNullOrEmpty(ClassCode);
+            get => !string.IsNullOrEmpty(ClassCode)
+                && (TransactionId != default || !string.IsNullOrEmpty(ExchangeAssignedId));
         }
 
         public bool IsMatching(Order? entity)
         {
             return entity != null
-                && entity.ExchangeAssignedIdString == ExchangeAssignedId
-                && entity.TransactionId == TransactionId
-                && entity.Security.ClassCode == ClassCode;
+                && entity.Security.ClassCode == ClassCode
+                && (entity.ExchangeAssignedIdString == ExchangeAssignedId
+                            || entity.TransactionId == TransactionId);
         }
 
         public bool Equals(OrderRequestContainer other)
@@ -38,16 +39,27 @@ namespace Quik.EntityProviders.RequestContainers
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(ExchangeAssignedId, ClassCode, TransactionId);
+            if (string.IsNullOrEmpty(ClassCode))
+            {
+                throw new InvalidOperationException($"Trying to generate hash of {nameof(OrderRequestContainer)} with empty {nameof(ClassCode)}");
+            }
+
+            if (!string.IsNullOrEmpty(ExchangeAssignedId))
+            {
+                return HashCode.Combine(ExchangeAssignedId, ClassCode);
+            }
+
+            if (TransactionId != default)
+            {
+                return HashCode.Combine(TransactionId, ClassCode);
+            }
+
+            throw new InvalidOperationException($"Generating hash for empty values {nameof(ExchangeAssignedId)} and {nameof(TransactionId)}");
         }
 
         public override string ToString()
         {
-            return HasData
-                ? string.IsNullOrEmpty(ExchangeAssignedId)
-                    ? $"OrderId: null; TransactionId: {TransactionId}"
-                    : $"OrderId: {ExchangeAssignedId}; TransactionId: {TransactionId}"
-                : "N/A";
+            return $"OrderRequest: {{TransactionId: {TransactionId}, OrderId: {ExchangeAssignedId ?? "null"}, ClassCode: {ClassCode ?? "null"}}}";
         }
     }
 }

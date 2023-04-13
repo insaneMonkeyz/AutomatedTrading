@@ -13,7 +13,7 @@ namespace Quik.EntityProviders
         protected LuaFunction _onNewDataCallback;
         private bool _disposed;
 
-        protected const string CALLBACK_EXCEPTION_MSG = "";
+        protected const string CALLBACK_EXCEPTION_MSG = "Exception occured while processing a callback";
 
         public QuikDataConsumer()
         {

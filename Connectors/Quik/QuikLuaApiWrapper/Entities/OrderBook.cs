@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Tools;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 
@@ -120,12 +121,9 @@ namespace Quik.Entities
 
         public void UseQuotes(QuotesReader reader)
         {
-            lock (_bidsLock)
+            lock (_bidsLock) lock (_asksLock)
             {
-                lock (_asksLock)
-                {
-                    reader(_bids, _asks, _marketDepth);
-                }
+                reader(_bids, _asks, _marketDepth);
             }
         }
         public void UseBids(OneSideQuotesReader reader)
@@ -141,6 +139,43 @@ namespace Quik.Entities
             {
                 reader(_asks, Operations.Sell, _marketDepth);
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(OrderBook)} {Security} Depth: {MarketDepth}";
+        }
+        public string Print()
+        {
+            var builder = new StringBuilder();
+
+            static void appendAsks(StringBuilder b, Quote q)
+            {
+                b.AppendLine("      ");
+                b.Append(q.Price);
+                b.Append(' ');
+                b.Append(q.Size);
+            }
+            static void appendBids(StringBuilder b, Quote q)
+            {
+                b.AppendLine(q.Size.ToString());
+                b.Append(' ');
+                b.Append(q.Price);
+            }
+
+            UseQuotes((bids, asks, depth) =>
+            {
+                for (int i = (int)depth-1; i >= 0; i--)
+                {
+                    appendAsks(builder, asks[i]);
+                }
+                for (int i = 0; i < depth; i++)
+                {
+                    appendBids(builder, bids[i]);
+                }
+            });
+
+            return builder.ToString();
         }
     }
 }

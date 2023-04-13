@@ -32,7 +32,7 @@ namespace Quik.EntityProviders
         public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
 #if TRACE
-            this.Trace(nameof(OrderbooksProvider));
+            this.Trace();
 #endif
             lock (_callbackLock)
             {
@@ -46,7 +46,7 @@ namespace Quik.EntityProviders
         public OrderBook? Create(ref OrderbookRequestContainer request)
         {
 #if TRACE
-            this.Trace(nameof(OrderbooksProvider));
+            this.Trace();
 #endif
 #if DEBUG
             EnsureInitialized(); 
@@ -66,7 +66,7 @@ namespace Quik.EntityProviders
         public bool Update(OrderBook book)
         {
 #if TRACE
-            this.Trace(nameof(OrderbooksProvider));
+            this.Trace();
 #endif
 #if DEBUG
             EnsureInitialized();
@@ -78,7 +78,7 @@ namespace Quik.EntityProviders
         protected override int OnNewData(IntPtr state)
         {
 #if TRACE
-            this.Trace(nameof(OrderbooksProvider));
+            //this.Trace();
 #endif
             lock (_callbackLock)
             {
@@ -91,6 +91,9 @@ namespace Quik.EntityProviders
 
                     if (entity != null && Update(entity))
                     {
+#if DEBUG
+                        //LogEntityUpdated(entity); 
+#endif
                         _eventSignalizer.QueueEntity(EntityChanged, entity);
 
                         return 1;
@@ -98,6 +101,9 @@ namespace Quik.EntityProviders
 
                     if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
                     {
+#if DEBUG
+                        //LogEntityCreated(entity);
+#endif
                         _bookResolver.CacheEntity(ref request, entity);
                         _eventSignalizer.QueueEntity(NewEntity, entity);
                     }
@@ -111,6 +117,14 @@ namespace Quik.EntityProviders
                     return 0;
                 }
             }
+        }
+        private void LogEntityCreated(OrderBook entity)
+        {
+            _log.Debug($"Received new {nameof(OrderBook)} for {entity.Security}\n{entity.Print()}");
+        }
+        private void LogEntityUpdated(OrderBook entity)
+        {
+            _log.Debug($"Received updates for {nameof(OrderBook)} {entity.Security}\n{entity.Print()}");
         }
 
         private void EnsureInitialized([CallerMemberName] string? method = null)

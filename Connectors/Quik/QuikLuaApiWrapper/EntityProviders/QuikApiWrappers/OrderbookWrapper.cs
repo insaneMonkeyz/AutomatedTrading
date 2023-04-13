@@ -35,7 +35,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
                     if (Quik.Lua.ReadRowValueLong(BIDS_COUNT) > 0 &&
                         Quik.Lua.PushColumnValueTable(BIDS))
                     {
-                        book.UseBids(ReadQuotes);
+                        book.UseBids(_quotesReader);
                         Quik.Lua.PopFromStack();
                         updated = true;
                     }
@@ -43,7 +43,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
                     if (Quik.Lua.ReadRowValueLong(ASKS_COUNT) > 0 &&
                         Quik.Lua.PushColumnValueTable(ASKS))
                     {
-                        book.UseAsks(ReadQuotes);
+                        book.UseAsks(_quotesReader);
                         Quik.Lua.PopFromStack();
                         updated = true;
                     }
@@ -54,6 +54,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
                 return updated;
             }
         }
+
+        private static readonly OneSideQuotesReader _quotesReader = ReadQuotes;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ReadQuotes(Quote[] quotes, Operations operation, long marketDepth)

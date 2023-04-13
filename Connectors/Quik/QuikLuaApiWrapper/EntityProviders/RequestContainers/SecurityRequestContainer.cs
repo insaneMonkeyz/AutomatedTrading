@@ -45,14 +45,7 @@ namespace Quik.EntityProviders.RequestContainers
 
         public override string? ToString()
         {
-            if (string.IsNullOrEmpty(Ticker))
-            {
-                return "Empty Security Request";
-            }
-
-            return string.IsNullOrEmpty(ClassCode)
-                    ? Ticker
-                    : $"{ClassCode}:{Ticker}";
+            return $"Security Request: {{ClassCode: {ClassCode ?? "null"}, Ticker: {Ticker ?? "null"}}}";
         }
         public override int GetHashCode()
         {

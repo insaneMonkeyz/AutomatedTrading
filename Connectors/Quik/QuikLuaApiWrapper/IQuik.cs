@@ -23,6 +23,9 @@ namespace Quik
         event Action<ISecurity> SecurityChanged;
         event Action<IOrder> OrderChanged;
 
+        bool IsConnected { get; }
+        ITradingAccount? Account { get; }
+
         IEnumerable<SecurityDescription> GetAvailableSecurities<TSecurity>() where TSecurity : ISecurity;
         TSecurity? GetSecurity<TSecurity>(string ticker) where TSecurity : ISecurity;
 

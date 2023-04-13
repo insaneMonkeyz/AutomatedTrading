@@ -72,6 +72,7 @@ namespace Quik.EntityProviders
         }
         protected abstract TEntity? Create(LuaWrap state);
         protected abstract TRequestContainer CreateRequestFrom(LuaWrap state);
+        protected abstract void LogEntityCreated(TEntity entity);
 
         protected override int OnNewData(IntPtr state)
         {
@@ -86,6 +87,9 @@ namespace Quik.EntityProviders
 
                     if (CreationIsApproved(ref request) && Create(state) is TEntity entity)
                     {
+#if DEBUG
+                        LogEntityCreated(entity); 
+#endif
                         _eventSignalizer.QueueEntity(NewEntity, entity);
                     }
 

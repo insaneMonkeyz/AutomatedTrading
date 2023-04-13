@@ -31,14 +31,12 @@ namespace Tools.Logging
         }
         public static Log GetLogger<T>()
         {
-            return WrapLogger(() => LogManager.GetLogger<T>());
+            return WrapLogger(() => LogManager.GetLogger(typeof(T).Name));
         }
-
         public static Log GetLogger(Type type)
         {
-            return WrapLogger(() => LogManager.GetLogger(type));
+            return WrapLogger(() => LogManager.GetLogger(type.Name));
         }
-
         public static Log GetLogger(string name)
         {
             return WrapLogger(() => LogManager.GetLogger(name));
@@ -101,9 +99,10 @@ namespace Tools.Logging
         private static Log WrapLogger(Func<ZeroLog.Log> getFullLogger)
         {
             EnsureInitialization();
+            var common = getFullLogger();
             var tracer = LogManagement.GetDedicatedFileLogger("Tracer", ZeroLog.LogLevel.Trace);
             var error = LogManagement.GetDedicatedFileLogger("Errors", ZeroLog.LogLevel.Error);
-            return new Log(getFullLogger(), tracer, error);
+            return new Log(common, common, error);
         }
 
         private LoggerConfiguration CreateLoggerConfiguration(LogLevel thresholdLevel, string logName)
@@ -163,6 +162,8 @@ namespace Tools.Logging
 
             writer = new StreamWriter(GetPathToLogFile(file), append: true);
 
+            writer.WriteLine("=======================================[New Session Started]===========================================");
+
             _textWriters[file] = writer;
 
             return writer;
@@ -192,6 +193,8 @@ namespace Tools.Logging
             {
                 if (_instance == null)
                 {
+                    EnsureFolderExists();
+
                     _instance = new LogManagement();
 
                     if (LogManager.Configuration is null)
@@ -199,8 +202,6 @@ namespace Tools.Logging
                         var configuration = _instance.CreateConfiguration();
                         LogManager.Initialize(configuration);
                     }
-
-                    EnsureFolderExists();
                 }
             }
         }

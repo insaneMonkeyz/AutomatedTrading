@@ -13,9 +13,18 @@ namespace Quik.Entities
         private string _code;
         private string _firmId;
         private int? _uniqueId;
+        private long _limitType;
 
-        public bool IsMoneyAccount { get; init; }
-        public long LimitType { get; init; }
+        public bool IsMoneyAccount { get; private set; }
+        public long LimitType
+        {
+            get => _limitType;
+            set
+            {
+                _limitType = value;
+                IsMoneyAccount = value == 0;
+            }
+        }
         public string AccountCode
         {
             get => _code;

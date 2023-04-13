@@ -2,7 +2,7 @@
 
 namespace Quik
 {
-    public static class Loader
+    public class Loader
     {
         /// <summary>
         /// Entry Point. This method gets called by lua wrapper of the Quik trading terminal
@@ -13,6 +13,7 @@ namespace Quik
         {
             Quik.Instance.Initialize(luaStack);
             DI.RegisterInstance<IQuik>(Quik.Instance);
+            Task.Run(ConsoleIO.Main);
             return 1;
         }
     }

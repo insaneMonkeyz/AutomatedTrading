@@ -1,15 +1,7 @@
-﻿using System.Diagnostics;
-using Tools;
-
-using Quik.Entities;
-using Quik.EntityProviders;
+﻿using Quik.EntityProviders;
 using Quik.EntityProviders.Attributes;
-using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
-using Tools.Logging;
-using TradingConcepts;
-using TradingConcepts.CommonImplementations;
-using TradingConcepts.SecuritySpecifics;
+using Tools;
 
 namespace Quik
 {
@@ -29,9 +21,9 @@ namespace Quik
         private readonly Dictionary<string, LuaFunction> _usedCallbacks;
         private readonly IQuikDataConsumer[] _components;
         private readonly ExecutionLoop _executionLoop = new();
-        private readonly TextWriter _logWriter = new StreamWriter("Quik.log", append: true);
         private readonly Log _log;
 
+        private const string ISCONNECTED_FUNC = "isConnected";
         private const string DLL_NAME = "NativeToManagedProxy";
 
         public int Initialize(IntPtr luaState)
@@ -199,7 +191,7 @@ namespace Quik
             };
 
             _components = SingletonInstanceAttribute.GetInstances<IQuikDataConsumer>();
-            _log = LogManagement.GetLogger<Quik>(); 
+            _log = LogManagement.GetLogger<Quik>();
         }
         #endregion
 
@@ -221,7 +213,6 @@ namespace Quik
 
             Lua.UnregisterCallback(DLL_NAME);
             LogManagement.Dispose();
-            _logWriter.Dispose();
             _disposed = true;
         }
         public void Dispose()

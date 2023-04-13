@@ -73,6 +73,13 @@ namespace Quik.EntityProviders
                 ExchangeAssignedOrderId = ExecutionWrapper.ExchangeOrderId
             };
         }
+        protected override void LogEntityCreated(OrderExecution entity)
+        {
+            _log.Debug($@"Received new {nameof(OrderExecution)} for order {entity.Order}
+    {nameof(entity.TimeStamp)}={entity.TimeStamp}
+    {nameof(entity.TradeId)}={entity.TradeId}
+    {nameof(entity.Quote)}={entity.Quote}");
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Order? ResolveOrderOfExecution(LuaWrap state)

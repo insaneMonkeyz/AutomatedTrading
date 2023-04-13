@@ -8,7 +8,7 @@
         {
             lock (_sync)
             {
-                return DateTime.Now.Ticks & 0xFFFFFF;
+                return DateTime.Now.Ticks & 0xFFFFFFFF;
             }
         }
     }

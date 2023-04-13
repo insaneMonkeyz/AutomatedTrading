@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Xml.Linq;
 using TradingConcepts;
 
 namespace Quik.Lua
@@ -806,6 +807,22 @@ namespace Quik.Lua
                 Api.lua_type(_state, LAST_ITEM) == returnType)
             {
                 result = callback();
+            }
+
+            Api.lua_settop(_state, SECOND_ITEM);
+
+            return result;
+        }
+        internal bool ExecSimpleFunction(string name)
+        {
+            Api.lua_getglobal(_state, name);
+
+            bool result = default;
+
+            if (Api.lua_pcallk(_state, 0, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT &&
+                Api.lua_type(_state, LAST_ITEM) == Api.TYPE_NUMBER)
+            {
+                result = Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero) > 0;
             }
 
             Api.lua_settop(_state, SECOND_ITEM);

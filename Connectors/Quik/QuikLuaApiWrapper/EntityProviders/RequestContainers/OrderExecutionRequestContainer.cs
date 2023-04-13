@@ -35,5 +35,10 @@ namespace Quik.EntityProviders.RequestContainers
         {
             return HashCode.Combine(TradeId, ExchangeAssignedOrderId);
         }
+
+        public override string ToString()
+        {
+            return $"Order Execution Request: {{TradeId: {TradeId}, OrderId: {ExchangeAssignedOrderId ?? "null"}}}";
+        }
     }
 }

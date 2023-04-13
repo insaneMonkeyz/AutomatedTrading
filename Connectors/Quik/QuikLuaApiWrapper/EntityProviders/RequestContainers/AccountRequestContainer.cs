@@ -42,5 +42,10 @@ namespace Quik.EntityProviders.RequestContainers
         {
             return HashCode.Combine(FirmId, Account, LimitType);
         }
+
+        public override string ToString()
+        {
+            return $"Account Request: {{FirmId: {FirmId ?? "null"}, Account: {Account ?? "null"}, LimitType: {LimitType} }}";
+        }
     }
 }

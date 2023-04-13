@@ -8,6 +8,7 @@ using Quik.Entities;
 using Quik.EntityProviders;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
+using Quik.Lua;
 using TradingConcepts;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;
@@ -31,6 +32,21 @@ namespace Quik
         public event Action<IOrderBook> OrderBookChanged = delegate { };
         public event Action<ISecurity> SecurityChanged = delegate { };
         public event Action<IOrder> OrderChanged = delegate { };
+
+        bool IQuik.IsConnected
+        {
+            get
+            {
+                lock (SyncRoot)
+                {
+                    return Lua.ExecSimpleFunction(ISCONNECTED_FUNC);
+                }
+            }
+        }
+        ITradingAccount? IQuik.Account
+        {
+            get => AccountsProvider.Instance.GetAllEntities().FirstOrDefault(acc => acc.IsMoneyAccount);
+        }
 
         IEnumerable<SecurityDescription> IQuik.GetAvailableSecurities<TSecurity>() 
         {
@@ -59,10 +75,16 @@ namespace Quik
 
         IOrder IQuik.PlaceNewOrder(MoexOrderSubmission submission)
         {
+#if TRACE
+            this.Trace();
+#endif
             return TransactionsProvider.Instance.PlaceNew(submission);
         }
         void IQuik.ChangeOrder(IOrder order, Decimal5 newPrice, long newSize)
         {
+#if TRACE
+            this.Trace();
+#endif
             if (order is not Order moexOrder)
             {
                 throw new InvalidOperationException("Requesting to change an order that does not belong to MOEX");
@@ -72,6 +94,9 @@ namespace Quik
         }
         void IQuik.CancelOrder(IOrder order)
         {
+#if TRACE
+            this.Trace(); 
+#endif
             if (order is not Order moexOrder)
             {
                 throw new InvalidOperationException("Requesting to change an order that does not belong to MOEX");

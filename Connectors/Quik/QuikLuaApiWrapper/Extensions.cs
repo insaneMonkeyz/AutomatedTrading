@@ -12,6 +12,14 @@ namespace Quik
     {
         private static Log _log = LogManagement.GetLogger<Quik>();
 
+        public static bool HasValue(this string? subj)
+        {
+            return !string.IsNullOrWhiteSpace(subj);
+        }
+        public static bool HasNoValue(this string? subj)
+        {
+            return string.IsNullOrWhiteSpace(subj);
+        }
         public static bool TryConvertToMoexExpiry(this string date, out DateTimeOffset result)
         {
             result = default;

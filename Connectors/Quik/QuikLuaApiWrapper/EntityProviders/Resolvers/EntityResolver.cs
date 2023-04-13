@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 
 namespace Quik.EntityProviders.Resolvers
@@ -9,10 +10,10 @@ namespace Quik.EntityProviders.Resolvers
         where TEntity : class
         where TRequest : struct, IRequestContainer<TEntity>
     {
-        private readonly object _resolveInProgress = new();
-        private readonly Dictionary<int, TEntity> _cache;
-        private readonly ResolveEntityHandler<TRequest, TEntity>? _fetchFromQuik;
-        private readonly Log _log = LogManagement.GetLogger(typeof(EntityResolver<TRequest, TEntity>));
+        protected readonly object _resolveInProgress = new();
+        protected readonly Dictionary<int, TEntity> _cache;
+        protected readonly ResolveEntityHandler<TRequest, TEntity>? _fetchFromQuik;
+        protected readonly Log _log = LogManagement.GetLogger(typeof(EntityResolver<TRequest, TEntity>));
 
         public EntityResolver(int initialCacheSize, ResolveEntityHandler<TRequest, TEntity?> fetchFromQuik)
         {
@@ -22,6 +23,9 @@ namespace Quik.EntityProviders.Resolvers
 
         public virtual void CacheEntity(ref TRequest request, TEntity entity)
         {
+#if DEBUG
+            _log.Debug($"Caching entity {entity} with key {request}");
+#endif
             lock (_resolveInProgress)
             {
                 _cache[request.GetHashCode()] = entity;
@@ -37,7 +41,16 @@ namespace Quik.EntityProviders.Resolvers
 
             lock (_resolveInProgress)
             {
-                return GetFromCacheInternal(ref request);
+                var result = GetFromCacheInternal(ref request);
+
+#if DEBUG
+                if (result != default)
+                {
+                    _log.Debug($"Entity {result} is found in cache! The request was {request}");
+                } 
+#endif
+
+                return result;
             }
         }
         public virtual TEntity? Resolve(ref TRequest request)
@@ -67,7 +80,7 @@ namespace Quik.EntityProviders.Resolvers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private TEntity? GetFromCacheInternal(ref TRequest request)
+        protected virtual TEntity? GetFromCacheInternal(ref TRequest request)
         {
             if (_cache.TryGetValue(request.GetHashCode(), out TEntity? entity))
             {
@@ -77,6 +90,12 @@ namespace Quik.EntityProviders.Resolvers
                         $"Request{request} hash {request.GetHashCode()}. Entity {entity}");
                 }
             }
+#if DEBUG
+            else
+            {
+                _log.Debug($"Entity for request {request} not found in cache");
+            } 
+#endif
 
             return entity;
         }

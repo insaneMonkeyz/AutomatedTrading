@@ -35,5 +35,9 @@ namespace Quik.EntityProviders.RequestContainers
                 return SecurityRequest.GetHashCode() * 808852;
             }
         }
+        public override string ToString()
+        {
+            return $"Orderbook Request: {{ClassCode: {SecurityRequest.ClassCode}, Ticker: {SecurityRequest.Ticker}}}";
+        }
     }
 }

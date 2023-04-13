@@ -24,8 +24,11 @@ namespace Quik.Entities
             get => _exchangeAssignedIdString; 
             set
             {
-                _exchangeAssignedIdString = value ?? throw new ArgumentNullException(nameof(value));
-                ExchangeAssignedId = long.Parse(value);
+                if (value.HasValue())
+                {
+                    _exchangeAssignedIdString = value;
+                    ExchangeAssignedId = long.Parse(value);
+                }
             }
         }
         public long ExchangeAssignedId { get; private set; }
@@ -90,7 +93,7 @@ namespace Quik.Entities
 
         public override string ToString()
         {
-            return $"{State} {ExecutionCondition} {Security} {Quote} Executed={ExecutedSize} Remainder={RemainingSize}";
+            return $"{Security} {Quote} {State} {ExecutionCondition} Executed={ExecutedSize} Remainder={RemainingSize}";
         }
 
         private void EnsureStateCanBeSet(OrderStates newState)
@@ -100,7 +103,9 @@ namespace Quik.Entities
             bool isInvalid = newState == OrderStates.Registering && !state.HasFlag(OrderStates.None)
                           || newState == OrderStates.Cancelling && !state.HasFlag(OrderStates.Active)
                           || newState == OrderStates.Changing && !state.HasFlag(OrderStates.Active)
-                          || newState == OrderStates.Active && !(state.HasFlag(OrderStates.Registering) || state.HasFlag(OrderStates.OnHold))
+                          || newState == OrderStates.Active && !(state.HasFlag(OrderStates.None) || 
+                                                                 state.HasFlag(OrderStates.Registering) || 
+                                                                 state.HasFlag(OrderStates.OnHold))
                           || newState == OrderStates.OnHold && !state.HasFlag(OrderStates.Active)
                           || newState == OrderStates.Rejected && !(state.HasFlag(OrderStates.Active) || state.HasFlag(OrderStates.None));
 

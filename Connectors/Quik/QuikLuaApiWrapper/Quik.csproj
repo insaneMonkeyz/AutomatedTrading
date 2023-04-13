@@ -16,15 +16,21 @@
     <ProjectReference Include="..\..\..\BasicConcepts\TradingConcepts.csproj" />
     <ProjectReference Include="..\..\..\Tools\Tools.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Bugs\" />
-  </ItemGroup>
 	
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>QuikLuaWrapperTests</_Parameter1>
 		</AssemblyAttribute>
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="ZeroLog" Version="2.1.0" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Reference Include="ZeroLog">
+	    <HintPath>..\..\..\x64\Debug\ZeroLog.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 	
 	<ItemGroup>

@@ -145,6 +145,28 @@ namespace Quik.EntityProviders
             }
         }
 
+        protected override void LogEntityCreated(DerivativesTradingAccount entity)
+        {
+            _log.Debug($@"Received new {nameof(DerivativesTradingAccount)} from quik
+    {nameof(entity.CollateralMargin)}={entity.CollateralMargin}
+    {nameof(entity.AccountCurrency)}={entity.AccountCurrency}
+    {nameof(entity.FloatingIncome)}={entity.FloatingIncome}
+    {nameof(entity.MoexCurrCode)}={entity.MoexCurrCode}
+    {nameof(entity.UnusedFunds)}={entity.UnusedFunds}
+    {nameof(entity.AccountCode)}={entity.AccountCode}
+    {nameof(entity.TotalFunds)}={entity.TotalFunds}
+    {nameof(entity.LimitType)}={entity.LimitType}
+    {nameof(entity.FirmId)}={entity.FirmId}");
+        }
+        protected override void LogEntityUpdated(DerivativesTradingAccount entity)
+        {
+            _log.Debug($@"Received updates for {nameof(DerivativesTradingAccount)} {entity.AccountCode}
+    {nameof(entity.CollateralMargin)}={entity.CollateralMargin}
+    {nameof(entity.FloatingIncome)}={entity.FloatingIncome}
+    {nameof(entity.UnusedFunds)}={entity.UnusedFunds}
+    {nameof(entity.TotalFunds)}={entity.TotalFunds}");
+        }
+
         #region Singleton
         [SingletonInstance(rank: 50)]
         public static AccountsProvider Instance { get; } = new();

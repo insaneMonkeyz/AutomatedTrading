@@ -55,7 +55,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             get => _context.ReadRowValueString(CLASS_CODE);
         }
-        public static long RemainingSize
+        public static long RejectedSize
         {
             get => _context.TryFetchLongFromTable(REST, out long result) ? result : 0;
         }

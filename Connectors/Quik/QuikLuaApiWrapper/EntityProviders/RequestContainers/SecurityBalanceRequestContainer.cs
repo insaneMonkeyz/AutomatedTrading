@@ -47,5 +47,10 @@ namespace Quik.EntityProviders.RequestContainers
         {
             return HashCode.Combine(FirmId, Account, Ticker);
         }
+
+        public override string ToString()
+        {
+            return $"Security Balance: {{Ticker: {Ticker ?? "null"}, Account: {Account ?? "null"}, FirmId: {FirmId ?? "null"}}}";
+        }
     }
 }

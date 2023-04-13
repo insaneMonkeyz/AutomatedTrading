@@ -157,7 +157,7 @@ namespace Quik.EntityProviders
 
                 var flags = OrdersWrapper.Flags;
 
-                entity.RemainingSize = OrdersWrapper.Rest;
+                entity.RemainingSize = entity.Quote.Size - OrdersWrapper.Rest;
 
                 if (flags.HasFlag(OrderFlags.IsAlive))
                 {
@@ -168,6 +168,26 @@ namespace Quik.EntityProviders
                     entity.SetSingleState(OrderStates.Done);
                 }
             }
+        }
+        protected override void LogEntityCreated(Order entity)
+        {
+            _log.Debug($@"Received new {nameof(Order)} from Quik
+    {nameof(entity.ExchangeAssignedIdString)}={entity.ExchangeAssignedIdString}
+    {nameof(entity.ExecutionCondition)}={entity.ExecutionCondition}
+    {nameof(entity.TransactionId)}={entity.TransactionId}
+    {nameof(entity.RemainingSize)}={entity.RemainingSize}
+    {nameof(entity.AccountCode)}={entity.AccountCode}
+    {nameof(entity.IsMarket)}={entity.IsMarket}
+    {nameof(entity.Expiry)}={entity.Expiry}
+    {nameof(entity.Quote)}={entity.Quote}
+    {nameof(entity.State)}={entity.State}");
+        }
+        protected override void LogEntityUpdated(Order entity)
+        {
+            _log.Debug($@"Received updates for {nameof(Order)} {entity}
+    {nameof(entity.ExchangeAssignedIdString)}={entity.ExchangeAssignedIdString}
+    {nameof(entity.RemainingSize)}={entity.RemainingSize}
+    {nameof(entity.State)}={entity.State}");
         }
 
         protected override OrderRequestContainer CreateRequestFrom(LuaWrap state)

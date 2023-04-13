@@ -3,7 +3,7 @@ using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
 using TradingConcepts;
-using static Quik.EntityDataProviders.QuikApiWrappers.TransactionWrapper;
+using static Quik.EntityProviders.QuikApiWrappers.TransactionWrapper;
 
 namespace Quik.EntityProviders
 {
@@ -31,55 +31,54 @@ namespace Quik.EntityProviders
                 throw new ArgumentException($"{nameof(submission.ClientCode)} of the order is not set");
             }
 
-            var newOrderArgs = new NewOrderArgs();
+            var newOrderArgs = new NewOrderArgs()
+            {
+                OrderSubmission = submission,
+                Expiry = string.Empty
+            };
 
-            var exectype = string.Empty;
-            var execondition = string.Empty;
-            var expiry = string.Empty;
-            var price = string.Empty;
-
-            var operation = submission.Quote.Operation == Operations.Buy
+            newOrderArgs.Operation = submission.Quote.Operation == Operations.Buy
                 ? BUY_OPERATION_PARAM
                 : SELL_OPERATION_PARAM;
 
             if (submission.IsMarket)
             {
-                exectype = ORDER_TYPE_MARKET_PARAM;
+                newOrderArgs.ExecutionType = ORDER_TYPE_MARKET_PARAM;
             }
             else
             {
-                exectype = ORDER_TYPE_LIMIT_PARAM;
-                price = submission.Quote.Price.ToString((uint)submission.Security.PricePrecisionScale);
+                newOrderArgs.ExecutionType = ORDER_TYPE_LIMIT_PARAM;
+                newOrderArgs.Price = submission.Quote.Price.ToString((uint)submission.Security.PricePrecisionScale);
             }
 
             switch (submission.ExecutionCondition)
             {
                 case OrderExecutionConditions.FillOrKill:
                     {
-                        execondition = FILL_OR_KILL_ORDER_PARAM;
+                        newOrderArgs.ExecutionCondition = FILL_OR_KILL_ORDER_PARAM;
                         break;
                     }
                 case OrderExecutionConditions.CancelRest:
                     {
-                        execondition = CANCEL_BALANCE_ORDER_PARAM;
+                        newOrderArgs.ExecutionCondition = CANCEL_BALANCE_ORDER_PARAM;
                         break;
                     }
                 case OrderExecutionConditions.Session:
                     {
-                        execondition = QUEUE_ORDER_PARAM;
-                        expiry = ORDER_TODAY_EXPIRY_PARAM;
+                        newOrderArgs.ExecutionCondition = QUEUE_ORDER_PARAM;
+                        newOrderArgs.Expiry = ORDER_TODAY_EXPIRY_PARAM;
                         break;
                     }
                 case OrderExecutionConditions.GoodTillCancelled:
                     {
-                        execondition = QUEUE_ORDER_PARAM;
-                        expiry = ORDER_GTC_EXPIRY_PARAM;
+                        newOrderArgs.ExecutionCondition = QUEUE_ORDER_PARAM;
+                        newOrderArgs.Expiry = ORDER_GTC_EXPIRY_PARAM;
                         break;
                     }
                 case OrderExecutionConditions.GoodTillDate:
                     {
-                        execondition = QUEUE_ORDER_PARAM;
-                        expiry = submission.Expiry.ToString("yyyyMMdd");
+                        newOrderArgs.ExecutionCondition = QUEUE_ORDER_PARAM;
+                        newOrderArgs.Expiry = submission.Expiry.ToString("yyyyMMdd");
                         break;
                     }
                 default:
@@ -90,14 +89,14 @@ namespace Quik.EntityProviders
             var error = PlaceNewOrder(ref newOrderArgs);
             var order = new Order(submission);
 
-            if (error != null)
+            if (error.HasNoValue())
             {
-                order.SetSingleState(OrderStates.Rejected);
-                _log.Warn($"Order {order} placement rejected\n{error}");
+                order.AddIntermediateState(OrderStates.Registering);
             }
             else
             {
-                order.AddIntermediateState(OrderStates.Registering);
+                order.SetSingleState(OrderStates.Rejected);
+                _log.Warn($"Order {order} placement rejected\n{error}");
             }
 
             var orderRequest = new OrderRequestContainer
@@ -143,6 +142,12 @@ namespace Quik.EntityProviders
                 return;
             }
 
+            if (order.ExchangeAssignedId == default || order.State.HasFlag(OrderStates.Registering))
+            {
+                _log.Warn($"Cannot change an order that is still registering {order}");
+                return;
+            }
+
             var changeArgs = new ChangeOrderArgs
             {
                 Order = order,
@@ -165,7 +170,7 @@ namespace Quik.EntityProviders
         private void Update(Order order)
         {
             order.ExchangeAssignedIdString = ExchangeAssignedOrderId;
-            order.RemainingSize = RemainingSize;
+            order.RemainingSize = order.Quote.Size - RejectedSize;
 
             if (order.RemainingSize > 0)
             {
@@ -188,15 +193,12 @@ namespace Quik.EntityProviders
                     SetContext(state);
 
                     var status = Status;
-
                     if (status != TransactionStatus.Completed)
                     {
                         _log.Warn($"Transaction rejected by {ErrorSource}. {status}\n{ResultDescription}");
-                        return 1;
                     }
 
                     var transactionId = Id;
-
                     if (ClassCode is not string classcode)
                     {
                         _log.Warn($"Cannot process transaction {transactionId} callback. Class Code of security of the order is not set");
@@ -217,10 +219,18 @@ namespace Quik.EntityProviders
 
                     if (order != null)
                     {
-                        Update(order);
-
+                        if (status != TransactionStatus.Completed)
+                        {
+                            order.SetSingleState(OrderStates.Rejected);
+                        }
+                        else
+                        {
+                            Update(order);
+                        }
+#if DEBUG
+                        LogEntityUpdated(order); 
+#endif
                         orderLookup.ExchangeAssignedId = order.ExchangeAssignedIdString;
-
                         _ordersResolver.CacheEntity(ref orderLookup, order);
                         _eventSignalizer.QueueEntity(OrderChanged, order);
 
@@ -234,6 +244,13 @@ namespace Quik.EntityProviders
             }
 
             return 1;
+        }
+        private void LogEntityUpdated(Order entity)
+        {
+            _log.Debug($@"Received updates for {nameof(Order)} {entity}
+    {nameof(entity.ExchangeAssignedIdString)}={entity.ExchangeAssignedIdString}
+    {nameof(entity.RemainingSize)}={entity.RemainingSize}
+    {nameof(entity.State)}={entity.State}");
         }
 
         #region Singleton

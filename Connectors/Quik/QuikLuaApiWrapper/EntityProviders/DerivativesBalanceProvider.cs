@@ -1,17 +1,14 @@
-﻿using TradingConcepts;
-using Quik.Entities;
+﻿using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
-
-using static Quik.Quik;
-using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMethod4Params<Quik.Entities.SecurityBalance, Quik.Lua.LuaWrap>;
-using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method4Params<Quik.Lua.LuaWrap, Quik.Entities.SecurityBalance?>;
-using System.Diagnostics;
-using Quik.Lua;
-using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.Resolvers;
-using Tools.Logging;
+using Quik.Lua;
+
+using TradingConcepts;
+
+using CreateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.Method4Params<Quik.Lua.LuaWrap, Quik.Entities.SecurityBalance?>;
+using UpdateParams = Quik.EntityProviders.QuikApiWrappers.FunctionsWrappers.VoidMethod4Params<Quik.Entities.SecurityBalance, Quik.Lua.LuaWrap>;
 
 namespace Quik.EntityProviders
 {
@@ -157,7 +154,21 @@ namespace Quik.EntityProviders
                 }; 
             }
         }
-
+        protected override void LogEntityCreated(SecurityBalance entity)
+        {
+            _log.Debug($@"Received new {nameof(SecurityBalance)} from quik
+    {nameof(entity.Security)}={entity.Security.Ticker}
+    {nameof(entity.Collateral)}={entity.Collateral}
+    {nameof(entity.Account)}={entity.Account}
+    {nameof(entity.Amount)}={entity.Amount}
+    {nameof(entity.FirmId)}={entity.FirmId}");
+        }
+        protected override void LogEntityUpdated(SecurityBalance entity)
+        {
+            _log.Debug($@"Received updates for {nameof(SecurityBalance)} {entity.Security.Ticker}
+    {nameof(entity.Collateral)}={entity.Collateral}
+    {nameof(entity.Amount)}={entity.Amount}");
+        }
 
         #region Singleton
         [SingletonInstance(rank: 10)]
