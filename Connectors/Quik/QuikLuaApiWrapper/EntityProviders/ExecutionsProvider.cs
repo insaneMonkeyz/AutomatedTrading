@@ -90,7 +90,6 @@ namespace Quik.EntityProviders
             var request = new OrderRequestContainer
             {
                 ClassCode = ExecutionWrapper.ClassCode,
-                TransactionId = ExecutionWrapper.TransactionId,
                 ExchangeAssignedId = ExecutionWrapper.ExchangeOrderId
             };
             return _orderResolver.Resolve(ref request);

@@ -1,3 +1,3 @@
 ﻿1) after sending an order we receive a callback with result of that transaction but TransactionId is not provided so we can't find the order that was executed
 2) double caching when new entity is received
-3) not tracing IQuik API Calls
+3) double rounding error spotted in USDRUBF price 81.74999 instead of 81.75

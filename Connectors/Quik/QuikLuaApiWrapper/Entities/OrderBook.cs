@@ -119,6 +119,13 @@ namespace Quik.Entities
             }
         }
 
+        public T UseQuotes<T>(QuotesReader<T> reader)
+        {
+            lock (_bidsLock) lock (_asksLock)
+            {
+                return reader(_bids, _asks, _marketDepth);
+            }
+        }
         public void UseQuotes(QuotesReader reader)
         {
             lock (_bidsLock) lock (_asksLock)
@@ -147,25 +154,25 @@ namespace Quik.Entities
         }
         public string Print()
         {
-            var builder = new StringBuilder();
+            static string read(Quote[] bids, Quote[] asks, long depth)
+            {
+                var builder = new StringBuilder();
 
-            static void appendAsks(StringBuilder b, Quote q)
-            {
-                b.AppendLine("      ");
-                b.Append(q.Price);
-                b.Append(' ');
-                b.Append(q.Size);
-            }
-            static void appendBids(StringBuilder b, Quote q)
-            {
-                b.AppendLine(q.Size.ToString());
-                b.Append(' ');
-                b.Append(q.Price);
-            }
+                static void appendAsks(StringBuilder b, Quote q)
+                {
+                    b.Append('\t');
+                    b.Append(q.Price.ToString((uint)Decimal5.EXPONENT, separateThousands: true));
+                    b.Append('\t');
+                    b.AppendLine(q.Size.ToString());
+                }
+                static void appendBids(StringBuilder b, Quote q)
+                {
+                    b.Append(q.Size);
+                    b.Append('\t');
+                    b.AppendLine(q.Price.ToString((uint)Decimal5.EXPONENT, separateThousands: true));
+                }
 
-            UseQuotes((bids, asks, depth) =>
-            {
-                for (int i = (int)depth-1; i >= 0; i--)
+                for (int i = (int)depth - 1; i >= 0; i--)
                 {
                     appendAsks(builder, asks[i]);
                 }
@@ -173,9 +180,11 @@ namespace Quik.Entities
                 {
                     appendBids(builder, bids[i]);
                 }
-            });
 
-            return builder.ToString();
+                return builder.ToString();
+            }
+
+            return UseQuotes<string>(read);
         }
     }
 }

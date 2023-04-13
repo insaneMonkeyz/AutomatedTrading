@@ -16,7 +16,7 @@ namespace Quik.Entities
         public Decimal5? PriceStepValue { get; internal set; }
         public int UniqueId
         {
-            get => _uniqueId ??= 
+            get => _uniqueId ??=
                 HashCode.Combine(nameof(Security), ClassCode, Ticker);
         }
         private int? _uniqueId;
@@ -33,6 +33,6 @@ namespace Quik.Entities
             DenominationCurrency = container.DenominationCurrency;
         }
 
-        public override string ToString() => Ticker;
+        public override string ToString() => $"{ClassCode}:{Ticker}";
     }
 }

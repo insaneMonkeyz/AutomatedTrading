@@ -11,7 +11,7 @@ namespace Tools.Logging
         public const string MAIN_LOG_FILE = "FullLog.log";
         public const int    DEFAULT_LOG_BUFFER_SIZE = 1024;
 
-        public static readonly LogLevel DefaultLevel = LogLevel.Debug;
+        public static readonly LogLevel DefaultLevel = LogLevel.Trace;
 
         private const string DEFAULT_LOG_FORMAT = "\n[%date  %time]\t[%level]\t%thread\t%loggerCompact\n  ";
         private const string   ERROR_LOG_FORMAT = "\n[%date  %time]\t[%level]\t%thread\n  ";
@@ -100,7 +100,6 @@ namespace Tools.Logging
         {
             EnsureInitialization();
             var common = getFullLogger();
-            var tracer = LogManagement.GetDedicatedFileLogger("Tracer", ZeroLog.LogLevel.Trace);
             var error = LogManagement.GetDedicatedFileLogger("Errors", ZeroLog.LogLevel.Error);
             return new Log(common, common, error);
         }

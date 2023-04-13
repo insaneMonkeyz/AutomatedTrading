@@ -19,6 +19,7 @@ namespace Quik
         private static Security? _currentSecurity;
         private static Order? _currentOrder;
         private static ITradingAccount? _currentAccount;
+        private static List<Order> _orders = new();
 
         public static void Main()
         {
@@ -32,11 +33,7 @@ namespace Quik
             _quik = DI.Resolve<IQuik>();
             _quik.NewOrder += (order) =>
             {
-                Console.WriteLine($"New Order received: {order}");
-            };
-            _quik.OrderChanged += (order) =>
-            {
-                Console.WriteLine($"Order changed: {order}");
+                _orders.Add(order as Order);
             };
 
             var commandsList =
@@ -65,22 +62,31 @@ namespace Quik
             {
                 Console.Clear();
                 Console.WriteLine(commandsList);
-                if (_currentSecurity != null)
-                {
-                    Console.WriteLine($"Security: {_currentSecurity}");
-                }
-                if (_currentOrder != null)
-                {
-                    Console.WriteLine($"Order: {_currentOrder}");
-                }
                 if (_currentAccount == null)
                 {
                     _currentAccount = _quik.Account;
-                    Console.WriteLine($"Account: {_currentAccount?.ToString() ?? "null"}");
+                    Console.WriteLine($"Selected Account: {_currentAccount?.ToString() ?? "null"}");
                 }
                 else
                 {
-                    Console.WriteLine($"Account: {_currentAccount?.ToString() ?? "null"}");
+                    Console.WriteLine($"Selected Account: {_currentAccount?.ToString() ?? "null"}");
+                }
+                if (_currentSecurity != null)
+                {
+                    Console.WriteLine($"Selected Security: {_currentSecurity}");
+                }
+                if (_currentOrder != null)
+                {
+                    Console.WriteLine($"Selected Order: {_currentOrder}");
+                }
+                if (_orders.Count > 0)
+                {
+                    Console.WriteLine($"-----------------------------------");
+
+                    foreach (var item in _orders)
+                    {
+                        Console.WriteLine(item.ToString());
+                    }
                 }
 
                 try

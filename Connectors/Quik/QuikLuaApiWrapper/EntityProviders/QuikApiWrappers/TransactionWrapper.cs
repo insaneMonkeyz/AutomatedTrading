@@ -55,9 +55,25 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             get => _context.ReadRowValueString(CLASS_CODE);
         }
+        public static string? Ticker
+        {
+            get => _context.ReadRowValueString(TICKER);
+        }
         public static long RejectedSize
         {
             get => _context.TryFetchLongFromTable(REST, out long result) ? result : 0;
+        }
+        public static Decimal5 Price
+        {
+            get => _context.ReadRowValueDecimal5(PRICE);
+        }
+        public static long Size
+        {
+            get => _context.ReadRowValueLong(SIZE);
+        }
+        public static long Uid
+        {
+            get => _context.ReadRowValueLong(UNIQUE_ID);
         }
 
         public struct CancelOrderArgs

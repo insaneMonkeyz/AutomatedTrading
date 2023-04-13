@@ -10,6 +10,7 @@ namespace Quik.EntityProviders.Resolvers
         private static EntityResolver<AccountRequestContainer, DerivativesTradingAccount>? _accountsResolver;
         private static EntityResolver<SecurityBalanceRequestContainer, SecurityBalance>? _balanceResolver;
         private static EntityResolver<OrderbookRequestContainer, OrderBook>? _orderbooksResolver;
+        private static EntityResolver<TransactionRequestContainer, Order>? _transactionsResolver;
         private static EntityResolver<OrderRequestContainer, Order>? _ordersResolver;
         private static SecurityResolver? _securityResolver;
 
@@ -44,6 +45,10 @@ namespace Quik.EntityProviders.Resolvers
         public static EntityResolver<OrderbookRequestContainer, OrderBook> GetOrderbooksResolver()
         {
             return _orderbooksResolver ??= new(10, OrderbooksProvider.Instance.Create);
+        }
+        public static EntityResolver<TransactionRequestContainer, Order> GetTransactionsResolver()
+        {
+            return _transactionsResolver ??= new(10_000, default);
         }
         public static EntityResolver<OrderRequestContainer, Order> GetOrdersResolver()
         {

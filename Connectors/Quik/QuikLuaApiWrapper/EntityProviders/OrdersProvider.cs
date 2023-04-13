@@ -201,7 +201,6 @@ namespace Quik.EntityProviders
 
                 return new()
                 {
-                    TransactionId = OrdersWrapper.TransactionId,
                     ExchangeAssignedId = OrdersWrapper.ExchangeOrderId,
                     ClassCode = OrdersWrapper.ClassCode
                 }; 

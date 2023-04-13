@@ -9,9 +9,9 @@ namespace TradingConcepts
         public static readonly Decimal5 MAX_VALUE = new() { mantissa = MANTISSA_MAX_VALUE };
         public static readonly Decimal5 MIN_VALUE = new() { mantissa = MANTISSA_MIN_VALUE };
 
+        public const long EXPONENT = 5;
         private const long POSITIVE = 1;
         private const long NEGATIVE = -1;
-        private const long EXPONENT = 5;
         private const long DECIMAL_NUMERAL_SYSTEM_BASE = 10;
         private const long DECIMAL_EXPONENT = EXPONENT << 16;
         private const long MULTIPLIER = 100_000;

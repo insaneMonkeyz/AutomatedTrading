@@ -92,7 +92,7 @@ namespace Quik.EntityProviders
                     if (entity != null && Update(entity))
                     {
 #if DEBUG
-                        //LogEntityUpdated(entity); 
+                        LogEntityUpdated(entity);
 #endif
                         _eventSignalizer.QueueEntity(EntityChanged, entity);
 
@@ -102,7 +102,7 @@ namespace Quik.EntityProviders
                     if (CreationIsApproved(ref request) && (entity = Create(ref request)) != null)
                     {
 #if DEBUG
-                        //LogEntityCreated(entity);
+                        LogEntityCreated(entity);
 #endif
                         _bookResolver.CacheEntity(ref request, entity);
                         _eventSignalizer.QueueEntity(NewEntity, entity);
