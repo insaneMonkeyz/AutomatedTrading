@@ -5,6 +5,8 @@ using TradingConcepts;
 using Quik.Entities;
 using Quik.EntityProviders;
 using System.Xml.Linq;
+using Quik.EntityProviders.QuikApiWrappers;
+using System.Text;
 
 namespace Quik
 {
@@ -124,6 +126,12 @@ namespace Quik
         public static bool HasAttribute<TAttribute>(this MemberInfo subj) where TAttribute : Attribute
         {
             return subj.CustomAttributes.Any(a => a.AttributeType == typeof(TAttribute));
+        }
+        public static bool TryGetAttributeValue<TAttribute>(this MemberInfo subj, out TAttribute? attribute) where TAttribute : Attribute
+        {
+            attribute = subj.GetCustomAttribute<TAttribute>();
+
+            return attribute != null;
         }
     }
 }

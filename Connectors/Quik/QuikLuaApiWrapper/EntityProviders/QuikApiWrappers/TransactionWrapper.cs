@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using Core.Tools;
 using Quik.Entities;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.Lua;
+using Tools;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 
@@ -23,54 +25,77 @@ namespace Quik.EntityProviders.QuikApiWrappers
             _context = lua;
         }
 
+        [QuikCallbackField(ID)]
         public static long Id
         {
             get => _context.ReadRowValueLong(ID);
         }
+        [QuikCallbackField(SERVER_TRANSACTION_ID)]
+        public static long ServerTransactionId
+        {
+            get => _context.ReadRowValueLong(SERVER_TRANSACTION_ID);
+        }
+        [QuikCallbackField(ORDER_ID)]
+        public static string? OrderId
+        {
+            get => _context.ReadRowValueNumber(ORDER_ID);
+        }
+        [QuikCallbackField(ERROR_SITE)]
         public static ErrorSite ErrorSource
         {
             get => (ErrorSite)_context.ReadRowValueLong(ERROR_SITE);
         }
+        [QuikCallbackField(ERROR_CODE)]
+        public static ErrorSite ErrorCode
+        {
+            get => (ErrorSite)_context.ReadRowValueLong(ERROR_CODE);
+        }
+        [QuikCallbackField(STATUS)]
         public static TransactionStatus Status
         {
             get => (TransactionStatus)_context.ReadRowValueLong(STATUS);
         }
+        [QuikCallbackField(RESULT_DESCRIPTION)]
         public static string? ResultDescription
         {
             get => _context.ReadRowValueString(RESULT_DESCRIPTION);
         }
+        [QuikCallbackField(TIMESTAMP)]
         public static DateTimeOffset Timestamp
         {
             get => TimeWrapper.GetTime(_context, TIMESTAMP).GetValueOrDefault();
         }
+        [QuikCallbackField(RESPONSE_RECEPTION_TIMESTAMP)]
         public static DateTimeOffset ResponseReceptionTimestamp
         {
             get => TimeWrapper.GetTime(_context, RESPONSE_RECEPTION_TIMESTAMP).GetValueOrDefault();
         }
-        public static string? ExchangeAssignedOrderId
-        {
-            get => _context.ReadRowValueString(EXCHANGE_ORDER_ID);
-        }
+        [QuikCallbackField(CLASS_CODE)]
         public static string? ClassCode
         {
             get => _context.ReadRowValueString(CLASS_CODE);
         }
+        [QuikCallbackField(TICKER)]
         public static string? Ticker
         {
             get => _context.ReadRowValueString(TICKER);
         }
+        [QuikCallbackField(REST)]
         public static long RejectedSize
         {
             get => _context.TryFetchLongFromTable(REST, out long result) ? result : 0;
         }
+        [QuikCallbackField(PRICE)]
         public static Decimal5 Price
         {
             get => _context.ReadRowValueDecimal5(PRICE);
         }
+        [QuikCallbackField(SIZE)]
         public static long Size
         {
             get => _context.ReadRowValueLong(SIZE);
         }
+        [QuikCallbackField(UNIQUE_ID)]
         public static long Uid
         {
             get => _context.ReadRowValueLong(UNIQUE_ID);

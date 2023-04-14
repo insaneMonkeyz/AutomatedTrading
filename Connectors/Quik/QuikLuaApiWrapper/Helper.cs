@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Quik.Entities;
+using Quik.EntityProviders.QuikApiWrappers;
 using TradingConcepts;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;
@@ -181,6 +183,31 @@ namespace Quik
                 Ticker = ticker,
                 ExpiryDate = new DateTime(year, month, 1)
             };
+        }
+
+        public static string PrintQuikParameters(Type t)
+        {
+#if !DEBUG
+            throw new InvalidOperationException("Do not call this method in production!");
+#endif
+            var sb = new StringBuilder(2048);
+
+            sb.Append(t.Name);
+            sb.AppendLine(" Data:");
+
+            foreach (var p in t.GetProperties(BindingFlags.Static | BindingFlags.Public))
+            {
+                if (p.TryGetAttributeValue(out QuikCallbackFieldAttribute? attribute))
+                {
+                    sb.Append(p.Name);
+                    sb.Append(" (");
+                    sb.Append(attribute.Parameter);
+                    sb.Append("): ");
+                    sb.AppendLine(p.GetValue(null)?.ToString() ?? "null");
+                }
+            }
+
+            return sb.ToString();
         }
     }
 }

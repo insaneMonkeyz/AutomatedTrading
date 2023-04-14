@@ -1,4 +1,5 @@
-﻿using Quik.Entities;
+﻿using System.Text;
+using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
@@ -12,7 +13,7 @@ namespace Quik.EntityProviders
     {
         protected override string QuikCallbackMethod => CALLBACK_METHOD;
 
-        private EntityResolver<TransactionRequestContainer, Order>? _transactionsResolver;
+        private TransactionCache _transactionsCache = new(cacheSize: 20);
         private EntityResolver<OrderRequestContainer, Order>? _ordersResolver;
 
         public EntityEventHandler<Order> OrderChanged = delegate { };
@@ -22,7 +23,6 @@ namespace Quik.EntityProviders
 #if TRACE
             this.Trace();
 #endif
-            _transactionsResolver = EntityResolvers.GetTransactionsResolver();
             _ordersResolver = EntityResolvers.GetOrdersResolver();
             base.Initialize(entityNotificationLoop);
         }
@@ -95,22 +95,13 @@ namespace Quik.EntityProviders
             if (error.HasNoValue())
             {
                 order.AddIntermediateState(OrderStates.Registering);
+                _transactionsCache.Push(order);
             }
             else
             {
                 order.SetSingleState(OrderStates.Rejected);
                 _log.Warn($"Order {order} placement rejected\n{error}");
             }
-
-            var transactionRequest = new TransactionRequestContainer
-            {
-                Submitted = order.Submitted.UtcDateTime,
-                Ticker = order.Security.Ticker,
-                Price = order.Quote.Price,
-                Size = order.Quote.Size,
-            };
-
-            _transactionsResolver.CacheEntity(ref transactionRequest, order);
 
             return order;
         }
@@ -181,6 +172,9 @@ namespace Quik.EntityProviders
                 lock (_callbackLock)
                 {
                     SetContext(state);
+#if DEBUG
+                    _log.Debug(Helper.PrintQuikParameters(typeof(TransactionWrapper)));
+#endif
 
                     var status = Status;
                     if (status != TransactionStatus.Completed)
@@ -195,18 +189,11 @@ namespace Quik.EntityProviders
                         return 1;
                     }
 
-                    var transactionLookup = new TransactionRequestContainer
-                    {
-                        Ticker = Ticker,
-                        Price = Price,
-                        Size = Size
-                    };
-
-                    var order = _transactionsResolver.GetFromCache(ref transactionLookup);
+                    var order = _transactionsCache.Pop(transactionId);
 
                     if (order != null)
                     {
-                        order.ExchangeAssignedIdString = ExchangeAssignedOrderId;
+                        order.ExchangeAssignedIdString = OrderId;
                         order.RemainingSize = order.Quote.Size - RejectedSize;
 
                         if (status != TransactionStatus.Completed)
@@ -224,9 +211,7 @@ namespace Quik.EntityProviders
                                 order.SetSingleState(OrderStates.Done);
                             }
                         }
-#if DEBUG
-                        LogEntityUpdated(order);
-#endif
+
                         var orderLookup = new OrderRequestContainer
                         {
                             ExchangeAssignedId = order.ExchangeAssignedIdString,
@@ -245,14 +230,6 @@ namespace Quik.EntityProviders
             }
 
             return 1;
-        }
-        private void LogEntityUpdated(Order entity)
-        {
-            _log.Debug($@"Received updates for {nameof(Order)} {entity}
-    {nameof(entity.ExchangeAssignedIdString)}={entity.ExchangeAssignedIdString}
-    {nameof(entity.RemainingSize)}={entity.RemainingSize}
-    {nameof(entity.State)}={entity.State}
-    {nameof(TransactionWrapper.Uid)}={Uid}");
         }
 
         #region Singleton

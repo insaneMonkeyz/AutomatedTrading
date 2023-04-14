@@ -32,7 +32,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         private const string CLIENT_CODE = "client_code";
         private const string CLASS_CODE = "class_code";
         private const string TICKER = "sec_code";
-        private const string EXCHANGE_ORDER_ID = "exchange_code";
+        private const string EXCHANGE_CODE = "exchange_code";
         #endregion
 
         //TRANSACTION

@@ -120,11 +120,11 @@ namespace Quik.EntityProviders
         }
         private void LogEntityCreated(OrderBook entity)
         {
-            _log.Debug($"Received new {nameof(OrderBook)} for {entity.Security}\n{entity.Print()}");
+            //_log.Debug($"Received new {nameof(OrderBook)} for {entity.Security}\n{entity.Print()}");
         }
         private void LogEntityUpdated(OrderBook entity)
         {
-            _log.Debug($"Received updates for {nameof(OrderBook)} {entity.Security}\n{entity.Print()}");
+            //_log.Debug($"Received updates for {nameof(OrderBook)} {entity.Security}\n{entity.Print()}");
         }
 
         private void EnsureInitialized([CallerMemberName] string? method = null)

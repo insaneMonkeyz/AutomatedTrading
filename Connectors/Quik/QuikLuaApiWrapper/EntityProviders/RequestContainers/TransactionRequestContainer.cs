@@ -11,14 +11,12 @@ namespace Quik.EntityProviders.RequestContainers
     internal struct TransactionRequestContainer : IRequestContainer<Order>, IEquatable<TransactionRequestContainer>
     {
         public string? Ticker;
-        public DateTimeOffset Submitted;
         public Decimal5 Price;
         public long Size;
 
         public bool HasData
         {
             get => Ticker.HasValue()
-                && Submitted != default
                 && Price != default
                 && Size != default;
         }
@@ -47,11 +45,11 @@ namespace Quik.EntityProviders.RequestContainers
         }
         public override int GetHashCode()
         {
-            return HashCode.Combine(Ticker, Submitted, Price, Size);
+            return HashCode.Combine(Ticker, Price, Size);
         }
         public override string? ToString()
         {
-            return $"{{{nameof(TransactionRequestContainer)}: {Ticker} {Size}x{Price} Submitted: {Submitted}}}";
+            return $"{{{nameof(TransactionRequestContainer)}: {Ticker} {Size}x{Price}}}";
         }
     }
 }

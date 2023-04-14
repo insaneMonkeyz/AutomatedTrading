@@ -1,11 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
-using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 
 namespace Quik.EntityProviders.Resolvers
 {
     internal delegate TEntity? ResolveEntityHandler<TRequest, TEntity>(ref TRequest request);
-
     internal class EntityResolver<TRequest, TEntity>
         where TEntity : class
         where TRequest : struct, IRequestContainer<TEntity>
