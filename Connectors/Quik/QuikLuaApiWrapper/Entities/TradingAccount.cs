@@ -4,11 +4,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Quik.EntityProviders.Notification;
 using TradingConcepts;
 
 namespace Quik.Entities
 {
-    internal class DerivativesTradingAccount : ITradingAccount, IUniquelyIdentifiable, INotifyEntityUpdated
+    internal class DerivativesTradingAccount : ITradingAccount, IUniquelyIdentifiable, INotifiableEntity
     {
         private string _code;
         private string _firmId;
@@ -54,6 +55,8 @@ namespace Quik.Entities
         public List<ISecurityBalance> SecuritiesBalance { get; init; } = new(10);
 
         public event Action Updated = delegate { };
+
+        public void NotifyUpdated() => Updated();
 
         public override string ToString()
         {

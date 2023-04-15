@@ -4,13 +4,14 @@ using Quik.Entities;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
 using Quik.EntityProviders.Resolvers;
+using Quik.EntityProviders.Notification;
 
 namespace Quik.EntityProviders
 {
     internal abstract class UpdatableEntitiesProvider<TEntity, TRequestContainer>
         : DataProvider<TEntity, TRequestContainer>
             where TRequestContainer : struct, IRequestContainer<TEntity>
-            where TEntity : class, INotifyEntityUpdated
+            where TEntity : class, INotifiableEntity
     {
         protected EntityResolver<TRequestContainer, TEntity>? _entityResolver;
 

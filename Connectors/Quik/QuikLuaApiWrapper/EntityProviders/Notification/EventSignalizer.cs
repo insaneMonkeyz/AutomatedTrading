@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using TradingConcepts;
 
 namespace Quik.EntityProviders.Notification
 {
     internal class EventSignalizer<TEntity> : IEntityEventSignalizer<TEntity>
-        where TEntity : class
+        where TEntity : class, INotifiableEntity
     {
         protected readonly ConcurrentQueue<(EntityEventHandler<TEntity>, TEntity)> _entitiesToSend = new();
         private readonly ExecutionLoop _loop;
@@ -42,6 +43,7 @@ namespace Quik.EntityProviders.Notification
         {
             if (_entitiesToSend.TryDequeue(out (EntityEventHandler<TEntity> Handle, TEntity Entity) param))
             {
+                param.Entity.NotifyUpdated();
                 param.Handle(param.Entity);
             }
         }

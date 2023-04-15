@@ -1,8 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
+using Quik.EntityProviders.Notification;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.Lua;
 using Tools.Logging;
+using TradingConcepts;
 
 namespace Quik.EntityProviders
 {
@@ -20,7 +22,7 @@ namespace Quik.EntityProviders
     /// </typeparam>
     internal abstract class DataProvider<TEntity, TRequestContainer> : QuikDataConsumer<TEntity>
         where TRequestContainer : struct, IRequestContainer<TEntity>
-        where TEntity : class
+        where TEntity : class, INotifiableEntity
     {
         protected readonly object _requestInProgressLock = new();
         protected bool _initialized;

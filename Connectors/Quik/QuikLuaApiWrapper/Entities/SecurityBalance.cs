@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using TradingConcepts;
 using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.Notification;
 
 namespace Quik.Entities
 {
-    internal class SecurityBalance : ISecurityBalance, INotifyEntityUpdated
+    internal class SecurityBalance : ISecurityBalance, INotifiableEntity
     {
         private string _firmId;
         private string _accountId;
@@ -28,6 +29,8 @@ namespace Quik.Entities
         }
 
         public event Action Updated = delegate { };
+
+        public void NotifyUpdated() => Updated();
 
         public SecurityBalance(ISecurity security)
         {

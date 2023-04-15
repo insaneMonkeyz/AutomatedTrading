@@ -4,12 +4,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Quik.EntityProviders.Notification;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 
 namespace Quik.Entities
 {
-    internal class Order : MoexOrderSubmission, IOrder, INotifyEntityUpdated
+    internal class Order : MoexOrderSubmission, IOrder, INotifiableEntity
     {
         private const int DEFAULT_EXECUTIONS_LIST_SIZE = 10;
 
@@ -90,6 +91,8 @@ namespace Quik.Entities
                 State |= state; 
             }
         }
+
+        public void NotifyUpdated() => Updated();
 
         public override string ToString()
         {

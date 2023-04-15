@@ -1,9 +1,11 @@
 ﻿using Quik.EntityProviders.Notification;
 using Quik.Lua;
+using TradingConcepts;
 
 namespace Quik.EntityProviders
 {
-    abstract class QuikDataConsumer<TEntity> : IQuikDataConsumer where TEntity : class
+    abstract class QuikDataConsumer<TEntity> : IQuikDataConsumer 
+        where TEntity : class, INotifiableEntity
     {
         protected abstract string QuikCallbackMethod { get; }
 

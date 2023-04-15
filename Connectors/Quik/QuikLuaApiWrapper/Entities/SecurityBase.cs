@@ -1,8 +1,9 @@
-﻿using TradingConcepts;
+﻿using Quik.EntityProviders.Notification;
+using TradingConcepts;
 
 namespace Quik.Entities
 {
-    internal abstract class Security : ISecurity, IUniquelyIdentifiable, INotifyEntityUpdated
+    internal abstract class Security : ISecurity, IUniquelyIdentifiable, INotifiableEntity
     {
         public Decimal5 MinTradingSize => MoexSpecifics.DefaultTradingSize;
         public Guid ExchangeId => MoexSpecifics.MoexExchangeId;
@@ -33,6 +34,8 @@ namespace Quik.Entities
             DenominationCurrency = container.DenominationCurrency;
         }
 
+
+        public void NotifyUpdated() => Updated();
         public override string ToString() => $"{ClassCode}:{Ticker}";
     }
 }

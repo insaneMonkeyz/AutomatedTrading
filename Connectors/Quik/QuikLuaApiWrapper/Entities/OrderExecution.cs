@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Quik.EntityProviders.Notification;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 
 namespace Quik.Entities
 {
-    internal class OrderExecution : IOrderExecution
+    internal class OrderExecution : IOrderExecution, INotifiableEntity
     {
         public long TradeId { get; init; }
         public long OrderId { get; init; }
@@ -18,6 +19,7 @@ namespace Quik.Entities
         public Security Security { get; }
         public Quote Quote { get; init; }
         public DateTimeOffset TimeStamp { get; init; }
+        public event Action Updated = delegate { };
 
         Guid IOrderExecution.AccountId => throw new NotImplementedException();
         IQuote IOrderExecution.Quote => Quote;
@@ -30,6 +32,8 @@ namespace Quik.Entities
             Security = order.Security;
             OrderId = order.ExchangeAssignedId;
         }
+
+        public void NotifyUpdated() => Updated();
 
         public override string ToString()
         {

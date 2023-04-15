@@ -4,13 +4,14 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Quik.EntityProviders.Notification;
 using Tools;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 
 namespace Quik.Entities
 {
-    internal class OrderBook : IOptimizedOrderBook, INotifyEntityUpdated
+    internal class OrderBook : IOptimizedOrderBook, INotifiableEntity
     {
         private const long DEFAULT_MARKET_DEPTH = 10;
         private const long MAX_MARKET_DEPTH = 50;
@@ -147,6 +148,7 @@ namespace Quik.Entities
                 reader(_asks, Operations.Sell, _marketDepth);
             }
         }
+        public void NotifyUpdated() => Updated();
 
         public override string ToString()
         {
