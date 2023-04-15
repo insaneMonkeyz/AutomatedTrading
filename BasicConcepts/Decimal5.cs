@@ -6,8 +6,8 @@ namespace TradingConcepts
 {
     public struct Decimal5 : IComparable
     {
-        public static readonly Decimal5 MAX_VALUE = new() { mantissa = MANTISSA_MAX_VALUE };
-        public static readonly Decimal5 MIN_VALUE = new() { mantissa = MANTISSA_MIN_VALUE };
+        public static readonly Decimal5 MAX_VALUE = new() { _mantissa = MANTISSA_MAX_VALUE };
+        public static readonly Decimal5 MIN_VALUE = new() { _mantissa = MANTISSA_MIN_VALUE };
 
         public const long EXPONENT = 5;
         private const long POSITIVE = 1;
@@ -28,62 +28,60 @@ namespace TradingConcepts
         private const long ZERO_CHAR_OFFSET = '0';
         private const  int MAX_STRING_LEN = 21;
 
-        private static readonly ulong[] pow10
-                          = new ulong[16]
-                          {
-                                  1, 10, 100, 1000, 10_000, 100_000, 1_000_000,
-                                  10_000_000, 100_000_000, 1_000_000_000,
-                                  10_000_000_000, 100_000_000_000,
-                                  1_000_000_000_000, 10_000_000_000_000,
-                                  100_000_000_000_000, 1_000_000_000_000_000
-                          };
-        private static readonly ulong[] roundToNearest
-                          = new ulong[16]
-                          {
-                                  1, 5, 50, 500, 5_000, 50_000, 500_000,
-                                  5_000_000, 50_000_000, 500_000_000,
-                                  5_000_000_000, 50_000_000_000,
-                                  500_000_000_000, 5_000_000_000_000,
-                                  50_000_000_000_000, 500_000_000_000_000,
-                              //5_000_000_000_000_000
-                          };
+        private static readonly ulong[] _pow10 = new ulong[16]
+        {
+                1, 10, 100, 1000, 10_000, 100_000, 1_000_000,
+                10_000_000, 100_000_000, 1_000_000_000,
+                10_000_000_000, 100_000_000_000,
+                1_000_000_000_000, 10_000_000_000_000,
+                100_000_000_000_000, 1_000_000_000_000_000
+        };
+        private static readonly ulong[] _roundToNearest = new ulong[16]
+        {
+                1, 5, 50, 500, 5_000, 50_000, 500_000,
+                5_000_000, 50_000_000, 500_000_000,
+                5_000_000_000, 50_000_000_000,
+                500_000_000_000, 5_000_000_000_000,
+                50_000_000_000_000, 500_000_000_000_000,
+            //5_000_000_000_000_000
+        };
 
-        public  long InternalValue => mantissa;
-        private long mantissa;
+        public  long InternalValue => _mantissa;
+        private long _mantissa;
 
         public Decimal5(int value)
         {
-            mantissa = value * MULTIPLIER;
+            _mantissa = value * MULTIPLIER;
         }
         public Decimal5(double value)
         {
-            mantissa = (long)(value * MULTIPLIER);
+            _mantissa = (long)(value * MULTIPLIER);
         }
         public Decimal5(long value)
         {
             if (value > INTEGER_MAX_VALUE)
             {
-                mantissa = MANTISSA_MAX_VALUE;
+                _mantissa = MANTISSA_MAX_VALUE;
                 return;
             }
             if (value < INTEGER_MIN_VALUE)
             {
-                mantissa = MANTISSA_MIN_VALUE;
+                _mantissa = MANTISSA_MIN_VALUE;
                 return;
             }
 
-            mantissa = value * MULTIPLIER;
+            _mantissa = value * MULTIPLIER;
         }
         public Decimal5(uint value)
         {
-            mantissa = value * MULTIPLIER;
+            _mantissa = value * MULTIPLIER;
         }
         public Decimal5(ulong value)
         {
             if (value < INTEGER_MAX_VALUE)
-                mantissa = (long)value * MULTIPLIER;
+                _mantissa = (long)value * MULTIPLIER;
             else
-                mantissa = MANTISSA_MAX_VALUE;
+                _mantissa = MANTISSA_MAX_VALUE;
         }
         public Decimal5(decimal value)
         {
@@ -94,7 +92,7 @@ namespace TradingConcepts
                 if ((pVal[0] & 0xFFFFFFFF_00000000) > 0 ||
                      pVal[1] > MANTISSA_MAX_VALUE)
                 {
-                    mantissa = ((*pVal & DECIMAL_SIGN_MASK) == DECIMAL_SIGN_MASK)
+                    _mantissa = ((*pVal & DECIMAL_SIGN_MASK) == DECIMAL_SIGN_MASK)
                                 ? MANTISSA_MIN_VALUE
                                 : MANTISSA_MAX_VALUE;
                     return;
@@ -109,9 +107,9 @@ namespace TradingConcepts
 
                 if (dExp > 0)
                 {
-                    bool doIncrement = pVal[1] % pow10[dExp] >= roundToNearest[dExp];
+                    bool doIncrement = pVal[1] % _pow10[dExp] >= _roundToNearest[dExp];
 
-                    pVal[1] /= pow10[dExp];
+                    pVal[1] /= _pow10[dExp];
 
                     //  если doIncrement = true, по ссылке указателя
                     //  будет записано значение 0x0000_0001
@@ -124,9 +122,9 @@ namespace TradingConcepts
                     dExp = 0;
                 }
 
-                mantissa = (long)(pVal[1] * pow10[-dExp]);
+                _mantissa = (long)(pVal[1] * _pow10[-dExp]);
 
-                if ((*pVal & DECIMAL_SIGN_MASK) == DECIMAL_SIGN_MASK) mantissa = -mantissa;
+                if ((*pVal & DECIMAL_SIGN_MASK) == DECIMAL_SIGN_MASK) _mantissa = -_mantissa;
             }
         }
 
@@ -168,51 +166,51 @@ namespace TradingConcepts
 
                 *pRes = *pRes | DECIMAL_EXPONENT;
 
-                if (obj.mantissa < 0L)
+                if (obj._mantissa < 0L)
                 {
                     *pRes = *pRes | DECIMAL_SIGN_MASK;
-                    *(long*)(pRes + 1) = -obj.mantissa;
+                    *(long*)(pRes + 1) = -obj._mantissa;
                 }
                 else
-                    *(long*)(pRes + 1) = obj.mantissa;
+                    *(long*)(pRes + 1) = obj._mantissa;
             }
 
             return res;
         }
         public static implicit operator  double(Decimal5 obj)
         {
-            return (double)obj.mantissa / MULTIPLIER;
+            return (double)obj._mantissa / MULTIPLIER;
         }
         public static implicit operator    long(Decimal5 obj)
         {
-            return obj.mantissa / MULTIPLIER;
+            return obj._mantissa / MULTIPLIER;
         }
 
         // COMPARATIONS 
 
         public static bool operator  <(Decimal5 val1, Decimal5 val2)
         {
-            return val2.mantissa > val1.mantissa;
+            return val2._mantissa > val1._mantissa;
         }
         public static bool operator  >(Decimal5 val1, Decimal5 val2)
         {
-            return val1.mantissa > val2.mantissa;
+            return val1._mantissa > val2._mantissa;
         }
         public static bool operator <=(Decimal5 val1, Decimal5 val2)
         {
-            return val1.mantissa <= val2.mantissa;
+            return val1._mantissa <= val2._mantissa;
         }
         public static bool operator >=(Decimal5 val1, Decimal5 val2)
         {
-            return val1.mantissa >= val2.mantissa;
+            return val1._mantissa >= val2._mantissa;
         }
         public static bool operator ==(Decimal5 val1, Decimal5 val2)
         {
-            return val1.mantissa == val2.mantissa;
+            return val1._mantissa == val2._mantissa;
         }
         public static bool operator !=(Decimal5 val1, Decimal5 val2)
         {
-            return val1.mantissa != val2.mantissa;
+            return val1._mantissa != val2._mantissa;
         }
 
         // MATHEMATICAL OPERATIONS 
@@ -221,14 +219,14 @@ namespace TradingConcepts
         {
             return new Decimal5
             {
-                mantissa = val1.mantissa + MULTIPLIER
+                _mantissa = val1._mantissa + MULTIPLIER
             };
         }
         public static Decimal5 operator +(Decimal5 val1, Decimal5 val2)
         {
             return new Decimal5
             {
-                mantissa = val1.mantissa + val2.mantissa
+                _mantissa = val1._mantissa + val2._mantissa
             };
         }
         public static  decimal operator +(Decimal5 val1, decimal val2)
@@ -252,21 +250,21 @@ namespace TradingConcepts
         {
             return new Decimal5
             {
-                mantissa = -val1.mantissa
+                _mantissa = -val1._mantissa
             };
         }
         public static Decimal5 operator --(Decimal5 val1)
         {
             return new Decimal5
             {
-                mantissa = val1.mantissa - MULTIPLIER
+                _mantissa = val1._mantissa - MULTIPLIER
             };
         }
         public static Decimal5 operator  -(Decimal5 val1, Decimal5 val2)
         {
             return new Decimal5
             {
-                mantissa = val1.mantissa - val2.mantissa
+                _mantissa = val1._mantissa - val2._mantissa
             };
         }
         public static   decimal operator -(Decimal5 val1, decimal val2)
@@ -290,7 +288,7 @@ namespace TradingConcepts
         {
             return new Decimal5
             {
-                mantissa = val1.mantissa * val2.mantissa / MULTIPLIER
+                _mantissa = val1._mantissa * val2._mantissa / MULTIPLIER
             };
         }
         public static  decimal operator *(Decimal5 val1, decimal val2)
@@ -303,32 +301,32 @@ namespace TradingConcepts
         }
         public static     long operator *(Decimal5 val1, long val2)
         {
-            return val2 * val1.mantissa / MULTIPLIER;
+            return val2 * val1._mantissa / MULTIPLIER;
         }
         public static     long operator *(long val1, Decimal5 val2)
         {
-            return val1 * val2.mantissa / MULTIPLIER;
+            return val1 * val2._mantissa / MULTIPLIER;
         }
 
         public static Decimal5 operator /(Decimal5 val1, Decimal5 val2)
         {
             return new Decimal5
             {
-                mantissa = val1.mantissa / val2.mantissa * MULTIPLIER
+                _mantissa = val1._mantissa / val2._mantissa * MULTIPLIER
             };
         }
         public static Decimal5 operator /(Decimal5 val1, long val2)
         {
             return new Decimal5
             {
-                mantissa = val1.mantissa / val2
+                _mantissa = val1._mantissa / val2
             };
         }
         public static Decimal5 operator /(long val1, Decimal5 val2)
         {
             return new Decimal5
             {
-                mantissa = val1 * DIVIDER / val2.mantissa
+                _mantissa = val1 * DIVIDER / val2._mantissa
             };
         }
         public static  decimal operator /(Decimal5 val1, decimal val2)
@@ -349,23 +347,23 @@ namespace TradingConcepts
 
                 precision = Math.Min(5, precision);
 
-                var isNeg = mantissa < 0;
+                var isNeg = _mantissa < 0;
                 var end = COMMA_POS - precision;
-                var rest = Math.Abs(mantissa);
+                var rest = Math.Abs(_mantissa);
                 var digit = 0L;
                 var buffer = stackalloc char[MAX_STRING_LEN];
                 var bufferPos = buffer + MAX_STRING_LEN;
                 var commaPos = bufferPos - precision;
                 var nextSpacePos = commaPos - FIRST_SPACE_POS - (precision > 0 ? 1 : 0);
-                var pow = (long)pow10[end];
+                var pow = (long)_pow10[end];
                 var round = rest % pow;
 
-                rest += round >= (long)roundToNearest[end]
+                rest += round >= (long)_roundToNearest[end]
                     ? pow - round
                     : 0;
 
                 // decrease the number so that the last digit would match given precision
-                rest /= (long)pow10[end];
+                rest /= (long)_pow10[end];
 
                 while (bufferPos > commaPos)
                 {
@@ -419,7 +417,7 @@ namespace TradingConcepts
         {
             unsafe
             {
-                var rest = Math.Abs(mantissa);
+                var rest = Math.Abs(_mantissa);
                 var digit = 0L;
                 var buffer = stackalloc char[MAX_STRING_LEN];
                 var bufferPos = buffer + MAX_STRING_LEN;
@@ -453,7 +451,7 @@ namespace TradingConcepts
                 }
                 while (rest > 0);
 
-                if (mantissa < 0)
+                if (_mantissa < 0)
                 {
                     bufferPos--;
                     *bufferPos = '-';
@@ -620,9 +618,9 @@ namespace TradingConcepts
                 // when the number has more than 5 decimal digits
                 if (roundexp > 0)
                 {
-                    var roundmultiplier = (long)pow10[roundexp];
+                    var roundmultiplier = (long)_pow10[roundexp];
                     var rest = mantissa % roundmultiplier;
-                    var middlevalue = (long)roundToNearest[roundexp];
+                    var middlevalue = (long)_roundToNearest[roundexp];
                     var round = roundmultiplier - rest;
 
                     // mantissa is 199
@@ -644,7 +642,7 @@ namespace TradingConcepts
                 }
                 else
                 {
-                    mantissa *= (long)pow10[roundexp * NEGATIVE];
+                    mantissa *= (long)_pow10[roundexp * NEGATIVE];
                 }
             }
             else
@@ -658,7 +656,7 @@ namespace TradingConcepts
                 return default;
             }
 
-            return new Decimal5() { mantissa = mantissa * sign };
+            return new Decimal5() { _mantissa = mantissa * sign };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -773,9 +771,9 @@ namespace TradingConcepts
                 // when the number has more than 5 decimal digits
                 if (roundexp > 0)
                 {
-                    var roundmultiplier = (long)pow10[roundexp];
+                    var roundmultiplier = (long)_pow10[roundexp];
                     var rest = mantissa % roundmultiplier;
-                    var middlevalue = (long)roundToNearest[roundexp];
+                    var middlevalue = (long)_roundToNearest[roundexp];
                     var round = roundmultiplier - rest;
 
                     // mantissa is 199
@@ -797,7 +795,7 @@ namespace TradingConcepts
                 }
                 else
                 {
-                    mantissa *= (long)pow10[roundexp * NEGATIVE];
+                    mantissa *= (long)_pow10[roundexp * NEGATIVE];
                 }
             }
             else
@@ -812,23 +810,23 @@ namespace TradingConcepts
                 return default;
             }
 
-            return new Decimal5() { mantissa = mantissa * sign };
+            return new Decimal5() { _mantissa = mantissa * sign };
         }
 
         public override bool Equals(object? obj)
         {
             return obj is Decimal5 decimal5 && 
-                   decimal5.mantissa == mantissa;
+                   decimal5._mantissa == _mantissa;
         }
         public override  int GetHashCode()
         {
-            return 652132164 ^ mantissa.GetHashCode();
+            return 652132164 ^ _mantissa.GetHashCode();
         }
 
         public int CompareTo(object? obj)
         {
             return obj is Decimal5 d
-                ? (int)(mantissa - d.mantissa)
+                ? (int)(_mantissa - d._mantissa)
                 : -1;
         }
     }
