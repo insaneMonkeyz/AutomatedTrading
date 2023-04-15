@@ -4,19 +4,19 @@ namespace Quik.EntityProviders.RequestContainers
 {
     internal struct OrderRequestContainer : IRequestContainer<Order>, IEquatable<OrderRequestContainer>
     {
-        public string? ExchangeAssignedId;
+        public long ExchangeAssignedId;
         public string? ClassCode;
 
         public bool HasData
         {
-            get => !(string.IsNullOrEmpty(ClassCode) || string.IsNullOrEmpty(ExchangeAssignedId));
+            get => !(ExchangeAssignedId != default || string.IsNullOrEmpty(ClassCode));
         }
 
         public bool IsMatching(Order? entity)
         {
             return entity != null
                 && entity.Security.ClassCode == ClassCode
-                && entity.ExchangeAssignedIdString == ExchangeAssignedId;
+                && entity.ExchangeAssignedId == ExchangeAssignedId;
         }
 
         public bool Equals(OrderRequestContainer other)
@@ -39,7 +39,7 @@ namespace Quik.EntityProviders.RequestContainers
 
         public override string ToString()
         {
-            return $"OrderRequest: {{OrderId: {ExchangeAssignedId ?? "null"}, ClassCode: {ClassCode ?? "null"}}}";
+            return $"OrderRequest: {{OrderId: {ExchangeAssignedId}, ClassCode: {ClassCode ?? "null"}}}";
         }
     }
 }

@@ -193,7 +193,7 @@ namespace Quik.EntityProviders
 
                     if (order != null)
                     {
-                        order.ExchangeAssignedIdString = OrderId;
+                        order.ExchangeAssignedId = OrderId;
                         order.RemainingSize = order.Quote.Size - RejectedSize;
 
                         if (status != TransactionStatus.Completed)
@@ -214,7 +214,7 @@ namespace Quik.EntityProviders
 
                         var orderLookup = new OrderRequestContainer
                         {
-                            ExchangeAssignedId = order.ExchangeAssignedIdString,
+                            ExchangeAssignedId = order.ExchangeAssignedId,
                             ClassCode = ClassCode,
                         };
                         _ordersResolver.CacheEntity(ref orderLookup, order);

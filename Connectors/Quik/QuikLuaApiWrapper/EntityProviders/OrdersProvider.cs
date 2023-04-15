@@ -42,6 +42,7 @@ namespace Quik.EntityProviders
             }
         };
 
+        protected override Type WrapperType => typeof(OrdersWrapper);
         protected override string QuikCallbackMethod => OrdersWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => OrdersWrapper.NAME;
         protected override Action<LuaWrap> SetWrapper => OrdersWrapper.Set;
@@ -64,7 +65,7 @@ namespace Quik.EntityProviders
 #if TRACE
             this.Trace();
 #endif
-            if (string.IsNullOrEmpty(request.ExchangeAssignedId))
+            if (request.ExchangeAssignedId == default)
             {
                 return null;
             }
@@ -74,7 +75,7 @@ namespace Quik.EntityProviders
             lock (_requestInProgressLock)
             {
                 _createParams.Arg0 = request.ClassCode;
-                _createParams.Arg1 = request.ExchangeAssignedId;
+                _createParams.Arg1 = request.ExchangeAssignedId.ToString();
 
                 return FunctionsWrappers.ReadSpecificEntry(ref _createParams);
             }
@@ -146,9 +147,10 @@ namespace Quik.EntityProviders
             {
                 OrdersWrapper.Set(state);
 
-                if (OrdersWrapper.ExchangeOrderId is string orderId && !string.IsNullOrEmpty(orderId))
+                var orderId = OrdersWrapper.ExchangeOrderId;
+                if (orderId != default)
                 {
-                    entity.ExchangeAssignedIdString = orderId;
+                    entity.ExchangeAssignedId = orderId;
                 }
                 else
                 {
@@ -157,7 +159,7 @@ namespace Quik.EntityProviders
 
                 var flags = OrdersWrapper.Flags;
 
-                entity.RemainingSize = entity.Quote.Size - OrdersWrapper.Rest;
+                entity.RemainingSize = OrdersWrapper.Rest;
 
                 if (flags.HasFlag(OrderFlags.IsAlive))
                 {
@@ -168,26 +170,6 @@ namespace Quik.EntityProviders
                     entity.SetSingleState(OrderStates.Done);
                 }
             }
-        }
-        protected override void LogEntityCreated(Order entity)
-        {
-            _log.Debug($@"Received new {nameof(Order)} from Quik
-    {nameof(entity.ExchangeAssignedIdString)}={entity.ExchangeAssignedIdString}
-    {nameof(entity.ExecutionCondition)}={entity.ExecutionCondition}
-    {nameof(entity.TransactionId)}={entity.TransactionId}
-    {nameof(entity.RemainingSize)}={entity.RemainingSize}
-    {nameof(entity.AccountCode)}={entity.AccountCode}
-    {nameof(entity.IsMarket)}={entity.IsMarket}
-    {nameof(entity.Expiry)}={entity.Expiry}
-    {nameof(entity.Quote)}={entity.Quote}
-    {nameof(entity.State)}={entity.State}");
-        }
-        protected override void LogEntityUpdated(Order entity)
-        {
-            _log.Debug($@"Received updates for {nameof(Order)} {entity}
-    {nameof(entity.ExchangeAssignedIdString)}={entity.ExchangeAssignedIdString}
-    {nameof(entity.RemainingSize)}={entity.RemainingSize}
-    {nameof(entity.State)}={entity.State}");
         }
 
         protected override OrderRequestContainer CreateRequestFrom(LuaWrap state)

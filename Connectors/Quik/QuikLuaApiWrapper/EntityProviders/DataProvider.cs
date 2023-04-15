@@ -27,6 +27,7 @@ namespace Quik.EntityProviders
         protected readonly object _requestInProgressLock = new();
         protected bool _initialized;
 
+        protected abstract Type WrapperType { get; }
         protected abstract string AllEntitiesTable { get; }
         protected abstract Action<LuaWrap> SetWrapper { get; }
 
@@ -74,7 +75,6 @@ namespace Quik.EntityProviders
         }
         protected abstract TEntity? Create(LuaWrap state);
         protected abstract TRequestContainer CreateRequestFrom(LuaWrap state);
-        protected abstract void LogEntityCreated(TEntity entity);
 
         protected override int OnNewData(IntPtr state)
         {
@@ -86,12 +86,12 @@ namespace Quik.EntityProviders
                 lock (_callbackLock)
                 {
                     var request = CreateRequestFrom(state);
+#if DEBUG
+                    _log.Debug(Helper.PrintQuikParameters(WrapperType));
+#endif
 
                     if (CreationIsApproved(ref request) && Create(state) is TEntity entity)
                     {
-#if DEBUG
-                        LogEntityCreated(entity); 
-#endif
                         _eventSignalizer.QueueEntity(NewEntity, entity);
                     }
 

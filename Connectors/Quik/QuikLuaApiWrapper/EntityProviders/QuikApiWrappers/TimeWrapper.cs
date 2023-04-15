@@ -25,13 +25,13 @@ namespace Quik.EntityProviders.QuikApiWrappers
             if (state.PushColumnValueTable(column))
             {
                 var result = new DateTimeOffset(
-                    (int)state.ReadRowValueLong(YEARS),
-                    (int)state.ReadRowValueLong(MONTHS),
-                    (int)state.ReadRowValueLong(DAYS),
-                    (int)state.ReadRowValueLong(HOURS),
-                    (int)state.ReadRowValueLong(MINUTES),
-                    (int)state.ReadRowValueLong(SECONDS),
-                    (int)state.ReadRowValueLong(MILLISECONDS),
+                    (int)state.ReadRowValueInteger(YEARS),
+                    (int)state.ReadRowValueInteger(MONTHS),
+                    (int)state.ReadRowValueInteger(DAYS),
+                    (int)state.ReadRowValueInteger(HOURS),
+                    (int)state.ReadRowValueInteger(MINUTES),
+                    (int)state.ReadRowValueInteger(SECONDS),
+                    (int)state.ReadRowValueInteger(MILLISECONDS),
                      MoscowUtcOffset);
 
                 state.PopFromStack();

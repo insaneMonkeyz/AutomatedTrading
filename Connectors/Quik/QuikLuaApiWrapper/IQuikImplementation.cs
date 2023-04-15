@@ -48,6 +48,11 @@ namespace Quik
             get => AccountsProvider.Instance.GetAllEntities().FirstOrDefault(acc => acc.IsMoneyAccount);
         }
 
+        IEnumerable<IOrder> IQuik.GetOrders()
+        {
+            return OrdersProvider.Instance.GetAllEntities();
+        }
+
         IEnumerable<SecurityDescription> IQuik.GetAvailableSecurities<TSecurity>() 
         {
             var type = typeof(TSecurity);

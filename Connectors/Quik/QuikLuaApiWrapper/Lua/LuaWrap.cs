@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -192,22 +194,28 @@ namespace Quik.Lua
         /// <returns></returns>
         internal bool TryFetchDecimalFromTable(string columnName, out Decimal5 result)
         {
-            //PrintStack("Beginning TryFetchDecimalFromTable " + columnName);
-
             // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
             // 2 строчки создадут только 1 ячейку памяти
             Api.lua_pushstring(_state, columnName);
             Api.lua_rawget(_state, SECOND_ITEM);
 
-            if (TryPopDecimal(out result))
+            if (Api.lua_isstring(_state, LAST_ITEM) == Api.TRUE)
             {
-                //PrintStack("Completed TryFetchDecimalFromTable success " + columnName);
+                var ptr = Api.lua_tolstring(_state, LAST_ITEM, out ulong strLen);
+                unsafe
+                {
+                    Decimal5.TryParse(
+                        new ReadOnlySpan<byte>(ptr.ToPointer(), (int)strLen),
+                        out result);
+                }
+                PopFromStack();
                 return true;
             }
             else
             {
                 PrintStack("Completed TryFetchDecimalFromTable fail " + columnName);
                 PopFromStack();
+                result = default;
                 return false;
             }
         }
@@ -216,20 +224,30 @@ namespace Quik.Lua
         /// </summary>
         /// <param name="columnName"></param>
         /// <returns></returns>
-        internal bool TryFetchLongFromTable(string columnName, out long result)
+        internal bool TryFetchIntegerFromTable(string columnName, out long result)
         {
             // lua_rawget заменяет значение в ячейке где lua_pushstring положила ключ.
             // 2 строчки создадут только 1 ячейку памяти
             Api.lua_pushstring(_state, columnName);
             Api.lua_rawget(_state, SECOND_ITEM);
 
-            if (TryPopLong(out result))
+            if (Api.lua_isstring(_state, LAST_ITEM) == Api.TRUE)
             {
+                unsafe
+                {
+                    var buffer = (byte*)Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
+
+                    result = Helper.AsciiToLong(buffer, (int)len);
+                }
+
+                PopFromStack();
+
                 return true;
             }
             else
             {
                 PopFromStack();
+                result = default;
                 return false;
             }
         }
@@ -313,15 +331,20 @@ namespace Quik.Lua
         }
         internal bool TryPopDecimal(out Decimal5 value)
         {
-            value = 0L;
-
-            if (Api.lua_isnumber(_state, LAST_ITEM) > 0)
+            if (Api.lua_isstring(_state, LAST_ITEM) > 0)
             {
-                value = Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
+                var ptr = Api.lua_tolstring(_state, LAST_ITEM, out ulong strLen);
+                unsafe
+                {
+                    Decimal5.TryParse(
+                        new ReadOnlySpan<byte>(ptr.ToPointer(), (int)strLen), 
+                        out value); 
+                }
                 Api.lua_settop(_state, SECOND_ITEM);
                 return true;
             }
 
+            value = default;
             return false;
         }
         internal bool TryPopChar(out char value)
@@ -336,7 +359,7 @@ namespace Quik.Lua
                 {
                     unsafe
                     {
-                        value = *(char*)pstr.ToPointer();
+                        value = *(char*)pstr;
                     }
                 }
 
@@ -484,6 +507,7 @@ namespace Quik.Lua
 
             switch (Api.lua_type(_state, LAST_ITEM))
             {
+                case Api.TYPE_NUMBER:
                 case Api.TYPE_STRING:
                     {
                         var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
@@ -578,20 +602,23 @@ namespace Quik.Lua
         /// Reads value of a field of the table on top of the stack
         /// </summary>
         /// <exception cref="QuikApiException"/>
-        internal string? ReadRowValueNumber(string columnName)
+        internal long ReadRowValueInteger(string columnName)
         {
             PrintStack("ReadRowValueNumber " + columnName);
 
             Api.lua_pushstring(_state, columnName);
             Api.lua_rawget(_state, SECOND_ITEM);
 
-            if (Api.lua_isnumber(_state, LAST_ITEM) == Api.TRUE)
+            if (Api.lua_isstring(_state, LAST_ITEM) == Api.TRUE)
             {
-                var pstr = Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
+                long result;
 
-                var result = len > 0
-                    ? Marshal.PtrToStringAnsi(pstr, (int)len)
-                    : string.Empty;
+                unsafe
+                {
+                    var buffer = (byte*)Api.lua_tolstring(_state, LAST_ITEM, out ulong len);
+
+                    result = Helper.AsciiToLong(buffer, (int)len); 
+                }
 
                 PopFromStack();
 
@@ -616,17 +643,23 @@ namespace Quik.Lua
 
             Decimal5 result;
 
-            if (Api.lua_isnumber(_state, LAST_ITEM) == Api.TRUE)
+            if (Api.lua_isstring(_state, LAST_ITEM) == Api.TRUE)
             {
-                result = Api.lua_tonumberx(_state, LAST_ITEM, IntPtr.Zero);
+                var ptr = Api.lua_tolstring(_state, LAST_ITEM, out ulong strLen);
+                unsafe
+                {
+                    Decimal5.TryParse(
+                        new ReadOnlySpan<byte>(ptr.ToPointer(), (int)strLen),
+                        out result);
+                }
                 PopFromStack();
+                return result;
             }
             else
             {
                 PopFromStack();
                 throw QuikApiException.ParseExceptionMsg(columnName, "decimal5");
             }
-            PrintStack("ReadRowValueDecimal5 completed. " + columnName);
 
             return result;
         }
@@ -833,6 +866,7 @@ namespace Quik.Lua
         /// <summary>
         /// Pops last item from the stack
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void PopFromStack()
         {
             Api.lua_settop(_state, SECOND_ITEM);
@@ -840,6 +874,7 @@ namespace Quik.Lua
         /// <summary>
         /// Pops last two items from the stack
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void PopTwoFromStack()
         {
             Api.lua_settop(_state, -3);
@@ -847,6 +882,7 @@ namespace Quik.Lua
         /// <summary>
         /// Pops n items from the stack
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void PopFromStack(int numItems)
         {
             Api.lua_settop(_state, -numItems - 1);

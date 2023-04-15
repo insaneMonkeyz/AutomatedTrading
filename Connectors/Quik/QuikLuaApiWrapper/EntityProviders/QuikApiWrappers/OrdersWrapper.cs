@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradingConcepts;
+﻿using Quik.EntityProviders.Attributes;
 using Quik.Lua;
+using TradingConcepts;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -37,46 +33,67 @@ namespace Quik.EntityProviders.QuikApiWrappers
             _stack = stack;
         }
 
-        public static string? ExchangeOrderId
+        [QuikCallbackField(EXCHANGE_ORDER_ID)]
+        public static long ExchangeOrderId
         {
-            get => _stack.ReadRowValueNumber(EXCHANGE_ORDER_ID);
+           get => _stack.ReadRowValueInteger(EXCHANGE_ORDER_ID);
         }
+
+        [QuikCallbackField(TRANSACTION_ID)]
         public static long TransactionId
         {
-            get => _stack.ReadRowValueLong(TRANSACTION_ID);
+            get => _stack.ReadRowValueInteger(TRANSACTION_ID);
         }
+
+        [QuikCallbackField(FLAGS)]
         public static OrderFlags Flags
         {
-            get => (OrderFlags)_stack.ReadRowValueLong(FLAGS);
+            get => (OrderFlags)_stack.ReadRowValueInteger(FLAGS);
         }
+
+        [QuikCallbackField(ACCOUNT_ID)]
         public static string? Account
         {
             get => _stack.ReadRowValueString(ACCOUNT_ID);
         }
+
+        [QuikCallbackField(PRICE)]
         public static Decimal5 Price
         {
             get => _stack.ReadRowValueDecimal5(PRICE);
         }
+
+        [QuikCallbackField(AVERAGE_PRICE)]
         public static Decimal5 AveragePrice
         {
             get => _stack.ReadRowValueDecimal5(AVERAGE_PRICE);
         }
+
+        [QuikCallbackField(SIZE)]
         public static long Size
         {
-            get => _stack.ReadRowValueLong(SIZE);
+            get => _stack.ReadRowValueInteger(SIZE);
         }
+
+        [QuikCallbackField(REST)]
         public static long Rest
         {
-            get => _stack.ReadRowValueLong(REST);
+            get => _stack.ReadRowValueInteger(REST);
         }
+
+        [QuikCallbackField(EXECUTION_MODE)]
         public static MoexOrderExecutionModes OrderExecutionMode
         {
-            get => (MoexOrderExecutionModes)_stack.ReadRowValueLong(EXECUTION_MODE);
+            get => (MoexOrderExecutionModes)_stack.ReadRowValueInteger(EXECUTION_MODE);
         }
+
+        [QuikCallbackField(REJECT_REASON)]
         public string? RejectReason
         {
             get => _stack.ReadRowValueString(REJECT_REASON);
         }
+
+        [QuikCallbackField(EXPIRY)]
         public static DateTimeOffset? Expiry
         {
             get
@@ -86,10 +103,14 @@ namespace Quik.EntityProviders.QuikApiWrappers
                     ? expiry : null;
             }
         }
+
+        [QuikCallbackField(TICKER)]
         public static string? Ticker
         {
             get => _stack.ReadRowValueString(TICKER);
         }
+
+        [QuikCallbackField(CLASS_CODE)]
         public static string? ClassCode
         {
             get => _stack.ReadRowValueString(CLASS_CODE);

@@ -46,14 +46,14 @@ namespace Quik.EntityProviders
                 lock (_callbackLock)
                 {
                     var request = CreateRequestFrom(state);
+#if DEBUG
+                    _log.Debug(Helper.PrintQuikParameters(WrapperType));
+#endif
                     var entity = _entityResolver.GetFromCache(ref request);
 
                     if (entity != null)
                     {
                         Update(entity, state);
-#if DEBUG
-                        LogEntityUpdated(entity); 
-#endif
                         _eventSignalizer.QueueEntity(EntityChanged, entity);
 
                         return 1;
@@ -61,9 +61,6 @@ namespace Quik.EntityProviders
 
                     if (CreationIsApproved(ref request) && (entity = Create(state)) != null)
                     {
-#if DEBUG
-                        LogEntityCreated(entity); 
-#endif
                         _entityResolver.CacheEntity(ref request, entity);
                         _eventSignalizer.QueueEntity(NewEntity, entity);
                     }
@@ -77,8 +74,6 @@ namespace Quik.EntityProviders
                 return -1;
             }
         }
-
-        protected virtual void LogEntityUpdated(TEntity entity) { }
 
         protected override void DisposeManaged()
         {

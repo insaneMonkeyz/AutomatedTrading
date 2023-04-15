@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Core.Tools;
+﻿using System.Runtime.CompilerServices;
 using Quik.Entities;
-using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.Attributes;
 using Quik.Lua;
 using Tools;
 using TradingConcepts;
-using TradingConcepts.CommonImplementations;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -28,32 +19,32 @@ namespace Quik.EntityProviders.QuikApiWrappers
         [QuikCallbackField(ID)]
         public static long Id
         {
-            get => _context.ReadRowValueLong(ID);
+            get => _context.ReadRowValueInteger(ID);
         }
         [QuikCallbackField(SERVER_TRANSACTION_ID)]
         public static long ServerTransactionId
         {
-            get => _context.ReadRowValueLong(SERVER_TRANSACTION_ID);
+            get => _context.ReadRowValueInteger(SERVER_TRANSACTION_ID);
         }
         [QuikCallbackField(ORDER_ID)]
-        public static string? OrderId
+        public static long OrderId
         {
-            get => _context.ReadRowValueNumber(ORDER_ID);
+            get => _context.ReadRowValueInteger(ORDER_ID);
         }
         [QuikCallbackField(ERROR_SITE)]
         public static ErrorSite ErrorSource
         {
-            get => (ErrorSite)_context.ReadRowValueLong(ERROR_SITE);
+            get => (ErrorSite)_context.ReadRowValueInteger(ERROR_SITE);
         }
         [QuikCallbackField(ERROR_CODE)]
         public static ErrorSite ErrorCode
         {
-            get => (ErrorSite)_context.ReadRowValueLong(ERROR_CODE);
+            get => (ErrorSite)_context.ReadRowValueInteger(ERROR_CODE);
         }
         [QuikCallbackField(STATUS)]
         public static TransactionStatus Status
         {
-            get => (TransactionStatus)_context.ReadRowValueLong(STATUS);
+            get => (TransactionStatus)_context.ReadRowValueInteger(STATUS);
         }
         [QuikCallbackField(RESULT_DESCRIPTION)]
         public static string? ResultDescription
@@ -83,7 +74,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         [QuikCallbackField(REST)]
         public static long RejectedSize
         {
-            get => _context.TryFetchLongFromTable(REST, out long result) ? result : 0;
+            get => _context.TryFetchIntegerFromTable(REST, out long result) ? result : 0;
         }
         [QuikCallbackField(PRICE)]
         public static Decimal5 Price
@@ -93,12 +84,12 @@ namespace Quik.EntityProviders.QuikApiWrappers
         [QuikCallbackField(SIZE)]
         public static long Size
         {
-            get => _context.ReadRowValueLong(SIZE);
+            get => _context.ReadRowValueInteger(SIZE);
         }
         [QuikCallbackField(UNIQUE_ID)]
         public static long Uid
         {
-            get => _context.ReadRowValueLong(UNIQUE_ID);
+            get => _context.ReadRowValueInteger(UNIQUE_ID);
         }
 
         public struct CancelOrderArgs

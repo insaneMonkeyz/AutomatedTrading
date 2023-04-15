@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradingConcepts;
+﻿using Quik.EntityProviders.Attributes;
 using Quik.Lua;
+using TradingConcepts;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -36,22 +32,27 @@ namespace Quik.EntityProviders.QuikApiWrappers
             _stack = stack;
         }
 
+        [QuikCallbackField(FIRM_ID)]
         public static string? FirmId
         {
             get => _stack.ReadRowValueString(FIRM_ID);
         }
+        [QuikCallbackField(ACCOUNT_ID)]
         public static string? AccountId
         {
             get => _stack.ReadRowValueString(ACCOUNT_ID);
         }
+        [QuikCallbackField(TICKER)]
         public static string? Ticker
         {
             get => _stack.ReadRowValueString(TICKER);
         }
+        [QuikCallbackField(CURRENT_POS)]
         public static long? CurrentPos
         {
-            get => _stack.TryFetchLongFromTable(CURRENT_POS, out long result) ? result : null;
+            get => _stack.TryFetchIntegerFromTable(CURRENT_POS, out long result) ? result : null;
         }
+        [QuikCallbackField(COLLATERAL)]
         public static Decimal5? Collateral
         {
             get => _stack.TryFetchDecimalFromTable(COLLATERAL, out Decimal5 result) ? result : null;

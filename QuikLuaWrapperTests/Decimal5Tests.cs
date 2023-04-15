@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
+using Quik;
+using Quik.Lua;
 using TradingConcepts;
 
 namespace QuikLuaWrapperTests
@@ -159,6 +162,36 @@ namespace QuikLuaWrapperTests
             }
 
 
+        }
+
+        [TestCase("123")]
+        [TestCase("0")]
+        [TestCase("-643564564")]
+        [TestCase("755924")]
+        public void SDfdf(string input)
+        {
+            unsafe
+            {
+                var ascii = Encoding.ASCII.GetBytes(input);
+
+                fixed (byte* pstr = ascii)
+                {
+                    //ulong len = (ulong)ascii.Length;
+                    //var charlen = (int)(len * 2uL);
+                    //var buffer = stackalloc byte[charlen];
+                    //var span = new Span<char>(buffer, (int)len);
+
+                    //// translating ascii to unicode
+                    //for (int i = 0; i < (int)len; i++)
+                    //{
+                    //    buffer[i * 2] = pstr[i];
+                    //}
+
+                    //var result = long.Parse(span, NumberStyles.Integer | NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture).ToString(); 
+                    var result = Helper.AsciiToLong(pstr, ascii.Length).ToString();
+                    Assert.That(result, Is.EqualTo(input));
+                }
+            }
         }
     }
 }

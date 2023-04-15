@@ -338,6 +338,11 @@ namespace TradingConcepts
             return val1 / (decimal)val2;
         }
 
+        public static Decimal5 FromMantissa(long mantissa)
+        {
+            return new Decimal5 { _mantissa = mantissa };
+        }
+
         public string ToString(uint precision, bool separateThousands = false)
         {
             unsafe
@@ -472,6 +477,18 @@ namespace TradingConcepts
             var result = ParseInternal(pointer, out Exception? e);
 
             return e is null ? result : throw e;
+        }
+        public static bool TryParse(ReadOnlySpan<byte> buffer, out Decimal5 result)
+        {
+            if (buffer.IsEmpty)
+            {
+                result = default;
+                return true;
+            }
+
+            result = ParseInternal(buffer, out Exception? e);
+
+            return e is null;
         }
         public static bool TryParse(ReadOnlySpan<char> buffer, out Decimal5 result)
         {
@@ -653,6 +670,145 @@ namespace TradingConcepts
             if (mantissa is > MANTISSA_MAX_VALUE or < MANTISSA_MIN_VALUE)
             {
                 exception = new ArgumentOutOfRangeException($"Value {value} is too big to be represented as {nameof(Decimal5)}");
+                return default;
+            }
+
+            return new Decimal5() { _mantissa = mantissa * sign };
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Decimal5 ParseInternal(ReadOnlySpan<byte> value, out Exception? exception)
+        {
+            static FormatException getException(ReadOnlySpan<byte> subj)
+            {
+                return new FormatException($"Cannot parse Decimal5 value from string'");
+            }
+
+            exception = default;
+
+            const long NOT_SEPARATED = 0;
+            const long SEPARATED = 1;
+
+            long sign = POSITIVE;
+            long decimalPartIncrement = NOT_SEPARATED;
+            long decimalPartLenght = 0;
+            long mantissa = 0;
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = (char)value[i];
+
+                if (c is >= '0' and <= '9')
+                {
+                    mantissa = mantissa * DECIMAL_NUMERAL_SYSTEM_BASE + (c - ZERO_CHAR_OFFSET);
+
+                    decimalPartLenght += decimalPartIncrement;
+
+                    continue;
+                }
+
+                switch (c)
+                {
+                    case ' ': break;
+
+                    case '\t':
+                        {
+                            if (mantissa != 0)
+                            {
+                                exception = getException(value);
+                                return default;
+                            }
+                            break;
+                        }
+
+                    case '+':
+                        {
+                            if (mantissa > 0 || sign == NEGATIVE)
+                            {
+                                exception = getException(value);
+                                return default;
+                            }
+
+                            break;
+                        }
+
+                    case '-':
+                        {
+                            if (mantissa > 0)
+                            {
+                                exception = getException(value);
+                                return default;
+                            }
+                            else
+                            {
+                                sign = NEGATIVE;
+                            }
+
+                            break;
+                        }
+
+                    case '.':
+                    case ',':
+                        {
+                            if (decimalPartIncrement == SEPARATED)
+                            {
+                                exception = getException(value);
+                                return default;
+                            }
+
+                            decimalPartIncrement = SEPARATED;
+
+                            break;
+                        }
+
+                    default:
+                        exception = getException(value);
+                        return default;
+                }
+            }
+
+            if (decimalPartLenght > 0)
+            {
+                var roundexp = decimalPartLenght - EXPONENT;
+
+                // when the number has more than 5 decimal digits
+                if (roundexp > 0)
+                {
+                    var roundmultiplier = (long)_pow10[roundexp];
+                    var rest = mantissa % roundmultiplier;
+                    var middlevalue = (long)_roundToNearest[roundexp];
+                    var round = roundmultiplier - rest;
+
+                    // mantissa is 199
+                    // rest is 99
+                    // middlevalue is 50
+                    // round is 1
+                    if (middlevalue >= round)
+                    {
+                        // add missing bit to round to the nearest greater number
+                        mantissa += round;
+                    }
+                    else
+                    {
+                        // discard rest to floor to the nearest
+                        mantissa -= rest;
+                    }
+
+                    mantissa /= roundmultiplier;
+                }
+                else
+                {
+                    mantissa *= (long)_pow10[roundexp * NEGATIVE];
+                }
+            }
+            else
+            {
+                mantissa *= MULTIPLIER;
+            }
+
+            if (mantissa is > MANTISSA_MAX_VALUE or < MANTISSA_MIN_VALUE)
+            {
+                exception = new ArgumentOutOfRangeException($"Value is too big to be represented as {nameof(Decimal5)}");
                 return default;
             }
 

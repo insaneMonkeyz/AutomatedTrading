@@ -43,6 +43,7 @@ namespace Quik.EntityProviders
         private readonly object _securityRequestLock = new();
         private SecurityResolver _securitiesResolver;
 
+        protected override Type WrapperType => typeof(DerivativesPositionsWrapper);
         protected override string QuikCallbackMethod => DerivativesPositionsWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => DerivativesPositionsWrapper.NAME;
         protected override Action<LuaWrap> SetWrapper => DerivativesPositionsWrapper.Set;
@@ -153,21 +154,6 @@ namespace Quik.EntityProviders
                     Account = DerivativesPositionsWrapper.AccountId,
                 }; 
             }
-        }
-        protected override void LogEntityCreated(SecurityBalance entity)
-        {
-            _log.Debug($@"Received new {nameof(SecurityBalance)} from quik
-    {nameof(entity.Security)}={entity.Security.Ticker}
-    {nameof(entity.Collateral)}={entity.Collateral}
-    {nameof(entity.Account)}={entity.Account}
-    {nameof(entity.Amount)}={entity.Amount}
-    {nameof(entity.FirmId)}={entity.FirmId}");
-        }
-        protected override void LogEntityUpdated(SecurityBalance entity)
-        {
-            _log.Debug($@"Received updates for {nameof(SecurityBalance)} {entity.Security.Ticker}
-    {nameof(entity.Collateral)}={entity.Collateral}
-    {nameof(entity.Amount)}={entity.Amount}");
         }
 
         #region Singleton

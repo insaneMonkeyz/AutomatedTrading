@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Core;
-using Core.Tools;
 using Quik.Entities;
+using Tools;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 using TradingConcepts.SecuritySpecifics;
@@ -19,7 +19,7 @@ namespace Quik
         private static Security? _currentSecurity;
         private static Order? _currentOrder;
         private static ITradingAccount? _currentAccount;
-        private static List<Order> _orders = new();
+        private static List<IOrder> _orders = new();
 
         public static void Main()
         {
@@ -33,8 +33,9 @@ namespace Quik
             _quik = DI.Resolve<IQuik>();
             _quik.NewOrder += (order) =>
             {
-                _orders.Add(order as Order);
+                _orders.Add(order);
             };
+            _orders.AddRange(_quik.GetOrders());
 
             var commandsList =
                 "find [security type] [ticker]\n" +

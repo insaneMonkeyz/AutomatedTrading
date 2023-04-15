@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Quik.Entities;
-using Quik.EntityProviders.QuikApiWrappers;
+using Quik.EntityProviders.Attributes;
 using TradingConcepts;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;
@@ -208,6 +209,25 @@ namespace Quik
             }
 
             return sb.ToString();
+        }
+
+        public static unsafe long AsciiToLong(byte* asciiBuffer, int symbolNum)
+        {
+            if (symbolNum == 0)
+            {
+                return 0;
+            }
+
+            var unicodeBuffer = stackalloc byte[symbolNum * 2];
+            var unicodeBufferSpan = new Span<char>(unicodeBuffer, symbolNum);
+
+            // translating ascii to unicode
+            for (int i = 0; i < symbolNum; i++)
+            {
+                unicodeBuffer[i * 2] = asciiBuffer[i];
+            }
+
+            return long.Parse(unicodeBufferSpan, NumberStyles.Integer | NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
         }
     }
 }

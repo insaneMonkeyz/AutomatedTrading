@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradingConcepts;
+﻿using Quik.EntityProviders.Attributes;
 using Quik.Lua;
-using static Quik.Quik;
+using TradingConcepts;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -19,7 +14,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
         public const string GET_METOD = "getFuturesLimit";
         public const string CALLBACK_METHOD = "OnFuturesLimitChange";
 
-        public const long MONEY_LIMIT_TYPE = 0;
+        public const char MONEY_LIMIT_TYPE = '0';
 
         private const string COLLATERAL = "cbplused";
         private const string TOTAL_FUNDS = "cbplimit";
@@ -42,49 +37,68 @@ namespace Quik.EntityProviders.QuikApiWrappers
             _stack = stack;
         }
 
+        [QuikCallbackField(ACCOUNT_CURRENCY)]
         public static string? MoexCurrencyCode
         {
             get => _stack.ReadRowValueString(ACCOUNT_CURRENCY);
         }
+
         public static Currencies AccountCurrency
         {
             get => _stack.ReadRowValueString(ACCOUNT_CURRENCY).CodeToCurrency();
         }
+
+        [QuikCallbackField(TOTAL_FUNDS)]
         public static Decimal5 TotalFunds
         {
             get => _stack.ReadRowValueDecimal5(TOTAL_FUNDS);
         }
+
+        [QuikCallbackField(FREE_FUNDS)]
         public static Decimal5 UnusedFunds
         {
             get => _stack.ReadRowValueDecimal5(FREE_FUNDS);
         }
+
+        [QuikCallbackField(COLLATERAL)]
         public static Decimal5 Collateral
         {
             get => _stack.ReadRowValueDecimal5(COLLATERAL);
         }
+
+        [QuikCallbackField(FLOATING_INCOME)]
         public static Decimal5 FloatingIncome
         {
             get => _stack.ReadRowValueDecimal5(FLOATING_INCOME);
         }
+
+        [QuikCallbackField(RECORDED_INCOME)]
         public static Decimal5 RecordedIncome
         {
             get => _stack.ReadRowValueDecimal5(RECORDED_INCOME);
         }
+
+        [QuikCallbackField(ACCOUNT_ID)]
         public static string? ClientCode
         {
             get => _stack.ReadRowValueString(ACCOUNT_ID);
         }
+
+        [QuikCallbackField(FIRM_ID)]
         public static string? FirmId
         {
             get => _stack.ReadRowValueString(FIRM_ID);
         }
+
         public static bool IsMainAccount
         {
-            get => _stack.ReadRowValueLong(LIMIT_TYPE) == MONEY_LIMIT_TYPE;
+            get => _stack.ReadRowValueChar(LIMIT_TYPE) == MONEY_LIMIT_TYPE;
         }
+
+        [QuikCallbackField(LIMIT_TYPE)]
         public static long LimitType
         {
-            get => _stack.ReadRowValueLong(LIMIT_TYPE);
+            get => _stack.ReadRowValueChar(LIMIT_TYPE) - MONEY_LIMIT_TYPE;
         }
     }
 }

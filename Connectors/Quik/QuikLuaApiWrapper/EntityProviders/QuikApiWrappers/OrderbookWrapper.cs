@@ -32,7 +32,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
 
                 if (Quik.Lua.ExecFunction(GET_METOD, Api.TYPE_TABLE, book.Security.ClassCode, book.Security.Ticker))
                 {
-                    if (Quik.Lua.ReadRowValueLong(BIDS_COUNT) > 0 &&
+                    if (Quik.Lua.ReadRowValueInteger(BIDS_COUNT) > 0 &&
                         Quik.Lua.PushColumnValueTable(BIDS))
                     {
                         book.UseBids(_quotesReader);
@@ -40,7 +40,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
                         updated = true;
                     }
 
-                    if (Quik.Lua.ReadRowValueLong(ASKS_COUNT) > 0 &&
+                    if (Quik.Lua.ReadRowValueInteger(ASKS_COUNT) > 0 &&
                         Quik.Lua.PushColumnValueTable(ASKS))
                     {
                         book.UseAsks(_quotesReader);
@@ -91,7 +91,7 @@ namespace Quik.EntityProviders.QuikApiWrappers
                 }
 
                 if (Quik.Lua.TryFetchDecimalFromTable(PRICE, out Decimal5 price) &&
-                    Quik.Lua.TryFetchLongFromTable(SIZE, out long size))
+                    Quik.Lua.TryFetchIntegerFromTable(SIZE, out long size))
                 {
                     quotes[thisIndex] = new Quote
                     {

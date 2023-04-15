@@ -21,18 +21,10 @@ namespace Quik.Entities
 
         public OrderStates State { get; private set; }
         public string? ExchangeAssignedIdString 
-        { 
-            get => _exchangeAssignedIdString; 
-            set
-            {
-                if (value.HasValue())
-                {
-                    _exchangeAssignedIdString = value;
-                    ExchangeAssignedId = long.Parse(value);
-                }
-            }
+        {
+            get => _exchangeAssignedIdString ??= ExchangeAssignedId.ToString();
         }
-        public long ExchangeAssignedId { get; private set; }
+        public long ExchangeAssignedId { get; set; }
         public long RemainingSize { get; set; }
         public long ExecutedSize => Quote.Size - RemainingSize;
         public DateTimeOffset Submitted { get; } = DateTimeOffset.Now;
@@ -96,7 +88,7 @@ namespace Quik.Entities
 
         public override string ToString()
         {
-            return $"{Security} {Quote} {State} {ExecutionCondition} Executed={ExecutedSize} Remainder={RemainingSize}";
+            return $"{Security} {Quote} {State} {ExchangeAssignedIdString} {ExecutionCondition} Executed={ExecutedSize} Remainder={RemainingSize}";
         }
 
         private void EnsureStateCanBeSet(OrderStates newState)

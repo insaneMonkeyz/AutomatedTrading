@@ -26,6 +26,7 @@ namespace Quik
         bool IsConnected { get; }
         ITradingAccount? Account { get; }
 
+        IEnumerable<IOrder> GetOrders();
         IEnumerable<SecurityDescription> GetAvailableSecurities<TSecurity>() where TSecurity : ISecurity;
         TSecurity? GetSecurity<TSecurity>(string ticker) where TSecurity : ISecurity;
 

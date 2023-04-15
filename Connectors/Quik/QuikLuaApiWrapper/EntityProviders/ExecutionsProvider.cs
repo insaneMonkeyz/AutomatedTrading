@@ -17,6 +17,7 @@ namespace Quik.EntityProviders
     {
         protected readonly EntityResolver<OrderRequestContainer, Order> _orderResolver;
 
+        protected override Type WrapperType => typeof(ExecutionWrapper);
         protected override string QuikCallbackMethod => ExecutionWrapper.CALLBACK_METHOD;
         protected override string AllEntitiesTable => ExecutionWrapper.NAME;
         protected override Action<LuaWrap> SetWrapper => ExecutionWrapper.Set;
@@ -40,7 +41,7 @@ namespace Quik.EntityProviders
 
                 if (ResolveOrderOfExecution(state) is not Order order)
                 {
-                    _log.Error($"Coudn't resolve order with id={ExecutionWrapper.ExchangeOrderId ?? "null"} to create an execution entity.");
+                    _log.Error($"Coudn't resolve order with id={ExecutionWrapper.ExchangeOrderId} to create an execution entity.");
 
                     return null;
                 }
@@ -72,13 +73,6 @@ namespace Quik.EntityProviders
                 TradeId = ExecutionWrapper.TradeId,
                 ExchangeAssignedOrderId = ExecutionWrapper.ExchangeOrderId
             };
-        }
-        protected override void LogEntityCreated(OrderExecution entity)
-        {
-            _log.Debug($@"Received new {nameof(OrderExecution)} for order {entity.Order}
-    {nameof(entity.TimeStamp)}={entity.TimeStamp}
-    {nameof(entity.TradeId)}={entity.TradeId}
-    {nameof(entity.Quote)}={entity.Quote}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

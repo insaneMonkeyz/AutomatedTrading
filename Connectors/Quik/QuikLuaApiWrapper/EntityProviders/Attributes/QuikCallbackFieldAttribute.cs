@@ -1,4 +1,4 @@
-﻿namespace Quik.EntityProviders.QuikApiWrappers
+﻿namespace Quik.EntityProviders.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
     internal class QuikCallbackFieldAttribute : Attribute

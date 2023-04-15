@@ -8,6 +8,7 @@ using Quik.Entities;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.Lua;
 using static Quik.Quik;
+using System.Runtime.InteropServices;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -129,12 +130,13 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
         public static long? PricePrecisionScale
         {
-            get => _stack.TryFetchLongFromTable(PRICE_SCALE, out long result) ? result : null;
+            get => _stack.TryFetchIntegerFromTable(PRICE_SCALE, out long result) ? result : null;
         }
         public static long? ContractSize
         {
-            get => _stack.TryFetchLongFromTable(CONTRACT_SIZE, out long result) ? result : null;
+            get => _stack.TryFetchIntegerFromTable(CONTRACT_SIZE, out long result) ? result : null;
         }
+
         public static Decimal5? MinPriceStep
         {
             get => _stack.TryFetchDecimalFromTable(MIN_PRICE_STEP, out Decimal5 result) ? result : null;

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradingConcepts;
+﻿using Quik.EntityProviders.Attributes;
 using Quik.Lua;
+using TradingConcepts;
 
 namespace Quik.EntityProviders.QuikApiWrappers
 {
@@ -41,60 +37,88 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             _stack = stack;
         }
+
+        [QuikCallbackField(ACCOUNT)]
         public static string? Account
         {
             get => _stack.ReadRowValueString(ACCOUNT);
         }
+
+        [QuikCallbackField(CLIENT_CODE)]
         public static string? ClientCode
         {
             get => _stack.ReadRowValueString(CLIENT_CODE);
         }
+
+        [QuikCallbackField(FIRM_ID)]
         public static string? FirmId
         {
             get => _stack.ReadRowValueString(FIRM_ID);
         }
+
+        [QuikCallbackField(TICKER)]
         public static string? Ticker
         {
             get => _stack.ReadRowValueString(TICKER);
         }
+
+        [QuikCallbackField(CLASS_CODE)]
         public static string? ClassCode
         {
             get => _stack.ReadRowValueString(CLASS_CODE);
         }
-        public static string? ExchangeOrderId
+
+        [QuikCallbackField(EXCHANGE_ORDER_ID)]
+        public static long ExchangeOrderId
         {
-            get => _stack.ReadRowValueNumber(EXCHANGE_ORDER_ID);
+            get => _stack.ReadRowValueInteger(EXCHANGE_ORDER_ID);
         }
+
+        [QuikCallbackField(ORDER_EXCHANGE_CODE)]
         public static string? ExchangeOrderCode
         {
             get => _stack.ReadRowValueString(ORDER_EXCHANGE_CODE);
         }
+
+        [QuikCallbackField(TRANSACTION_ID)]
         public static long TransactionId
         {
-            get => _stack.ReadRowValueLong(TRANSACTION_ID);
+            get => _stack.ReadRowValueInteger(TRANSACTION_ID);
         }
+
+        [QuikCallbackField(TRADE_ID)]
         public static long TradeId
         {
-            get => _stack.ReadRowValueLong(TRADE_ID);
+            get => _stack.ReadRowValueInteger(TRADE_ID);
         }
+
+        [QuikCallbackField(PRICE)]
         public static Decimal5 Price
         {
             get => _stack.ReadRowValueDecimal5(PRICE);
         }
+
+        [QuikCallbackField(SIZE)]
         public static long Size
         {
-            get => _stack.ReadRowValueLong(SIZE);
+            get => _stack.ReadRowValueInteger(SIZE);
         }
+
+        [QuikCallbackField(FLAGS)]
         public static Operations Operation
         {
-            get => (_stack.ReadRowValueLong(FLAGS) & SELL_OPERATION_BIT) == SELL_OPERATION_BIT
+            get => (_stack.ReadRowValueInteger(FLAGS) & SELL_OPERATION_BIT) == SELL_OPERATION_BIT
                 ? Operations.Sell
                 : Operations.Buy;
         }
+
+        [QuikCallbackField(TIME)]
         public static DateTimeOffset Timestamp
         {
             get => TimeWrapper.GetTime(_stack, TIME).GetValueOrDefault();
         }
+
+        [QuikCallbackField(CANCELED_DATETIME)]
         public static DateTimeOffset CancelledTimestamp
         {
             get => TimeWrapper.GetTime(_stack, CANCELED_DATETIME).GetValueOrDefault();

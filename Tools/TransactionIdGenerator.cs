@@ -1,4 +1,4 @@
-﻿namespace Core.Tools
+﻿namespace Tools
 {
     public static class TransactionIdGenerator
     {
