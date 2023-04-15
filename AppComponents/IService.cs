@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core.AppComponents.AppStructureConcepts
+namespace AppComponents
 {
-    public interface IMessageBroker
+    public class IService
     {
     }
 }

@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core.AppComponents.AppStructureConcepts
+namespace AppComponents.AppStructureConcepts
 {
     public interface ICommandBroker
     {
+        void RegisterExecutiveService(object service);
+        void SendCommand(object command);
     }
 }
