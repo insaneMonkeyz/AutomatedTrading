@@ -37,5 +37,9 @@ namespace Quik.Entities
 
         public void NotifyUpdated() => Updated();
         public override string ToString() => $"{ClassCode}:{Ticker}";
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ClassCode, Ticker, PricePrecisionScale, ContractSize);
+        }
     }
 }

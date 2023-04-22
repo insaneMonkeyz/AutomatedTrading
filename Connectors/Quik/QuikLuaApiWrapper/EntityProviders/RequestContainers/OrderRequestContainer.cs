@@ -9,7 +9,7 @@ namespace Quik.EntityProviders.RequestContainers
 
         public bool HasData
         {
-            get => !(ExchangeAssignedId != default || string.IsNullOrEmpty(ClassCode));
+            get => ExchangeAssignedId != default && !string.IsNullOrEmpty(ClassCode);
         }
 
         public bool IsMatching(Order? entity)

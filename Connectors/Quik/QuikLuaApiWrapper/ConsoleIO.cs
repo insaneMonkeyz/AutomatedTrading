@@ -1,11 +1,15 @@
-﻿using System.Runtime.InteropServices;
-using Core;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Quik.Entities;
 using Tools;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;
+using System.Globalization;
 
 namespace Quik
 {
@@ -19,7 +23,8 @@ namespace Quik
         private static Security? _currentSecurity;
         private static Order? _currentOrder;
         private static ITradingAccount? _currentAccount;
-        private static List<IOrder> _orders = new();
+        private static HashSet<IOrder> _orders;
+        private static HashSet<IOrderExecution> _executions = new(20);
 
         public static void Main()
         {
@@ -31,11 +36,15 @@ namespace Quik
             }
 
             _quik = DI.Resolve<IQuik>();
+            _orders = _quik.GetOrders().ToHashSet();
             _quik.NewOrder += (order) =>
             {
                 _orders.Add(order);
             };
-            _orders.AddRange(_quik.GetOrders());
+            _quik.NewOrderExecution += exec =>
+            {
+                _executions.Add(exec);
+            };
 
             var commandsList =
                 "find [security type] [ticker]\n" +
@@ -51,7 +60,7 @@ namespace Quik
             {
                 { "find", FindSecurityHandler },
                 { "sell", TradeSecurity },
-                { "byu", TradeSecurity },
+                { "buy", TradeSecurity },
                 { "move", MoveOrder },
                 { "cancel", CancelOrder },
                 { "reset", Reset },
@@ -76,15 +85,25 @@ namespace Quik
                 {
                     Console.WriteLine($"Selected Security: {_currentSecurity}");
                 }
+                _currentOrder ??= _orders.FirstOrDefault(o => o.State.HasFlag(OrderStates.Active)) as Order;
                 if (_currentOrder != null)
                 {
                     Console.WriteLine($"Selected Order: {_currentOrder}");
                 }
                 if (_orders.Count > 0)
                 {
-                    Console.WriteLine($"-----------------------------------");
+                    Console.WriteLine($"-----------------[ORDERS]------------------");
 
                     foreach (var item in _orders)
+                    {
+                        Console.WriteLine(item.ToString());
+                    }
+                }
+                if (_executions.Count > 0)
+                {
+                    Console.WriteLine($"-----------------[TRADES]------------------");
+
+                    foreach (var item in _executions)
                     {
                         Console.WriteLine(item.ToString());
                     }
@@ -140,7 +159,9 @@ namespace Quik
                 ExecutionCondition = args.Length == TRADE_ORDER_WITH_GTD_PARAM_ARGS_NUM
                     ? OrderExecutionConditions.GoodTillDate
                     : OrderExecutionConditions.Session,
-                Expiry = DateTimeOffset.Now + TimeSpan.FromDays(2),
+                Expiry = args.Length == TRADE_ORDER_WITH_GTD_PARAM_ARGS_NUM
+                    ? DateTimeOffset.Parse(args[TRADECMD_CANCEL_DATE_INDEX], CultureInfo.GetCultureInfo("it", "IT"))
+                    : DateTimeOffset.Now + TimeSpan.FromDays(2),
             };
 
             _currentOrder = _quik.PlaceNewOrder(submission) as Order;

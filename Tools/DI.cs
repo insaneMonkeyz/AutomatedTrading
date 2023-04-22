@@ -1,4 +1,4 @@
-﻿namespace Core
+﻿namespace Tools
 {
     /// <summary>
     /// Dependency injections provider

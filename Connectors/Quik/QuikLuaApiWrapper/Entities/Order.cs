@@ -22,7 +22,20 @@ namespace Quik.Entities
         public OrderStates State { get; private set; }
         public string? ExchangeAssignedIdString 
         {
-            get => _exchangeAssignedIdString ??= ExchangeAssignedId.ToString();
+            get
+            {
+                if (_exchangeAssignedIdString == null)
+                {
+                    if (ExchangeAssignedId == 0)
+                    {
+                        return string.Empty;
+                    }
+
+                    _exchangeAssignedIdString = ExchangeAssignedId.ToString();
+                }
+
+                return _exchangeAssignedIdString;
+            }
         }
         public long ExchangeAssignedId { get; set; }
         public long RemainingSize { get; set; }
@@ -86,11 +99,6 @@ namespace Quik.Entities
 
         public void NotifyUpdated() => Updated();
 
-        public override string ToString()
-        {
-            return $"{Security} {Quote} {State} {ExchangeAssignedIdString} {ExecutionCondition} Executed={ExecutedSize} Remainder={RemainingSize}";
-        }
-
         private void EnsureStateCanBeSet(OrderStates newState)
         {
             var state = State;
@@ -109,6 +117,15 @@ namespace Quik.Entities
             {
                 throw new InvalidOperationException($"Cannot set {newState} order state when base state is {state}");
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{Security} {Quote} {State}\tExchangeId={ExchangeAssignedIdString} TransactionId={TransactionId}\tCondition={ExecutionCondition} Executed={ExecutedSize} Remainder={RemainingSize}";
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Security, ExchangeAssignedId, TransactionId);
         }
     }
 }

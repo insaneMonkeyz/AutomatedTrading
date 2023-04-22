@@ -68,6 +68,8 @@ namespace Quik.EntityProviders
 #if TRACE
             this.Trace();
 #endif
+            ExecutionWrapper.Set(state);
+
             return new OrderExecutionRequestContainer
             {
                 TradeId = ExecutionWrapper.TradeId,

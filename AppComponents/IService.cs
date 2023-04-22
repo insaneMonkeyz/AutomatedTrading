@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AppComponents
 {
-    public class IService
+    public interface IService
     {
     }
 }

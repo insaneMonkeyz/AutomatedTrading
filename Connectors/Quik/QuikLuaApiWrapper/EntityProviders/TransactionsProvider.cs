@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using Quik.Entities;
 using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
@@ -13,7 +14,8 @@ namespace Quik.EntityProviders
     {
         protected override string QuikCallbackMethod => CALLBACK_METHOD;
 
-        private TransactionCache _transactionsCache = new(cacheSize: 20);
+        private readonly RandomAccessQueue<Order> _transactionsQueue = new();
+        private IsSubjectToDequeue<Order, long> _isRelatedToTransaction;
         private EntityResolver<OrderRequestContainer, Order>? _ordersResolver;
 
         public EntityEventHandler<Order> OrderChanged = delegate { };
@@ -24,6 +26,7 @@ namespace Quik.EntityProviders
             this.Trace();
 #endif
             _ordersResolver = EntityResolvers.GetOrdersResolver();
+            _isRelatedToTransaction = IsRelatedToTransaction;
             base.Initialize(entityNotificationLoop);
         }
 
@@ -95,7 +98,7 @@ namespace Quik.EntityProviders
             if (error.HasNoValue())
             {
                 order.AddIntermediateState(OrderStates.Registering);
-                _transactionsCache.Push(order);
+                _transactionsQueue.Enqueue(order);
             }
             else
             {
@@ -162,6 +165,10 @@ namespace Quik.EntityProviders
             }
         }
 
+        private bool IsRelatedToTransaction(Order order, long transactionId)
+        {
+            return order.TransactionId == transactionId;
+        }
         protected override int OnNewData(nint state)
         {
             try
@@ -189,9 +196,7 @@ namespace Quik.EntityProviders
                         return 1;
                     }
 
-                    var order = _transactionsCache.Pop(transactionId);
-
-                    if (order != null)
+                    if (_transactionsQueue.TryDequeueItem(_isRelatedToTransaction, transactionId, out Order order))
                     {
                         order.ExchangeAssignedId = OrderId;
                         order.RemainingSize = order.Quote.Size - RejectedSize;
