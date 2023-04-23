@@ -23,6 +23,9 @@ namespace Quik
         event Action<ISecurity> SecurityChanged;
         event Action<IOrder> OrderChanged;
 
+        event Action<IOrder> OrderChangeDenied;
+        event Action<IOrder> OrderCancellationDenied;
+
         bool IsConnected { get; }
         ITradingAccount? Account { get; }
 

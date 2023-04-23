@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Quik.Entities;
 using Quik.EntityProviders.Attributes;
@@ -6,6 +7,7 @@ using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
 using TradingConcepts;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static Quik.EntityProviders.QuikApiWrappers.TransactionWrapper;
 
 namespace Quik.EntityProviders
@@ -19,6 +21,8 @@ namespace Quik.EntityProviders
         private EntityResolver<OrderRequestContainer, Order>? _ordersResolver;
 
         public EntityEventHandler<Order> OrderChanged = delegate { };
+        public EntityEventHandler<Order> ChangeDenied = delegate { };
+        public EntityEventHandler<Order> CancellationDenied = delegate { };
 
         public override void Initialize(ExecutionLoop entityNotificationLoop)
         {
@@ -112,7 +116,7 @@ namespace Quik.EntityProviders
         {
             if (order.State != OrderStates.Active)
             {
-                _log.Warn($"Cannot cancel inactive order {order}");
+                OnCancellationDenied(order, $"Cannot cancel inactive order {order}");
                 return;
             }
 
@@ -125,24 +129,25 @@ namespace Quik.EntityProviders
 
             if (error != null)
             {
-                _log.Warn($"Order {order} cancellation rejected\n  {error}");
+                OnCancellationDenied(order, $"Order {order} cancellation rejected\n  {error}");
             }
             else
             {
                 order.AddIntermediateState(OrderStates.Cancelling);
+                _eventSignalizer.QueueEntity(OrderChanged, order);
             }
         }
         public void Change(Order order, Decimal5 newprice, long newsize)
         {
             if (order.State != OrderStates.Active)
             {
-                _log.Warn($"Cannot change inactive order {order}");
+                OnChangeDenied(order, $"Cannot change inactive order {order}");
                 return;
             }
 
             if (order.ExchangeAssignedId == default || order.State.HasFlag(OrderStates.Registering))
             {
-                _log.Warn($"Cannot change an order that is still registering {order}");
+                OnChangeDenied(order, $"Cannot change an order that is still registering {order}");
                 return;
             }
 
@@ -157,12 +162,26 @@ namespace Quik.EntityProviders
 
             if (error != null)
             {
-                _log.Warn($"Order {order} changing rejected\n{error}");
+                OnChangeDenied(order, $"Order {order} changing rejected\n{error}");
             }
             else
             {
                 order.AddIntermediateState(OrderStates.Changing);
+                _eventSignalizer.QueueEntity(OrderChanged, order);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void OnCancellationDenied(Order order, string errorMessage)
+        {
+            _log.Warn(errorMessage);
+            _eventSignalizer.QueueEntity(CancellationDenied, order);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void OnChangeDenied(Order order, string errorMessage)
+        {
+            _log.Warn(errorMessage);
+            _eventSignalizer.QueueEntity(ChangeDenied, order);
         }
 
         private bool IsRelatedToTransaction(Order order, long transactionId)

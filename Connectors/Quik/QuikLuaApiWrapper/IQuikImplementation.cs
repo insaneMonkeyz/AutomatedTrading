@@ -33,6 +33,9 @@ namespace Quik
         public event Action<ISecurity> SecurityChanged = delegate { };
         public event Action<IOrder> OrderChanged = delegate { };
 
+        public event Action<IOrder> OrderChangeDenied;
+        public event Action<IOrder> OrderCancellationDenied;
+
         bool IQuik.IsConnected
         {
             get

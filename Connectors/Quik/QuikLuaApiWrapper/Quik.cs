@@ -63,22 +63,9 @@ namespace Quik
 
             try
             {
-                //==========================================================================
-                //
-                //  WARNING! It turns out that quik rounds long numbers of type 'number'
-                //           when reading them as Int64.
-                //           The only way to get precise values is to read them as strings.
-                //
-                //  TODO: Check all API calls that return type 'number' and make sure
-                //        they are being treated as strings!
-                //
-                //==========================================================================
-
-                // WHEN STATE OF CACHED ENTITY CHANGES
-                // THE HASH USED TO RETRIEVE THIS ENTITY WILL REMAIN THE SAME
-                // MATHCING STAGE WILL FAIL
-
-                // check if transaction reply comes together with new order callback
+                // TODO: Think about transating error messages to the user
+                //       It's important to keep them informed about what's going on and
+                //       why their orders are being rejected on the application side.
 
                 DerivativesBalanceProvider.Instance.EntityChanged = (balance) => SecurityBalanceChanged(balance);
                 OrderbooksProvider.Instance.EntityChanged = (book) => OrderBookChanged(book);
@@ -94,6 +81,8 @@ namespace Quik
                 AccountsProvider.Instance.NewEntity = (acc) => NewAccount(acc);
                 OrdersProvider.Instance.NewEntity = (order) => NewOrder(order);
 
+                TransactionsProvider.Instance.CancellationDenied = (order) => OrderCancellationDenied(order);
+                TransactionsProvider.Instance.ChangeDenied = (order) => OrderChangeDenied(order);
 
                 _components.ForEach(c => c.Initialize(_executionLoop));
                 _executionLoop.Enter();
