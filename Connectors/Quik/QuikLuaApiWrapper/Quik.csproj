@@ -54,12 +54,12 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <Protobuf Include="Grpc/Protos/Primitives/decimal5.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
-	  <Protobuf Include="Grpc/Protos/Primitives/guid.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
-	  <Protobuf Include="Grpc/Protos/quik.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
-	  <Protobuf Include="Grpc/Protos/security.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
-	  <Protobuf Include="Grpc/Protos/securityBalance.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
-	  <Protobuf Include="Grpc/Protos/tradingAccount.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/Primitives/decimal5.proto" ProtoRoot="Grpc/" Access="Internal" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/Primitives/guid.proto" ProtoRoot="Grpc/" Access="Internal" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/security.proto" ProtoRoot="Grpc/" Access="Internal" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/securityBalance.proto" ProtoRoot="Grpc/" Access="Internal" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/tradingAccount.proto" ProtoRoot="Grpc/" Access="Internal" GrpcServices="Server" />
+      <Protobuf Include="Grpc/Protos/quik.proto" ProtoRoot="Grpc/" Access="Internal" GrpcServices="Server" />
 	</ItemGroup>
 
 </Project>

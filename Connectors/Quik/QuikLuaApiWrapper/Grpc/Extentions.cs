@@ -3,7 +3,7 @@ using TradingConcepts;
 
 namespace Quik.Grpc
 {
-    public static class Extentions
+    internal static class Extentions
     {
         public static Entities.Primitives.Decimal5 ToGrpcType(this Decimal5 value)
         {

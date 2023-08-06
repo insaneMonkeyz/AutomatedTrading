@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "Quik.Grpc.Prototypes";
+option csharp_namespace = "Quik.Grpc";
 
 package quik_grpc;
 

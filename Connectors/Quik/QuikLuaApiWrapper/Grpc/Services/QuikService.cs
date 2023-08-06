@@ -1,7 +1,7 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Quik.Grpc.Entities;
-using Quik.Grpc.Prototypes;
+using Quik.Grpc;
 using Microsoft.Extensions.Logging;
 using Quik;
 
