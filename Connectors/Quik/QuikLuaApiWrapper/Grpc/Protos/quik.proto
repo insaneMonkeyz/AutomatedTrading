@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option csharp_namespace = "Quik.Grpc.Prototypes";
+
+package quik_grpc;
+
+import "google/protobuf/empty.proto";
+import "Protos/Primitives/decimal5.proto";
+import "Protos/Primitives/guid.proto";
+import "Protos/tradingAccount.proto";
+import "Protos/security.proto";
+
+service QuikApi{
+	rpc IsConnected(google.protobuf.Empty) returns(QuikConnectionStatusResponse);
+	rpc GetTradingAccount(google.protobuf.Empty) returns(TradingAccount);
+	//rpc GetOrders() returns (OrdersData);
+	//rpc GetAvailableSecurities(SecurityLookupRequest) returns (AvailableSecuritiesDescription);
+	//rpc GetSecurity(SecurityRequest) returns (SecurityDescription);
+
+	//rpc PlaceOrder(OrderSubmissionRequest) returns (OrderSubmissionResponse);
+	//rpc ChangeOrder(OrderChangeRequest) returns (OrderChangeResponse);
+	//rpc CancelOrder(OrderCancelRequest) returns (OrderCancelResponse);
+}
+
+message QuikConnectionStatusResponse{
+	bool IsConnected = 1;
+}

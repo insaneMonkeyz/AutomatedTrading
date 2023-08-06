@@ -1,4 +1,5 @@
-﻿using Quik.EntityProviders;
+﻿using Quik.Grpc;
+using Quik.EntityProviders;
 using Quik.EntityProviders.Attributes;
 using Quik.Lua;
 using Tools;
@@ -202,6 +203,7 @@ namespace Quik
 
             Lua.UnregisterCallback(DLL_NAME);
             LogManagement.Dispose();
+            GrpcServer.Dispose();
             _disposed = true;
         }
         public void Dispose()

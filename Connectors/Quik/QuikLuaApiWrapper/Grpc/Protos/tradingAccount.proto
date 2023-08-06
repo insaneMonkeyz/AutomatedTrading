@@ -1,0 +1,19 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "Quik.Grpc.Entities";
+
+package quik_grpc;
+
+import "Protos/Primitives/decimal5.proto";
+import "Protos/securityBalance.proto";
+
+message TradingAccount{
+    string AccountCurrency = 1;
+	string AccountCode = 2;
+    optional string Description = 3;
+    Decimal5 TotalFunds = 4;
+    Decimal5 UnusedFunds = 5;
+    Decimal5 FloatingIncome = 6;
+    Decimal5 CollateralMargin = 7;
+    repeated SecurityBalance SecurityBalance = 8;
+}

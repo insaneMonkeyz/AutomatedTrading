@@ -3,14 +3,24 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-	  <LangVersion>11</LangVersion>
+	<LangVersion>Preview</LangVersion>
     <Nullable>enable</Nullable>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseOutputPath>E:\Work\FFIN QUIK</BaseOutputPath>
-	  <LangVersion>Preview</LangVersion>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-  </PropertyGroup>
+	<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+	<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Grpc\Protos\Primitives\decimal5.proto" />
+    <None Remove="Grpc\Protos\Primitives\guid.proto" />
+    <None Remove="Grpc\Protos\quik.proto" />
+    <None Remove="Grpc\Protos\security.proto" />
+    <None Remove="Grpc\Protos\securityBalance.proto" />
+    <None Remove="Grpc\Protos\tradingAccount.proto" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\BasicConcepts\TradingConcepts.csproj" />
@@ -24,6 +34,12 @@
 	</ItemGroup>
 	
 	<ItemGroup>
+	  <PackageReference Include="Google.Protobuf" Version="3.23.1" />
+	  <PackageReference Include="Grpc.AspNetCore.Server" Version="2.55.0" />
+	  <PackageReference Include="Grpc.Tools" Version="2.56.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	  <PackageReference Include="ZeroLog" Version="2.1.0" />
 	</ItemGroup>
 	
@@ -35,6 +51,15 @@
 	
 	<ItemGroup>
 	  <Using Include="Tools.Logging" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Protobuf Include="Grpc/Protos/Primitives/decimal5.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/Primitives/guid.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/quik.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/security.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/securityBalance.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
+	  <Protobuf Include="Grpc/Protos/tradingAccount.proto" ProtoRoot="Grpc/" GrpcServices="Server" />
 	</ItemGroup>
 
 </Project>

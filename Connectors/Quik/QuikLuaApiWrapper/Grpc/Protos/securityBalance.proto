@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option csharp_namespace = "Quik.Grpc.Entities";
+
+package quik_grpc;
+
+import "Protos/security.proto";
+
+message SecurityBalance{
+	Security Security = 1;
+	sint64 Amount = 2;
+}

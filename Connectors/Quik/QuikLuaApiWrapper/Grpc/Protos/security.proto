@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option csharp_namespace = "Quik.Grpc.Entities";
+
+package quik_grpc;
+
+import "Protos/Primitives/decimal5.proto";
+import "Protos/Primitives/guid.proto";
+
+message Security{
+	ProtoGuid ExchangeId = 1;
+	string Ticker = 2;
+	optional string Description = 3;
+	int64 PricePrecisionScale = 4;
+	int64 ContractSize = 5;
+	Decimal5 MinPriceStep = 6;
+	optional Decimal5 PriceStepValue = 7;
+	int64 MinTradinSize = 8;
+	string DenominationCurrency = 9;
+}

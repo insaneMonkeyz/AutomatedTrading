@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option csharp_namespace = "Quik.Grpc.Entities.Primitives";
+
+package quik_grpc;
+
+message Decimal5{
+	sfixed64 mantissa = 1;
+}
