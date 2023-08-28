@@ -38,7 +38,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{ADA24A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarketExecutionService", "TradingService\MarketExecutionService.csproj", "{54634E1E-BD0C-4522-874C-B963CE5B4837}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikGrpcTestClient", "QuikGrpcTestClient\QuikGrpcTestClient.csproj", "{2EA9DB97-9B6E-4816-8020-1D5396725349}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuikGrpcTestClient", "QuikGrpcTestClient\QuikGrpcTestClient.csproj", "{2EA9DB97-9B6E-4816-8020-1D5396725349}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{516621C9-253D-4D1A-BFAF-FCEFDFD3EE68}"
+	ProjectSection(SolutionItems) = preProject
+		Readme.md = Readme.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
