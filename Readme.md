@@ -1,20 +1,20 @@
-## Краткий путеводитель для ознакомления с моей работой с кодом
+## РљСЂР°С‚РєРёР№ РїСѓС‚РµРІРѕРґРёС‚РµР»СЊ РґР»СЏ РѕР·РЅР°РєРѕРјР»РµРЅРёСЏ СЃ РјРѕРµР№ СЂР°Р±РѕС‚РѕР№ СЃ РєРѕРґРѕРј
 
-Проект предоставляет доступ к московской бирже через терминал Quik используя его Lua C Api интерфейс
+РџСЂРѕРµРєС‚ РїСЂРµРґРѕСЃС‚Р°РІР»СЏРµС‚ РґРѕСЃС‚СѓРї Рє РјРѕСЃРєРѕРІСЃРєРѕР№ Р±РёСЂР¶Рµ С‡РµСЂРµР· С‚РµСЂРјРёРЅР°Р» Quik РёСЃРїРѕР»СЊР·СѓСЏ РµРіРѕ Lua C Api РёРЅС‚РµСЂС„РµР№СЃ
 
-Фасад функциональности проекта представлен интерфейсом [IQuik](https://github.com/insaneMonkeyz/AutomatedTrading/blob/master/Connectors/Quik/QuikLuaApiWrapper/IQuik.cs)
+Р¤Р°СЃР°Рґ С„СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚Рё РїСЂРѕРµРєС‚Р° РїСЂРµРґСЃС‚Р°РІР»РµРЅ РёРЅС‚РµСЂС„РµР№СЃРѕРј [IQuik](https://github.com/insaneMonkeyz/AutomatedTrading/blob/master/Connectors/Quik/QuikLuaApiWrapper/IQuik.cs)
 
-Реализуют его классы в файлах 
-[Quik.cs](https://github.com/insaneMonkeyz/AutomatedTrading/blob/master/Connectors/Quik/QuikLuaApiWrapper/Quik.cs) и 
+Р РµР°Р»РёР·СѓСЋС‚ РµРіРѕ РєР»Р°СЃСЃС‹ РІ С„Р°Р№Р»Р°С… 
+[Quik.cs](https://github.com/insaneMonkeyz/AutomatedTrading/blob/master/Connectors/Quik/QuikLuaApiWrapper/Quik.cs) Рё 
 [IQuikImplementation.cs](https://github.com/insaneMonkeyz/AutomatedTrading/blob/master/Connectors/Quik/QuikLuaApiWrapper/IQuikImplementation.cs)
 
-Обмен данными ведется через череду классов прослоек, абстрагирующих работу c низкоуровневыми конструкциями Lua:
+РћР±РјРµРЅ РґР°РЅРЅС‹РјРё РІРµРґРµС‚СЃСЏ С‡РµСЂРµР· С‡РµСЂРµРґСѓ РєР»Р°СЃСЃРѕРІ РїСЂРѕСЃР»РѕРµРє, Р°Р±СЃС‚СЂР°РіРёСЂСѓСЋС‰РёС… СЂР°Р±РѕС‚Сѓ c РЅРёР·РєРѕСѓСЂРѕРІРЅРµРІС‹РјРё РєРѕРЅСЃС‚СЂСѓРєС†РёСЏРјРё Lua:
 
-1) Самый высокий уровень абстракции - вышеупомянутый интерфейс [IQuik](https://github.com/insaneMonkeyz/AutomatedTrading/blob/master/Connectors/Quik/QuikLuaApiWrapper/IQuik.cs) выступающий проводником к основной логике приложения - выставление заявок, получение информации по инструментам, ценам итд
+1) РЎР°РјС‹Р№ РІС‹СЃРѕРєРёР№ СѓСЂРѕРІРµРЅСЊ Р°Р±СЃС‚СЂР°РєС†РёРё - РІС‹С€РµСѓРїРѕРјСЏРЅСѓС‚С‹Р№ РёРЅС‚РµСЂС„РµР№СЃ [IQuik](https://github.com/insaneMonkeyz/AutomatedTrading/blob/master/Connectors/Quik/QuikLuaApiWrapper/IQuik.cs) РІС‹СЃС‚СѓРїР°СЋС‰РёР№ РїСЂРѕРІРѕРґРЅРёРєРѕРј Рє РѕСЃРЅРѕРІРЅРѕР№ Р»РѕРіРёРєРµ РїСЂРёР»РѕР¶РµРЅРёСЏ - РІС‹СЃС‚Р°РІР»РµРЅРёРµ Р·Р°СЏРІРѕРє, РїРѕР»СѓС‡РµРЅРёРµ РёРЅС„РѕСЂРјР°С†РёРё РїРѕ РёРЅСЃС‚СЂСѓРјРµРЅС‚Р°Рј, С†РµРЅР°Рј РёС‚Рґ
 
-2) Следующий слой - [провайдеры данных](https://github.com/insaneMonkeyz/AutomatedTrading/tree/master/Connectors/Quik/QuikLuaApiWrapper/EntityProviders). Здесь объекты бизнес сущностей приложения ([сделок, заявок, торговых инструментов, котировок итд](https://github.com/insaneMonkeyz/AutomatedTrading/tree/master/Connectors/Quik/QuikLuaApiWrapper/Entities)) 
-собираются и разбираются для загрузки в терминал. 
+2) РЎР»РµРґСѓСЋС‰РёР№ СЃР»РѕР№ - [РїСЂРѕРІР°Р№РґРµСЂС‹ РґР°РЅРЅС‹С…](https://github.com/insaneMonkeyz/AutomatedTrading/tree/master/Connectors/Quik/QuikLuaApiWrapper/EntityProviders). Р—РґРµСЃСЊ РѕР±СЉРµРєС‚С‹ Р±РёР·РЅРµСЃ СЃСѓС‰РЅРѕСЃС‚РµР№ РїСЂРёР»РѕР¶РµРЅРёСЏ ([СЃРґРµР»РѕРє, Р·Р°СЏРІРѕРє, С‚РѕСЂРіРѕРІС‹С… РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ, РєРѕС‚РёСЂРѕРІРѕРє РёС‚Рґ](https://github.com/insaneMonkeyz/AutomatedTrading/tree/master/Connectors/Quik/QuikLuaApiWrapper/Entities)) 
+СЃРѕР±РёСЂР°СЋС‚СЃСЏ Рё СЂР°Р·Р±РёСЂР°СЋС‚СЃСЏ РґР»СЏ Р·Р°РіСЂСѓР·РєРё РІ С‚РµСЂРјРёРЅР°Р». 
 
-3) Еще более глубокий слой абстракции - [Обертка для бизнес API терминала](https://github.com/insaneMonkeyz/AutomatedTrading/tree/master/Connectors/Quik/QuikLuaApiWrapper/EntityProviders/QuikApiWrappers). Здесь объекты нашего приложения переводятся в DTO объектов терминала.
+3) Р•С‰Рµ Р±РѕР»РµРµ РіР»СѓР±РѕРєРёР№ СЃР»РѕР№ Р°Р±СЃС‚СЂР°РєС†РёРё - [РћР±РµСЂС‚РєР° РґР»СЏ Р±РёР·РЅРµСЃ API С‚РµСЂРјРёРЅР°Р»Р°](https://github.com/insaneMonkeyz/AutomatedTrading/tree/master/Connectors/Quik/QuikLuaApiWrapper/EntityProviders/QuikApiWrappers). Р—РґРµСЃСЊ РѕР±СЉРµРєС‚С‹ РЅР°С€РµРіРѕ РїСЂРёР»РѕР¶РµРЅРёСЏ РїРµСЂРµРІРѕРґСЏС‚СЃСЏ РІ DTO РѕР±СЉРµРєС‚РѕРІ С‚РµСЂРјРёРЅР°Р»Р°.
 
-4) Последний слой - [Обёртка для Lua C API](https://github.com/insaneMonkeyz/AutomatedTrading/tree/master/Connectors/Quik/QuikLuaApiWrapper/Lua). Представляет собой логику оперирующую стеком Lua в памяти терминала. Через него осуществляется обмен данными с терминалом.
+4) РџРѕСЃР»РµРґРЅРёР№ СЃР»РѕР№ - [РћР±С‘СЂС‚РєР° РґР»СЏ Lua C API](https://github.com/insaneMonkeyz/AutomatedTrading/tree/master/Connectors/Quik/QuikLuaApiWrapper/Lua/LuaWrap.cs). РџСЂРµРґСЃС‚Р°РІР»СЏРµС‚ СЃРѕР±РѕР№ Р»РѕРіРёРєСѓ РѕРїРµСЂРёСЂСѓСЋС‰СѓСЋ СЃС‚РµРєРѕРј Lua РІ РїР°РјСЏС‚Рё С‚РµСЂРјРёРЅР°Р»Р°. Р§РµСЂРµР· РЅРµРіРѕ РѕСЃСѓС‰РµСЃС‚РІР»СЏРµС‚СЃСЏ РѕР±РјРµРЅ РґР°РЅРЅС‹РјРё СЃ С‚РµСЂРјРёРЅР°Р»РѕРј.
