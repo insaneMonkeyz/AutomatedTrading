@@ -179,6 +179,9 @@
     <ClCompile Include="bootstrap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\QuikIntegrationTest\QuikIntegrationTest.csproj">
+      <Project>{8d8c2d71-aedd-4d5c-8d2e-26f379c892e4}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\QuikLuaApiWrapper\Quik.csproj">
       <Project>{0ad1e47c-f4cf-477e-a3f5-c3af4b66fb8c}</Project>
     </ProjectReference>

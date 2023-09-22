@@ -36,20 +36,14 @@ namespace Quik.EntityProviders
 
         public Order PlaceNew(MoexOrderSubmission submission)
         {
-            if (submission.ClientCode is null)
-            {
-                throw new ArgumentException($"{nameof(submission.ClientCode)} of the order is not set");
-            }
-
-            var newOrderArgs = new NewOrderArgs()
+            var newOrderArgs = new NewOrderArgs
             {
                 OrderSubmission = submission,
-                Expiry = string.Empty
+                Expiry = string.Empty,
+                Operation = submission.Quote.Operation == Operations.Buy
+                    ? BUY_OPERATION_PARAM
+                    : SELL_OPERATION_PARAM
             };
-
-            newOrderArgs.Operation = submission.Quote.Operation == Operations.Buy
-                ? BUY_OPERATION_PARAM
-                : SELL_OPERATION_PARAM;
 
             if (submission.IsMarket)
             {

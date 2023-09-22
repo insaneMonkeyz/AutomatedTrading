@@ -17,6 +17,8 @@ namespace Quik
     {
         [DllImport("kernel32")]
         private static extern bool AllocConsole();
+        [DllImport("kernel32")]
+        static extern bool FreeConsole();
 
         private static bool _isRunning = true;
         private static IQuik _quik;
@@ -128,7 +130,11 @@ namespace Quik
         }
 
         private static void Refresh(string[] args) { }
-        private static void Terminate(string[] args) { _isRunning = false; }
+        private static void Terminate(string[] args) 
+        { 
+            _isRunning = false;
+            FreeConsole();
+        }
         private static void Reset(string[] args)
         {
             _currentOrder = null;

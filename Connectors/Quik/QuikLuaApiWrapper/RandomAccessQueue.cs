@@ -21,22 +21,24 @@ namespace Quik
             lock (_sync)
             {
                 var node = _queue.First;
+                item = default;
 
-                if (node is not null)
+                if (node is null)
                 {
-                    for (int i = 0; i < _queue.Count; i++)
+                    return false;
+                }
+
+                for (int i = 0; i < _queue.Count; i++)
+                {
+                    if (isSubjectToDequeue(node.Value, arg))
                     {
-                        if (isSubjectToDequeue(node.Value, arg))
-                        {
-                            item = node.Value;
-                            _queue.Remove(node);
-                            return true;
-                        }
+                        item = node.Value;
+                        _queue.Remove(node);
+                        return true;
                     }
                 }
             }
 
-            item = default;
             return false;
         }
         public bool TryDequeue(out T item)

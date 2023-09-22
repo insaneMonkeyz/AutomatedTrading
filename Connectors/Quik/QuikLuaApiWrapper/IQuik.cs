@@ -29,9 +29,12 @@ namespace Quik
         bool IsConnected { get; }
         ITradingAccount? Account { get; }
 
+        int Initialize(IntPtr luaContext);
+
         IEnumerable<IOrder> GetOrders();
         IEnumerable<SecurityDescription> GetAvailableSecurities<TSecurity>() where TSecurity : ISecurity;
         TSecurity? GetSecurity<TSecurity>(string ticker) where TSecurity : ISecurity;
+        IOrderBook? GetOrderBook<TSecurity>(string ticker) where TSecurity : ISecurity;
 
         IOrder PlaceNewOrder(MoexOrderSubmission submission);
         void ChangeOrder(IOrder order, Decimal5 newPrice, long newSize);

@@ -64,7 +64,7 @@ namespace Quik
 
             try
             {
-                // TODO: Think about transating error messages to the user
+                // TODO: Think about translating error messages to the user
                 //       It's important to keep them informed about what's going on and
                 //       why their orders are being rejected on the application side.
 

@@ -33,8 +33,8 @@ namespace Quik
         public event Action<ISecurity> SecurityChanged = delegate { };
         public event Action<IOrder> OrderChanged = delegate { };
 
-        public event Action<IOrder> OrderChangeDenied;
-        public event Action<IOrder> OrderCancellationDenied;
+        public event Action<IOrder> OrderChangeDenied = delegate { };
+        public event Action<IOrder> OrderCancellationDenied = delegate { };
 
         bool IQuik.IsConnected
         {
@@ -65,20 +65,45 @@ namespace Quik
                 return SecuritiesProvider.Instance.GetAvailableSecuritiesOfType(t).Select(tickerToDescription);
             }
 
-            return type switch
+            if (type.Equals(typeof(IFutures)))
             {
-                       IFutures => createDescriptions(type, Helper.InferFuturesFromTicker),
-                        IOption => createDescriptions(type, Helper.InferOptionFromTicker),
-                ICalendarSpread => createDescriptions(type, Helper.InferSpreadFromTicker),
-                              _ => throw new NotSupportedException($"Descriptions for type {type} cannot be created. Type not supported")
-            };
+                return createDescriptions(type, Helper.InferFuturesFromTicker);
+            }
+            if (type.Equals(typeof(IOption)))
+            {
+                return createDescriptions(type, Helper.InferOptionFromTicker);
+            }
+            if (type.Equals(typeof(ICalendarSpread)))
+            {
+                return createDescriptions(type, Helper.InferSpreadFromTicker);
+            }
+
+            throw new NotSupportedException($"Descriptions for type {type} cannot be created. Type not supported");
         }
         TSecurity? IQuik.GetSecurity<TSecurity>(string ticker) where TSecurity : default
         {
-            return 
-                (TSecurity?)EntityResolvers
-                    .GetSecurityResolver()
-                    .Resolve<TSecurity>(ticker);
+            var resolver = EntityResolvers.GetSecurityResolver();
+            var sec = resolver.Resolve<TSecurity>(ticker);
+
+            return (TSecurity?)sec;
+        }
+        IOrderBook? IQuik.GetOrderBook<TSecurity>(string ticker)
+        {
+            string classcode;
+
+            try
+            {
+                classcode = MoexSpecifics.SecurityTypesToClassCodes[typeof(TSecurity)];
+            }
+            catch (Exception e)
+            {
+                _log.Error("Unsupported security type", e);
+                throw new ArgumentException($"Unsupported security type {typeof(TSecurity)}");
+            }
+
+            var request = OrderbookRequestContainer.Create(classcode, ticker);
+
+            return EntityResolvers.GetOrderbooksResolver().Resolve(ref request);
         }
 
         IOrder IQuik.PlaceNewOrder(MoexOrderSubmission submission)

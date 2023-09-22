@@ -2,7 +2,6 @@
 using System.Reflection;
 using Quik.Grpc;
 using Tools;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Quik
 {
@@ -20,7 +19,7 @@ namespace Quik
             Quik.Instance.Initialize(luaStack);
             DI.RegisterInstance<IQuik>(Quik.Instance);
             //Task.Run(ConsoleIO.Main);
-            Task.Run(GrpcServer.Launch);
+            //Task.Run(GrpcServer.Launch);
             return 1;
         }
 
