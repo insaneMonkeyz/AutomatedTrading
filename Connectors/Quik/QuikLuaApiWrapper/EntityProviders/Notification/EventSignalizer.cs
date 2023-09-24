@@ -8,7 +8,7 @@ namespace Quik.EntityProviders.Notification
     internal class EventSignalizer<TEntity> : IEntityEventSignalizer<TEntity>
         where TEntity : class, INotifiableEntity
     {
-        protected readonly ConcurrentQueue<(EntityEventHandler<TEntity>, TEntity)> _entitiesToSend = new();
+        protected readonly Queue<(EntityEventHandler<TEntity>, TEntity)> _entitiesToSend = new();
         private readonly ExecutionLoop _loop;
         private bool _enabled;
         private bool _disposed;

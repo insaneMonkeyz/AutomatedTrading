@@ -46,7 +46,7 @@ namespace Quik.EntityProviders
                 lock (_callbackLock)
                 {
                     var request = CreateRequestFrom(state);
-#if DEBUG
+#if DEBUG && !UNITTESTING
                     _log.Debug(Helper.PrintQuikParameters(WrapperType));
 #endif
                     var entity = _entityResolver.GetFromCache(ref request);

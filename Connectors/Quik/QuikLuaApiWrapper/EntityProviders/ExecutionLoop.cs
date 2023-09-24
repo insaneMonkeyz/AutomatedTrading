@@ -41,6 +41,8 @@
                 {
                     _log.Error("Exception in execution loop", e);
                 }
+
+                Thread.Yield();
             }
 
             Stopping();

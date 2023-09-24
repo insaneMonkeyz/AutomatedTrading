@@ -192,7 +192,7 @@ namespace Quik.EntityProviders
                 lock (_callbackLock)
                 {
                     SetContext(state);
-#if DEBUG
+#if DEBUG && !UNITTESTING
                     _log.Debug(Helper.PrintQuikParameters(typeof(TransactionWrapper)));
 #endif
 
