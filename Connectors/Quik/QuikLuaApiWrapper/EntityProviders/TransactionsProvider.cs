@@ -6,6 +6,7 @@ using Quik.EntityProviders.Attributes;
 using Quik.EntityProviders.QuikApiWrappers;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
+using Tools;
 using TradingConcepts;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static Quik.EntityProviders.QuikApiWrappers.TransactionWrapper;
@@ -34,67 +35,65 @@ namespace Quik.EntityProviders
             base.Initialize(entityNotificationLoop);
         }
 
-        public Order PlaceNew(MoexOrderSubmission submission)
+        public void PlaceNew(Order order)
         {
             var newOrderArgs = new NewOrderArgs
             {
-                OrderSubmission = submission,
+                Order = order,
                 Expiry = string.Empty,
-                Operation = submission.Quote.Operation == Operations.Buy
+                ExecutionType = ORDER_TYPE_LIMIT_PARAM,
+                Operation = order.Quote.Operation == Operations.Buy
                     ? BUY_OPERATION_PARAM
                     : SELL_OPERATION_PARAM
             };
-
-            if (submission.IsMarket)
+            
+            switch (order.ExecutionCondition)
             {
-                newOrderArgs.ExecutionType = ORDER_TYPE_MARKET_PARAM;
-            }
-            else
-            {
-                newOrderArgs.ExecutionType = ORDER_TYPE_LIMIT_PARAM;
-                newOrderArgs.Price = submission.Quote.Price.ToString((uint)submission.Security.PricePrecisionScale);
-            }
-
-            switch (submission.ExecutionCondition)
-            {
-                case OrderExecutionConditions.FillOrKill:
-                    {
-                        newOrderArgs.ExecutionCondition = FILL_OR_KILL_ORDER_PARAM;
-                        break;
-                    }
-                case OrderExecutionConditions.CancelRest:
-                    {
-                        newOrderArgs.ExecutionCondition = CANCEL_BALANCE_ORDER_PARAM;
-                        break;
-                    }
                 case OrderExecutionConditions.Session:
                     {
+                        newOrderArgs.Price = order.Quote.Price.ToString((uint)order.Security.PricePrecisionScale);
                         newOrderArgs.ExecutionCondition = QUEUE_ORDER_PARAM;
                         newOrderArgs.Expiry = ORDER_TODAY_EXPIRY_PARAM;
                         break;
                     }
+                case OrderExecutionConditions.Market:
+                    {
+                        newOrderArgs.ExecutionType = ORDER_TYPE_MARKET_PARAM;
+                        break;
+                    }
                 case OrderExecutionConditions.GoodTillCancelled:
                     {
+                        newOrderArgs.Price = order.Quote.Price.ToString((uint)order.Security.PricePrecisionScale);
                         newOrderArgs.ExecutionCondition = QUEUE_ORDER_PARAM;
                         newOrderArgs.Expiry = ORDER_GTC_EXPIRY_PARAM;
                         break;
                     }
                 case OrderExecutionConditions.GoodTillDate:
                     {
+                        newOrderArgs.Price = order.Quote.Price.ToString((uint)order.Security.PricePrecisionScale);
                         newOrderArgs.ExecutionCondition = QUEUE_ORDER_PARAM;
-                        newOrderArgs.Expiry = submission.Expiry.ToString("yyyyMMdd");
+                        newOrderArgs.Expiry = order.Expiry.ToString("yyyyMMdd");
+                        break;
+                    }
+                case OrderExecutionConditions.FillOrKill:
+                    {
+                        newOrderArgs.Price = order.Quote.Price.ToString((uint)order.Security.PricePrecisionScale);
+                        newOrderArgs.ExecutionCondition = FILL_OR_KILL_ORDER_PARAM;
+                        break;
+                    }
+                case OrderExecutionConditions.CancelRest:
+                    {
+                        newOrderArgs.Price = order.Quote.Price.ToString((uint)order.Security.PricePrecisionScale);
+                        newOrderArgs.ExecutionCondition = CANCEL_BALANCE_ORDER_PARAM;
                         break;
                     }
                 default:
                     throw new NotImplementedException(
-                        $"Add support for {nameof(OrderExecutionConditions)}.{submission.ExecutionCondition} case");
+                        $"Add support for {nameof(OrderExecutionConditions)}.{order.ExecutionCondition} case");
             }
 
             var error = PlaceNewOrder(ref newOrderArgs);
-            var order = new Order(submission)
-            {
-                SubmittedTime = DateTime.UtcNow
-            };
+            order.SubmittedTime = DateTime.UtcNow;
 
             if (error.HasNoValue())
             {
@@ -106,64 +105,49 @@ namespace Quik.EntityProviders
                 order.SetSingleState(OrderStates.Rejected);
                 _log.Warn($"Order {order} placement rejected\n{error}");
             }
+        }
+        public Order? Change(Order order, Decimal5 newprice, long newsize)
+        {
+            var neworder = new Order(order.Security)
+            {
+                TransactionId = TransactionIdGenerator.CreateId(),
+                ExecutionCondition = order.ExecutionCondition,
+                AccountCode = order.AccountCode,
+                ParentOrder = order,
+                Expiry = order.Expiry,
+                Quote = new()
+                {
+                    Price = newprice,
+                    Size = newsize,
+                    Operation = order.Quote.Operation
+                }
+            };
 
-            return order;
+            var error = ChangeOrder(neworder);
+            neworder.SubmittedTime = DateTime.UtcNow;
+
+            if (error != null)
+            {
+                OnChangeDenied(order, $"Order {order} changing rejected\n{error}");
+                return null;
+            }
+            else
+            {
+                order.AddIntermediateState(OrderStates.Changing);
+                neworder.AddIntermediateState(OrderStates.Registering);
+                _eventSignalizer.QueueEntity(OrderChanged, order);
+                return neworder;
+            }
         }
         public void Cancel(Order order)
         {
-            if (order.State != OrderStates.Active)
-            {
-                OnCancellationDenied(order, $"Cannot cancel inactive order {order}");
-                return;
-            }
-
-            var args = new CancelOrderArgs
-            {
-                Order = order
-            };
-
-            var error = CancelOrder(ref args);
-
-            if (error != null)
+            if (CancelOrder(order) is string error)
             {
                 OnCancellationDenied(order, $"Order {order} cancellation rejected\n  {error}");
             }
             else
             {
                 order.AddIntermediateState(OrderStates.Cancelling);
-                _eventSignalizer.QueueEntity(OrderChanged, order);
-            }
-        }
-        public void Change(Order order, Decimal5 newprice, long newsize)
-        {
-            if (order.State != OrderStates.Active)
-            {
-                OnChangeDenied(order, $"Cannot change inactive order {order}");
-                return;
-            }
-
-            if (order.ExchangeAssignedId == default || order.State.HasFlag(OrderStates.Registering))
-            {
-                OnChangeDenied(order, $"Cannot change an order that is still registering {order}");
-                return;
-            }
-
-            var changeArgs = new ChangeOrderArgs
-            {
-                Order = order,
-                NewPrice = newprice,
-                NewSize = newsize
-            };
-
-            var error = ChangeOrder(ref changeArgs);
-
-            if (error != null)
-            {
-                OnChangeDenied(order, $"Order {order} changing rejected\n{error}");
-            }
-            else
-            {
-                order.AddIntermediateState(OrderStates.Changing);
                 _eventSignalizer.QueueEntity(OrderChanged, order);
             }
         }

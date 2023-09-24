@@ -1,6 +1,6 @@
 ﻿namespace TradingConcepts.SecuritySpecifics
 {
-    public interface ICalendarSpread : ISecurity, IExpiring
+    public interface ICalendarSpread : IDerivative, IExpiring
     {
         IExpiring? NearTermLeg { get; }
         IExpiring? LongTermLeg { get; }

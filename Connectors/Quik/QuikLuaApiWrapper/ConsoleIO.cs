@@ -76,7 +76,7 @@ namespace Quik
                 Console.WriteLine(commandsList);
                 if (_currentAccount == null)
                 {
-                    _currentAccount = _quik.Account;
+                    _currentAccount = _quik.DerivativesAccount;
                     Console.WriteLine($"Selected Account: {_currentAccount?.ToString() ?? "null"}");
                 }
                 else
@@ -147,30 +147,25 @@ namespace Quik
         private const int TRADE_ORDER_WITH_GTD_PARAM_ARGS_NUM = 4;
         private static void TradeSecurity(string[] args)
         {
-            var submission = new MoexOrderSubmission(_currentSecurity)
+            var quote = new Quote()
             {
-                AccountCode = _currentAccount.AccountCode,
-                ClientCode = _currentSecurity.ClassCode,
-                Quote = new Quote()
+                Price = Decimal5.Parse(args[TRADECMD_PRICE_INDEX]),
+                Size = long.Parse(args[TRADECMD_SIZE_INDEX]),
+                Operation = args[0] switch
                 {
-                    Price = Decimal5.Parse(args[TRADECMD_PRICE_INDEX]),
-                    Size = long.Parse(args[TRADECMD_SIZE_INDEX]),
-                    Operation = args[0] switch
-                    {
-                        "sell" => Operations.Sell,
-                        "buy" => Operations.Buy,
-                    }
-                },
-                TransactionId = TransactionIdGenerator.CreateId(),
-                ExecutionCondition = args.Length == TRADE_ORDER_WITH_GTD_PARAM_ARGS_NUM
-                    ? OrderExecutionConditions.GoodTillDate
-                    : OrderExecutionConditions.Session,
-                Expiry = args.Length == TRADE_ORDER_WITH_GTD_PARAM_ARGS_NUM
-                    ? DateTimeOffset.Parse(args[TRADECMD_CANCEL_DATE_INDEX], CultureInfo.GetCultureInfo("it", "IT"))
-                    : DateTimeOffset.Now + TimeSpan.FromDays(2),
+                    "sell" => Operations.Sell,
+                    "buy" => Operations.Buy,
+                    _ => throw new ArgumentException("Invalid operation")
+                }
             };
 
-            _currentOrder = _quik.PlaceNewOrder(submission) as Order;
+            var condition = args.Length == TRADE_ORDER_WITH_GTD_PARAM_ARGS_NUM
+                    ? OrderExecutionConditions.GoodTillDate
+                    : OrderExecutionConditions.Session;
+
+            _currentOrder = _quik.CreateDerivativeOrder(_currentSecurity as IDerivative, ref quote, condition) as Order;
+
+            _quik.PlaceNewOrder(_currentOrder);
         }
 
         private const int FINDCMD_SEC_TYPE_INDEX = 1;

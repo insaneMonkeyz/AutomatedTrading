@@ -1,4 +1,6 @@
 ﻿using Microsoft.QualityTools.Testing.Fakes;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Quik.Entities;
 using Quik.EntityProviders;
 using TradingConcepts;
 
@@ -22,9 +24,9 @@ namespace QuikLuaWrapperTests.EntityProvidersTests
 
                     TransactionsProvider.Instance.OrderChanged = (order) => orderChangedInvoked = true;
 
-                    var order = TransactionsProvider.Instance.PlaceNew(context.OrderSubmission);
+                    TransactionsProvider.Instance.PlaceNew(context.Order);
 
-                    order.Updated += () => orderUpdatedInvoked = true;
+                    context.Order.Updated += () => orderUpdatedInvoked = true;
 
                     // give callbacks some time to complete
                     Task.Delay(100).Wait();
@@ -49,14 +51,14 @@ namespace QuikLuaWrapperTests.EntityProvidersTests
                     bool callbackInvoked = false;
                     TransactionsProvider.Instance.OrderChanged = (order) => callbackInvoked = true;
 
-                    var order = TransactionsProvider.Instance.PlaceNew(context.OrderSubmission);
-                    Assert.That(order.State, Is.EqualTo(OrderStates.Registering));
+                    TransactionsProvider.Instance.PlaceNew(context.Order);
+                    Assert.That(context.Order.State, Is.EqualTo(OrderStates.Registering));
 
                     // give callbacks some time to complete
                     Task.Delay(100).Wait();
 
                     Assert.That(callbackInvoked, Is.True);
-                    Assert.That(order.State, Is.EqualTo(OrderStates.Active));
+                    Assert.That(context.Order.State, Is.EqualTo(OrderStates.Active));
                 }
 
                 OrderSubmissionTestContextFactory

@@ -49,7 +49,7 @@ namespace QuikIntegrationTest
                 MethodTest_GetSecurity();
                 MethodTest_GetOrders();
                 MethodTest_PlaceNewOrder(out IOrder order);
-                MethodTest_MoveOrder(order);
+                MethodTest_MoveOrder(order, out IOrder neworder);
                 MethodTest_CancelOrder(order);
             }
             catch (Exception e)
@@ -68,11 +68,11 @@ namespace QuikIntegrationTest
 
             try
             {
-                var account = _quik.Account;
+                var account = _quik.DerivativesAccount;
             }
             catch (Exception e)
             {
-                throw new Exception($"Quik failed to evaluate property {nameof(IQuik.Account)}", e);
+                throw new Exception($"Quik failed to evaluate property {nameof(IQuik.DerivativesAccount)}", e);
             }
         }
         static void PropertyTest_IsConnected()
@@ -135,44 +135,48 @@ namespace QuikIntegrationTest
                 throw new Exception("Quik did not provide any order");
             }
         }
-        static void MethodTest_PlaceNewOrder(out IOrder order)
+        static void MethodTest_PlaceNewOrder(out IOrder? order)
         {
             NotifyTestStarted();
 
-            static IOrder placeNewOrder() => _quik.PlaceNewOrder(CreateNewOrderFromUserInput());
+            order = CreateNewOrderFromUserInput();
 
-            order = SubmitOrderAndWaitForReply(placeNewOrder);
-        }
-        static void MethodTest_MoveOrder(IOrder order)
-        {
-            NotifyTestStarted();
-
-            var newPrice = order.Quote.Price + order.Security.MinPriceStep;
-
-            IOrder moveOrder()
+            IOrder placeOrder(IOrder o)
             {
-                _quik.ChangeOrder(order, newPrice, order.Quote.Size);
-                return order;
+                _quik.PlaceNewOrder(o);
+                return o;
             }
 
-            SubmitOrderAndWaitForReply(moveOrder);
+            SubmitOrderAndWaitForReply(order, placeOrder);
+        }
+        static void MethodTest_MoveOrder(IOrder order, out IOrder neworder)
+        {
+            NotifyTestStarted();
+
+            IOrder moveOrder(IOrder order)
+            {
+                var newPrice = order.Quote.Price + order.Security.MinPriceStep;
+                return _quik.ChangeOrder(order, newPrice, order.Quote.Size);
+            }
+
+            neworder = SubmitOrderAndWaitForReply(order, moveOrder);
         }
         static void MethodTest_CancelOrder(IOrder order)
         {
             NotifyTestStarted();
 
-            IOrder cancelOrder()
+            IOrder cancelOrder(IOrder order)
             {
                 _quik.CancelOrder(order);
                 return order;
             }
 
-            SubmitOrderAndWaitForReply(cancelOrder);
+            SubmitOrderAndWaitForReply(order, cancelOrder);
         }
 
-        static MoexOrderSubmission CreateNewOrderFromUserInput()
+        static IOrder CreateNewOrderFromUserInput()
         {
-            var getSecurity = default(Func<string, ISecurity?>);
+            var getSecurity = default(Func<string, IDerivative?>);
             var quote = default(Quote);
             var ticker = default(string);
 
@@ -207,21 +211,15 @@ namespace QuikIntegrationTest
 
             var sec = getSecurity(ticker);
 
-            return new MoexOrderSubmission(sec)
-            {
-                AccountCode = _quik.Account.AccountCode,
-                TransactionId = TransactionIdGenerator.CreateId(),
-                Quote = quote
-            };
+            return _quik.CreateDerivativeOrder(sec, ref quote);
         }
-        static IOrder SubmitOrderAndWaitForReply(Func<IOrder> submitOrder)
+        static IOrder? SubmitOrderAndWaitForReply(IOrder order, Func<IOrder, IOrder?> submit)
         {
-            var order = default(IOrder);
             var cancellationSrc = new CancellationTokenSource();
 
             void onOrderChanged(IOrder o)
             {
-                if (o.TransactionId == order?.TransactionId &&
+                if (o.TransactionId == order.TransactionId &&
                     // предыдущий метод отправив заявку сразу установит состояние в OrderStates.Changing/Registering/Cancelling
                     // и будет получен этот коллбек.
                     // так что будем реагировать только на коллбек с конечным состоянием OrderStates.Active
@@ -233,8 +231,7 @@ namespace QuikIntegrationTest
             }
 
             _quik.OrderChanged += onOrderChanged;
-
-            order = submitOrder();
+            var result = submit(order);
 
             if (order.State.HasFlag(OrderStates.Rejected))
             {
@@ -248,7 +245,7 @@ namespace QuikIntegrationTest
             catch (AggregateException e) when (e.InnerException is OperationCanceledException
                                             || e.InnerException is TaskCanceledException)
             {
-                return order;
+                return result;
             }
 
             throw new Exception("Quik did not reply on the submitted order");

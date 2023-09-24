@@ -12,5 +12,16 @@ namespace Quik.Entities
         {
 
         }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Futures fut
+                && (fut.Underlying?.Equals(Underlying) ?? Underlying is null)
+                && base.Equals(obj);
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), 3847511);
+        }
     }
 }

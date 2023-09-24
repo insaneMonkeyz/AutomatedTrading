@@ -1,5 +1,6 @@
 ﻿using Quik.Entities;
 using TradingConcepts;
+using TradingConcepts.CommonImplementations;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;
 
@@ -27,7 +28,7 @@ namespace Quik
         event Action<IOrder> OrderCancellationDenied;
 
         bool IsConnected { get; }
-        ITradingAccount? Account { get; }
+        ITradingAccount? DerivativesAccount { get; }
 
         int Initialize(IntPtr luaContext);
 
@@ -36,8 +37,11 @@ namespace Quik
         TSecurity? GetSecurity<TSecurity>(string ticker) where TSecurity : ISecurity;
         IOrderBook? GetOrderBook<TSecurity>(string ticker) where TSecurity : ISecurity;
 
-        IOrder PlaceNewOrder(MoexOrderSubmission submission);
-        void ChangeOrder(IOrder order, Decimal5 newPrice, long newSize);
+        IOrder CreateOrder(ISecurity security, string accountCode, ref Quote quote, OrderExecutionConditions ExecutionCondition = default);
+        IOrder CreateDerivativeOrder(IDerivative security, ref Quote quote, OrderExecutionConditions ExecutionCondition = default);
+
+        void PlaceNewOrder(IOrder order);
+        IOrder? ChangeOrder(IOrder order, Decimal5 newPrice, long newSize);
         void CancelOrder(IOrder order);
     }
 }

@@ -24,10 +24,10 @@ namespace QuikLuaWrapperTests.EntityProvidersTests
             };
             return new Futures(ref buildparams);
         }
-        private static MoexOrderSubmission CreateOrderSubmissionStub(ISecurity sec) => new(sec)
+        private static Order CreateOrderStub(ISecurity sec) => new(sec)
         {
-            AccountCode = StubConstants.DEFAULT_ACCOUNT,
             TransactionId = StubConstants.DEFAULT_TRANSACTION_ID,
+            AccountCode = StubConstants.DEFAULT_ACCOUNT,
             Quote = new Quote
             {
                 Operation = Operations.Sell,
@@ -39,7 +39,7 @@ namespace QuikLuaWrapperTests.EntityProvidersTests
         public static OrderSubmissionTestContext SetupOrderSuccessfullyQueuedContext()
         {
             var sec = CreateSecurityStub();
-            var submission = CreateOrderSubmissionStub(sec);
+            var order = CreateOrderStub(sec);
 
             var transactionWrapper = TransactionWrapperBehaviourFactory.Instance.CreateSuccessfulOrderSubmissionBehaviour();
 
@@ -68,7 +68,7 @@ namespace QuikLuaWrapperTests.EntityProvidersTests
             var result = new OrderSubmissionTestContext()
             {
                 Security = sec,
-                OrderSubmission = submission,
+                Order = order,
                 NotificationLoop = new ExecutionLoop(),
             };
             var resolver = new EntityResolver<OrderRequestContainer, Order>(10, result.FakeOrderResolver);

@@ -56,5 +56,17 @@ namespace Quik.Entities
 
             throw new Exception($"Could not resolve option type from ticker {ticker}");
         }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Option option
+                && option.Strike == Strike
+                && option.OptionType == OptionType
+                && (option.Underlying?.Equals(Underlying) ?? Underlying is null);
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Strike, OptionType, Underlying, 2999);
+        }
     }
 }

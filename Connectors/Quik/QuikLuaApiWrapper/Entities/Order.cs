@@ -1,26 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Quik.EntityProviders.Notification;
+﻿using Quik.EntityProviders.Notification;
+using Tools;
 using TradingConcepts;
 using TradingConcepts.CommonImplementations;
 
 namespace Quik.Entities
 {
-    internal class Order : MoexOrderSubmission, IOrder, INotifiableEntity
+    internal class Order : IOrder, INotifiableEntity
     {
         private const int DEFAULT_EXECUTIONS_LIST_SIZE = 10;
 
+        private readonly Security _security;
         private string? _exchangeAssignedIdString;
+        private string _accountCode;
 
-        public List<OrderExecution> Executions { get; } = new(DEFAULT_EXECUTIONS_LIST_SIZE);
+        #region IOrder
         IEnumerable<IOrderExecution> IOrder.Executions => this.Executions;
-
+        ISecurity IOrder.Security => _security;
+        public required string AccountCode
+        {
+            get => _accountCode;
+            init => _accountCode = value ?? throw new ArgumentNullException(nameof(value));
+        }
+        public required Quote Quote { get; init; }
+        public required long TransactionId { get; init; }
+        public OrderExecutionConditions ExecutionCondition { get; init; }
+        public DateTimeOffset Expiry { get; init; }
+        public TimeSpan TimeToExpiry => DateTime.UtcNow - Expiry.UtcDateTime;
+        public IOrder? ParentOrder { get; set; }
         public OrderStates State { get; private set; }
-        public string? ExchangeAssignedIdString 
+        public long ExchangeAssignedId { get; set; }
+        public long RemainingSize { get; set; }
+        public long ExecutedSize => Quote.Size - RemainingSize;
+        public DateTime SubmittedTime { get; set; }
+        public DateTime SubmissionReplyTime { get; set; }
+        public DateTime ServerCompletionTime { get; set; }
+        public DateTime CompletionReplyTime { get; set; }
+        #endregion
+
+        #region INotifyEntityUpdated
+        public event Action Updated = delegate { };
+        public void NotifyUpdated() => Updated();
+        #endregion
+
+        internal Security Security => _security;
+        public string ExchangeAssignedIdString
         {
             get
             {
@@ -37,24 +60,11 @@ namespace Quik.Entities
                 return _exchangeAssignedIdString;
             }
         }
-        public long ExchangeAssignedId { get; set; }
-        public long RemainingSize { get; set; }
-        public long ExecutedSize => Quote.Size - RemainingSize;
-        public DateTime SubmittedTime { get; set; }
-        public DateTime SubmissionReplyTime { get; set; }
+        public List<OrderExecution> Executions { get; } = new(DEFAULT_EXECUTIONS_LIST_SIZE);
 
-        public event Action Updated = delegate { };
-
-        [SetsRequiredMembers]
-        public Order(MoexOrderSubmission submission) : base(submission.Security)
+        public Order(ISecurity security)
         {
-            base.ExecutionCondition = submission.ExecutionCondition;
-            base.TransactionId = submission.TransactionId;
-            base.AccountCode = submission.AccountCode;
-            base.ClientCode = submission.ClientCode;
-            base.IsMarket = submission.IsMarket;
-            base.Expiry = submission.Expiry;
-            base.Quote = submission.Quote;
+            _security = Helper.CastToMoexSecurity(security);
         }
 
         public void SetSingleState(OrderStates state)
@@ -75,7 +85,6 @@ namespace Quik.Entities
                 State = state; 
             }
         }
-
         public void AddIntermediateState(OrderStates state)
         {
             lock (this)
@@ -97,9 +106,6 @@ namespace Quik.Entities
                 State |= state; 
             }
         }
-
-        public void NotifyUpdated() => Updated();
-
         private void EnsureStateCanBeSet(OrderStates newState)
         {
             var state = State;
@@ -126,7 +132,25 @@ namespace Quik.Entities
         }
         public override int GetHashCode()
         {
-            return HashCode.Combine(Security, ExchangeAssignedId, TransactionId);
+            return HashCode.Combine(ExchangeAssignedId, TransactionId);
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is Order another
+                && another.ExecutionCondition == ExecutionCondition
+                && another.TransactionId == TransactionId
+                && another.RemainingSize == RemainingSize
+                && another.Expiry == Expiry
+                && another.State == State
+                && another.Quote == Quote
+                && another.SubmittedTime == SubmittedTime
+                && another.SubmissionReplyTime == SubmissionReplyTime
+                && another.ServerCompletionTime == ServerCompletionTime
+                && another.CompletionReplyTime == CompletionReplyTime
+                && another._accountCode == _accountCode
+                && another._security.Equals(_security)
+                && another.Executions.SequenceEqual(Executions)
+                && (another.ParentOrder?.Equals(ParentOrder) ?? ParentOrder is null);
         }
     }
 }

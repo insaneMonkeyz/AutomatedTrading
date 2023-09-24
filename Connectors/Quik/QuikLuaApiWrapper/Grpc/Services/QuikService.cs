@@ -37,7 +37,7 @@ namespace Quik.Grpc.Services
 
         private TradingAccount GetTradingAccount()
         {
-            var account = _quik.Account;
+            var account = _quik.DerivativesAccount;
 
             if (account == null)
             {

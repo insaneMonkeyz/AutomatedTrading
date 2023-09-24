@@ -23,6 +23,7 @@ namespace Quik.Entities
         private int? _uniqueId;
 
         public event Action Updated = delegate { };
+        public void NotifyUpdated() => Updated();
 
         public Security(ref SecurityParamsContainer container)
         {
@@ -35,11 +36,23 @@ namespace Quik.Entities
         }
 
 
-        public void NotifyUpdated() => Updated();
         public override string ToString() => $"{ClassCode}:{Ticker}";
         public override int GetHashCode()
         {
             return HashCode.Combine(ClassCode, Ticker, PricePrecisionScale, ContractSize);
+        }
+        public override bool Equals(object? obj)
+        {
+            return obj is Security sec
+                && sec.Ticker == Ticker
+                && sec.ClassCode == ClassCode
+                && sec.Description == Description
+                && sec.ContractSize == ContractSize
+                && sec.ContractSize == ContractSize
+                && sec.MinPriceStep == MinPriceStep
+                && sec.PriceStepValue == PriceStepValue
+                && sec.PricePrecisionScale == PricePrecisionScale
+                && sec.DenominationCurrency == DenominationCurrency;
         }
     }
 }

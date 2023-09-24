@@ -9,7 +9,9 @@ using Quik.EntityProviders;
 using Quik.EntityProviders.RequestContainers;
 using Quik.EntityProviders.Resolvers;
 using Quik.Lua;
+using Tools;
 using TradingConcepts;
+using TradingConcepts.CommonImplementations;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;
 
@@ -46,7 +48,7 @@ namespace Quik
                 }
             }
         }
-        ITradingAccount? IQuik.Account
+        ITradingAccount? IQuik.DerivativesAccount
         {
             get => AccountsProvider.Instance.GetAllEntities().FirstOrDefault(acc => acc.IsMoneyAccount);
         }
@@ -106,24 +108,59 @@ namespace Quik
             return EntityResolvers.GetOrderbooksResolver().Resolve(ref request);
         }
 
-        IOrder IQuik.PlaceNewOrder(MoexOrderSubmission submission)
+        IOrder IQuik.CreateOrder(ISecurity security, string accountCode, ref Quote quote, OrderExecutionConditions executionCondition = default)
         {
-#if TRACE
-            this.Trace();
-#endif
-            return TransactionsProvider.Instance.PlaceNew(submission);
+            return new Order(security)
+            {
+                TransactionId = TransactionIdGenerator.CreateId(),
+                ExecutionCondition = executionCondition,
+                AccountCode = accountCode,
+                Quote = quote,
+            };
         }
-        void IQuik.ChangeOrder(IOrder order, Decimal5 newPrice, long newSize)
+        public IOrder CreateDerivativeOrder(IDerivative security, ref Quote quote, OrderExecutionConditions executionCondition = OrderExecutionConditions.Session)
+        {
+            var iquik = this as IQuik;
+            return iquik.CreateOrder(security, iquik.DerivativesAccount.AccountCode, ref quote, executionCondition);
+        }
+
+        void IQuik.PlaceNewOrder(IOrder order)
         {
 #if TRACE
             this.Trace();
 #endif
             if (order is not Order moexOrder)
             {
-                throw new InvalidOperationException("Requesting to change an order that does not belong to MOEX");
+                throw new ArgumentException("The order is not a MOEX order");
+            }
+            if (order.Quote.Operation == Operations.Undefined)
+            {
+                throw new InvalidOperationException("Order operation is not defined");
             }
 
-            TransactionsProvider.Instance.Change(moexOrder, newPrice, newSize);
+            TransactionsProvider.Instance.PlaceNew(moexOrder);
+        }
+        IOrder? IQuik.ChangeOrder(IOrder order, Decimal5 newPrice, long newSize)
+        {
+#if TRACE
+            this.Trace();
+#endif
+            if (order is not Order moexOrder)
+            {
+                throw new ArgumentException("The order is not a MOEX order");
+            }
+
+            if (order.State != OrderStates.Active)
+            {
+                throw new InvalidOperationException($"Cannot change inactive order {order}");
+            }
+
+            if (order.ExchangeAssignedId == default || order.State.HasFlag(OrderStates.Registering))
+            {
+                throw new InvalidOperationException($"Cannot change an order that is still registering {order}");
+            }
+
+            return TransactionsProvider.Instance.Change(moexOrder, newPrice, newSize);
         }
         void IQuik.CancelOrder(IOrder order)
         {
@@ -132,10 +169,16 @@ namespace Quik
 #endif
             if (order is not Order moexOrder)
             {
-                throw new InvalidOperationException("Requesting to change an order that does not belong to MOEX");
+                throw new InvalidOperationException("The order is not a MOEX order");
+            }
+
+            if (order.State != OrderStates.Active)
+            {
+                throw new InvalidOperationException($"Cannot cancel inactive order {order}");
             }
 
             TransactionsProvider.Instance.Cancel(moexOrder);
         }
+
     }
 }

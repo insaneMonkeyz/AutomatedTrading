@@ -98,12 +98,11 @@ namespace Quik.EntityProviders
 
                 var flags = OrdersWrapper.Flags;
 
-                var submission = new MoexOrderSubmission(sec)
+                var order = new Order(sec)
                 {
                     AccountCode = OrdersWrapper.Account,
-                    ExecutionCondition = FromMoexExecutionMode(OrdersWrapper.OrderExecutionMode),
+                    ExecutionCondition = GetExecutionMode(flags, OrdersWrapper.OrderExecutionMode),
                     Expiry = OrdersWrapper.Expiry ?? default,
-                    IsMarket = !flags.HasFlag(OrderFlags.IsLimitOrder),
                     TransactionId = OrdersWrapper.TransactionId,
                     Quote = new Quote
                     {
@@ -114,8 +113,6 @@ namespace Quik.EntityProviders
                             : Operations.Buy
                     }
                 };
-
-                var order = new Order(submission);
 
                 Update(order, state);
 
@@ -202,14 +199,19 @@ namespace Quik.EntityProviders
             return _securityResolver.Resolve(ref request);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static OrderExecutionConditions FromMoexExecutionMode(MoexOrderExecutionModes mode)
+        private static OrderExecutionConditions GetExecutionMode(OrderFlags flags, MoexOrderExecutionModes mode)
         {
+            if (!flags.HasFlag(OrderFlags.IsLimitOrder))
+            {
+                return OrderExecutionConditions.Market;
+            }
+
             return mode switch
             {
                 MoexOrderExecutionModes.FillOrKill => OrderExecutionConditions.FillOrKill,
                 MoexOrderExecutionModes.CancelRest => OrderExecutionConditions.CancelRest,
-                MoexOrderExecutionModes.GoodTillCanceled => OrderExecutionConditions.GoodTillCancelled,
                 MoexOrderExecutionModes.GoodTillDate => OrderExecutionConditions.GoodTillDate,
+                MoexOrderExecutionModes.GoodTillCanceled => OrderExecutionConditions.GoodTillCancelled,
                 _ => OrderExecutionConditions.Session
             };
         }

@@ -674,6 +674,17 @@ namespace Quik.Lua
                 && Api.lua_type(_state, LAST_ITEM) == returnType2
                 && Api.lua_type(_state, SECOND_ITEM) == returnType1;
         }
+        internal bool ExecFunction<TTableArgs>(string name, int returnType, int tableSize, Action<TTableArgs> completeTable, TTableArgs tableArgs)
+            where TTableArgs : class
+        {
+            Api.lua_getglobal(_state, name);
+            Api.lua_createtable(_state, tableSize, 0);
+
+            completeTable(tableArgs);
+
+            return Api.lua_pcallk(_state, 1, 1, 0, IntPtr.Zero, Api.EmptyKFunction) == Api.OK_RESULT
+                && Api.lua_type(_state, LAST_ITEM) == returnType;
+        }
         internal bool ExecFunction<TTableArgs>(string name, int returnType, int tableSize, CompleteTable<TTableArgs> completeTable, ref TTableArgs tableArgs )
             where TTableArgs : struct
         {

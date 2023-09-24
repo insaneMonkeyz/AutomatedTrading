@@ -14,5 +14,17 @@ namespace Quik.Entities
         {
         }
 
+        public override bool Equals(object? obj)
+        {
+            return obj is MoexDerivativeBase derivative
+                && derivative.Expiry == Expiry
+                && derivative.UpperPriceLimit == UpperPriceLimit
+                && derivative.LowerPriceLimit == LowerPriceLimit
+                && base.Equals(obj);
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(UpperPriceLimit, LowerPriceLimit, Expiry, 1001010);
+        }
     }
 }

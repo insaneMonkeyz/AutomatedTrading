@@ -6,6 +6,7 @@
         GoodTillCancelled,
         GoodTillDate,
         FillOrKill,
-        CancelRest
+        CancelRest,
+        Market
     }
 }
