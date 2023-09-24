@@ -40,7 +40,8 @@ namespace Quik.Entities
         public long ExchangeAssignedId { get; set; }
         public long RemainingSize { get; set; }
         public long ExecutedSize => Quote.Size - RemainingSize;
-        public DateTimeOffset Submitted { get; } = DateTimeOffset.Now;
+        public DateTime SubmittedTime { get; set; }
+        public DateTime SubmissionReplyTime { get; set; }
 
         public event Action Updated = delegate { };
 

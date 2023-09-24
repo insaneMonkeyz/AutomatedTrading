@@ -91,7 +91,10 @@ namespace Quik.EntityProviders
             }
 
             var error = PlaceNewOrder(ref newOrderArgs);
-            var order = new Order(submission);
+            var order = new Order(submission)
+            {
+                SubmittedTime = DateTime.UtcNow
+            };
 
             if (error.HasNoValue())
             {
@@ -211,6 +214,7 @@ namespace Quik.EntityProviders
 
                     if (_transactionsQueue.TryDequeueItem(_isRelatedToTransaction, transactionId, out Order order))
                     {
+                        order.SubmissionReplyTime = DateTime.UtcNow;
                         order.ExchangeAssignedId = OrderId;
                         order.RemainingSize = order.Quote.Size - RejectedSize;
 

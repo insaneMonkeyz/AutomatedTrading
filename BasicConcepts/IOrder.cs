@@ -4,7 +4,8 @@ namespace TradingConcepts
 {
     public interface IOrder : IOrderSubmission
     {
-        DateTimeOffset Submitted { get; }
+        DateTime SubmittedTime { get; }
+        DateTime SubmissionReplyTime { get; }
         long ExchangeAssignedId { get; }
         OrderStates State { get; }
         long RemainingSize { get; }
