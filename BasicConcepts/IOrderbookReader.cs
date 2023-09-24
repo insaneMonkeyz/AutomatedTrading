@@ -7,7 +7,7 @@ namespace TradingConcepts
     public delegate T QuotesReader<T>(Quote[] bids, Quote[] asks, long marketDepth);
     public delegate void OneSideQuotesReader(Quote[] quotes, Operations operation, long marketDepth);
 
-    public interface IOptimizedOrderBook : IOrderBook
+    public interface IOrderbookReader : IOrderBook
     {
         /// <summary>
         /// Provides an efficient way to operate on quotes arrays that avoids copying. <para/>

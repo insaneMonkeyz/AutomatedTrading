@@ -11,7 +11,7 @@ using TradingConcepts.CommonImplementations;
 
 namespace Quik.Entities
 {
-    internal class OrderBook : IOptimizedOrderBook, INotifiableEntity
+    internal class OrderBook : IOrderbookReader, INotifiableEntity
     {
         private const long DEFAULT_MARKET_DEPTH = 10;
         private const long MAX_MARKET_DEPTH = 50;
@@ -26,14 +26,19 @@ namespace Quik.Entities
 
         private long _marketDepth = DEFAULT_MARKET_DEPTH;
 
-        public long MarketDepth 
-        { 
-            get => _marketDepth; 
-            set 
+        public Security Security { get; }
+
+        #region IOrderbook
+        ISecurity IOrderBook.Security => Security;
+
+        public long MarketDepth
+        {
+            get => _marketDepth;
+            set
             {
                 if (_marketDepth is > MAX_MARKET_DEPTH or < MIN_MARKET_DEPTH)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(MarketDepth), 
+                    throw new ArgumentOutOfRangeException(nameof(MarketDepth),
                         $"Value must be between {nameof(MAX_MARKET_DEPTH)} and {MIN_MARKET_DEPTH} constants value");
                 }
 
@@ -57,8 +62,7 @@ namespace Quik.Entities
             }
         }
 
-        public Security Security { get; }
-        ISecurity IOrderBook.Security => Security;
+        public DateTime LastTimeUpdated { get; set; }
 
         public Quote[] Bids
         {
@@ -80,59 +84,20 @@ namespace Quik.Entities
                 }
             }
         }
+        #endregion
 
+        #region INotifiableEntity
         public event Action Updated = delegate { };
+        public void NotifyUpdated() => Updated();
+        #endregion
 
-        public OrderBook(Security security)
-        {
-            Security = security ?? throw new ArgumentNullException(nameof(security));
-        }
-
-        private Quote[] Clone(Quote[] src)
-        {
-            var copy = new Quote[src.Length];
-
-            var srchandle = GCHandle.Alloc(src, GCHandleType.Pinned);
-            var copyhandle = GCHandle.Alloc(copy, GCHandleType.Pinned);
-
-            try
-            {
-                unsafe
-                {
-                    var pcopy = (Quote*)copyhandle.AddrOfPinnedObject().ToPointer();
-                    var psrc  = (Quote*)srchandle .AddrOfPinnedObject().ToPointer();
-
-                    // no, this is not the same to iterating
-                    // through a regular array
-
-                    for (int i = 0; i < _marketDepth; i++)
-                    {
-                        pcopy[i] = psrc[i];
-                    }
-
-                    return copy;
-                }
-            }
-            finally
-            {
-                srchandle.Free();
-                copyhandle.Free();
-            }
-        }
-
-        public T UseQuotes<T>(QuotesReader<T> reader)
-        {
-            lock (_bidsLock) lock (_asksLock)
-            {
-                return reader(_bids, _asks, _marketDepth);
-            }
-        }
+        #region IOrderbookReader
         public void UseQuotes(QuotesReader reader)
         {
             lock (_bidsLock) lock (_asksLock)
-            {
-                reader(_bids, _asks, _marketDepth);
-            }
+                {
+                    reader(_bids, _asks, _marketDepth);
+                }
         }
         public void UseBids(OneSideQuotesReader reader)
         {
@@ -147,8 +112,13 @@ namespace Quik.Entities
             {
                 reader(_asks, Operations.Sell, _marketDepth);
             }
+        } 
+        #endregion
+
+        public OrderBook(Security security)
+        {
+            Security = security ?? throw new ArgumentNullException(nameof(security));
         }
-        public void NotifyUpdated() => Updated();
 
         public override string ToString()
         {
@@ -186,7 +156,42 @@ namespace Quik.Entities
                 return builder.ToString();
             }
 
-            return UseQuotes<string>(read);
+            lock (_bidsLock) lock (_asksLock)
+            {
+                return read(_bids, _asks, _marketDepth);
+            }
+        }
+
+        private Quote[] Clone(Quote[] src)
+        {
+            var copy = new Quote[src.Length];
+
+            var srchandle = GCHandle.Alloc(src, GCHandleType.Pinned);
+            var copyhandle = GCHandle.Alloc(copy, GCHandleType.Pinned);
+
+            try
+            {
+                unsafe
+                {
+                    var pcopy = (Quote*)copyhandle.AddrOfPinnedObject().ToPointer();
+                    var psrc = (Quote*)srchandle.AddrOfPinnedObject().ToPointer();
+
+                    // no, this is not the same as iterating
+                    // through a regular array
+
+                    for (int i = 0; i < _marketDepth; i++)
+                    {
+                        pcopy[i] = psrc[i];
+                    }
+
+                    return copy;
+                }
+            }
+            finally
+            {
+                srchandle.Free();
+                copyhandle.Free();
+            }
         }
     }
 }

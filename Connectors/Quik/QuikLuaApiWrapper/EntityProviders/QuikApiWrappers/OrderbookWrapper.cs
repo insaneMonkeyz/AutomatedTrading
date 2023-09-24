@@ -47,6 +47,8 @@ namespace Quik.EntityProviders.QuikApiWrappers
                         Quik.Lua.PopFromStack();
                         updated = true;
                     }
+
+                    book.LastTimeUpdated = DateTime.UtcNow;
                 }
 
                 Quik.Lua.PopFromStack();
