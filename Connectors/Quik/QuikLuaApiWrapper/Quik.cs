@@ -8,7 +8,7 @@ namespace Quik
 {
     internal delegate void CallbackSubscriber(LuaFunction handler, string quikTableName);
 
-    internal partial class Quik : IDisposable
+    internal partial class Quik
     {
         internal static readonly object SyncRoot = new();
 

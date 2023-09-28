@@ -18,5 +18,12 @@ namespace Tools
                 action(item);
             }
         }
+        public static IEnumerable<T> ToEnumerable<T>(this T? obj)
+        {
+            if (obj is not null)
+            {
+                yield return obj;
+            }
+        }
     }
 }

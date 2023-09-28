@@ -71,7 +71,7 @@ namespace QuikLuaWrapperTests.EntityProvidersTests
                 Order = order,
                 NotificationLoop = new ExecutionLoop(),
             };
-            var resolver = new EntityResolver<OrderRequestContainer, Order>(10, result.FakeOrderResolver);
+            var resolver = new EntityResolver<OrderRequestContainer, Order>(1, result.FakeOrderResolver);
 
             ShimEntityResolvers.GetOrdersResolver = () => resolver;
 

@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AppComponents\AppComponents.csproj" />
     <ProjectReference Include="..\BasicConcepts\TradingConcepts.csproj" />
+    <ProjectReference Include="..\Broker\Broker.csproj" />
     <ProjectReference Include="..\Connectors\Quik\QuikLuaApiWrapper\Quik.csproj" />
     <ProjectReference Include="..\Tools\Tools.csproj" />
   </ItemGroup>

@@ -38,6 +38,8 @@ namespace Quik
         public event Action<IOrder> OrderChangeDenied = delegate { };
         public event Action<IOrder> OrderCancellationDenied = delegate { };
 
+        Guid IQuik.Id { get; } = new("310A16CB-F3A7-4317-A7CB-B4E4F9CFC5A2");
+
         bool IQuik.IsConnected
         {
             get
@@ -57,7 +59,10 @@ namespace Quik
         {
             return OrdersProvider.Instance.GetAllEntities();
         }
-
+        IEnumerable<IOrderExecution> IQuik.GetOrderExecutions()
+        {
+            throw new NotImplementedException();
+        }
         IEnumerable<SecurityDescription> IQuik.GetAvailableSecurities<TSecurity>() 
         {
             var type = typeof(TSecurity);
@@ -108,23 +113,35 @@ namespace Quik
             return EntityResolvers.GetOrderbooksResolver().Resolve(ref request);
         }
 
-        IOrder IQuik.CreateOrder(ISecurity security, string accountCode, ref Quote quote, OrderExecutionConditions executionCondition = default)
+        IOrder IQuik.CreateOrder(ISecurity? security, string? accountCode, ref Quote quote, 
+            OrderExecutionConditions? executionCondition = null, DateTime? expiry = null)
         {
+            if (security is null)
+            {
+                throw new ArgumentNullException(nameof(security));
+            }
+            if (accountCode is null)
+            {
+                throw new ArgumentNullException(nameof(accountCode));
+            }
+
             return new Order(security)
             {
                 TransactionId = TransactionIdGenerator.CreateId(),
-                ExecutionCondition = executionCondition,
-                AccountCode = accountCode,
+                ExecutionCondition = executionCondition.GetValueOrDefault(),
+                Expiry = expiry.GetValueOrDefault(),
+                AccountCode = accountCode ?? throw new ArgumentNullException(nameof(accountCode)),
                 Quote = quote,
             };
         }
-        public IOrder CreateDerivativeOrder(IDerivative security, ref Quote quote, OrderExecutionConditions executionCondition = OrderExecutionConditions.Session)
+        public IOrder CreateDerivativeOrder(IDerivative security, ref Quote quote, 
+            OrderExecutionConditions executionCondition = OrderExecutionConditions.Session)
         {
             var iquik = this as IQuik;
             return iquik.CreateOrder(security, iquik.DerivativesAccount.AccountCode, ref quote, executionCondition);
         }
 
-        void IQuik.PlaceNewOrder(IOrder order)
+        void IQuik.PlaceNewOrder(IOrder? order)
         {
 #if TRACE
             this.Trace();
@@ -140,7 +157,7 @@ namespace Quik
 
             TransactionsProvider.Instance.PlaceNew(moexOrder);
         }
-        IOrder? IQuik.ChangeOrder(IOrder order, Decimal5 newPrice, long newSize)
+        IOrder? IQuik.ChangeOrder(IOrder? order, Decimal5 newPrice, long newSize)
         {
 #if TRACE
             this.Trace();
@@ -162,7 +179,7 @@ namespace Quik
 
             return TransactionsProvider.Instance.Change(moexOrder, newPrice, newSize);
         }
-        void IQuik.CancelOrder(IOrder order)
+        void IQuik.CancelOrder(IOrder? order)
         {
 #if TRACE
             this.Trace(); 

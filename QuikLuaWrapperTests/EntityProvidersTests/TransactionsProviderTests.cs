@@ -1,7 +1,9 @@
 ﻿using Microsoft.QualityTools.Testing.Fakes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Quik.Entities;
 using Quik.EntityProviders;
+using Quik.EntityProviders.RequestContainers;
+using Quik.EntityProviders.Resolvers;
+using Quik.EntityProviders.Resolvers.Fakes;
 using TradingConcepts;
 
 using Assert = NUnit.Framework.Assert;
