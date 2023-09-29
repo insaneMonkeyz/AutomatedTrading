@@ -18,11 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Connectors\Quik\QuikLuaApiWrapper\Quik.csproj" />
+	<Protobuf Include="$(SolutionDir)Connectors\Quik\QuikLuaApiWrapper\Grpc\Protos\**\*.proto" ProtoRoot="$(SolutionDir)Connectors\Quik\QuikLuaApiWrapper\Grpc" GrpcServices="Client" />
   </ItemGroup>
 
   <ItemGroup>
-	<Protobuf Include="$(SolutionDir)Connectors\Quik\QuikLuaApiWrapper\Grpc\Protos\**\*.proto" ProtoRoot="$(SolutionDir)Connectors\Quik\QuikLuaApiWrapper\Grpc" GrpcServices="Client" />
+    <ProjectReference Include="..\..\Connections\Quik\QuikLuaApiWrapper\Quik.csproj" />
   </ItemGroup>
 
 </Project>

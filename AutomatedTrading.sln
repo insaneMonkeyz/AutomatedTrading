@@ -3,51 +3,51 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Strategies", "Strategies\Strategies.csproj", "{C3E3868B-988B-4AE7-9258-DC14C7D7AF4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Strategies", "Server\Strategies\Strategies.csproj", "{C3E3868B-988B-4AE7-9258-DC14C7D7AF4A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{AD452C09-AF8D-4E41-BDD9-60D44D00EE5C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Server\Core\Core.csproj", "{AD452C09-AF8D-4E41-BDD9-60D44D00EE5C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TradingConcepts", "BasicConcepts\TradingConcepts.csproj", "{863AA5C1-1CF5-42B0-98B1-AFBE1728AE1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TradingConcepts", "Common\TradingConcepts\TradingConcepts.csproj", "{863AA5C1-1CF5-42B0-98B1-AFBE1728AE1A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Connectors", "Connectors", "{02EB15A2-5F25-40D2-89A9-DBCCC7DD3470}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Connections", "Connections", "{02EB15A2-5F25-40D2-89A9-DBCCC7DD3470}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Quik", "Quik", "{DA3B4651-999E-440F-AA0F-BD83C842296F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClrBootstrap", "Connectors\Quik\ClrBootstrap\ClrBootstrap.vcxproj", "{B3B6A1CC-D614-47DF-8A1F-D9AA5224B108}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClrBootstrap", "Server\Connections\Quik\ClrBootstrap\ClrBootstrap.vcxproj", "{B3B6A1CC-D614-47DF-8A1F-D9AA5224B108}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeToManagedProxy", "Connectors\Quik\NativeToManagedProxy\NativeToManagedProxy.vcxproj", "{EF27322F-29E7-436E-A37E-D8C857FC9687}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeToManagedProxy", "Server\Connections\Quik\NativeToManagedProxy\NativeToManagedProxy.vcxproj", "{EF27322F-29E7-436E-A37E-D8C857FC9687}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B3B6A1CC-D614-47DF-8A1F-D9AA5224B108} = {B3B6A1CC-D614-47DF-8A1F-D9AA5224B108}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quik", "Connectors\Quik\QuikLuaApiWrapper\Quik.csproj", "{0AD1E47C-F4CF-477E-A3F5-C3AF4B66FB8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quik", "Server\Connections\Quik\QuikLuaApiWrapper\Quik.csproj", "{0AD1E47C-F4CF-477E-A3F5-C3AF4B66FB8C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{33076292-419D-4078-A26B-EF08F16DB261}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuikLuaWrapperTests", "QuikLuaWrapperTests\QuikLuaWrapperTests.csproj", "{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuikLuaWrapperTests", "Server\Tests\QuikLuaWrapperTests\QuikLuaWrapperTests.csproj", "{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tools", "Tools\Tools.csproj", "{4EAA9D5C-FFD5-4257-8134-8F61B24D9320}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tools", "Common\Tools\Tools.csproj", "{4EAA9D5C-FFD5-4257-8134-8F61B24D9320}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{81601984-6F25-409B-AB97-B524B6573867}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppComponents", "AppComponents\AppComponents.csproj", "{6A354424-8FB8-4D9B-9A37-9DF3A882D675}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppComponents", "Server\AppComponents\AppComponents.csproj", "{6A354424-8FB8-4D9B-9A37-9DF3A882D675}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{352D0F4D-F029-43DF-B011-AA10E5B1BF00}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{ADA24A20-3DFA-4DD2-BFBF-37304310E940}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarketExecutionService", "TradingService\MarketExecutionService.csproj", "{54634E1E-BD0C-4522-874C-B963CE5B4837}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarketExecutionService", "Server\Services\MarketExecutionService\MarketExecutionService.csproj", "{54634E1E-BD0C-4522-874C-B963CE5B4837}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuikGrpcTestClient", "QuikGrpcTestClient\QuikGrpcTestClient.csproj", "{2EA9DB97-9B6E-4816-8020-1D5396725349}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuikGrpcTestClient", "Server\Tests\QuikGrpcTestClient\QuikGrpcTestClient.csproj", "{2EA9DB97-9B6E-4816-8020-1D5396725349}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{516621C9-253D-4D1A-BFAF-FCEFDFD3EE68}"
 	ProjectSection(SolutionItems) = preProject
 		Readme.md = Readme.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuikIntegrationTest", "QuikIntegrationTest\QuikIntegrationTest.csproj", "{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuikIntegrationTest", "Server\Tests\QuikIntegrationTest\QuikIntegrationTest.csproj", "{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Broker", "Broker\Broker.csproj", "{BC099A6C-5067-4694-98FC-28FAD7CA2717}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Broker", "Server\Services\Broker\Broker.csproj", "{BC099A6C-5067-4694-98FC-28FAD7CA2717}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -170,7 +170,6 @@ Global
 		{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}.Debug|x64.Build.0 = Debug|Any CPU
 		{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}.Debug|x86.Build.0 = Debug|Any CPU
 		{F068987A-A862-46D5-9FE9-EABFF3C4F2FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -236,7 +235,6 @@ Global
 		{2EA9DB97-9B6E-4816-8020-1D5396725349}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2EA9DB97-9B6E-4816-8020-1D5396725349}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EA9DB97-9B6E-4816-8020-1D5396725349}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2EA9DB97-9B6E-4816-8020-1D5396725349}.Debug|x64.Build.0 = Debug|Any CPU
 		{2EA9DB97-9B6E-4816-8020-1D5396725349}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{2EA9DB97-9B6E-4816-8020-1D5396725349}.Debug|x86.Build.0 = Debug|Any CPU
 		{2EA9DB97-9B6E-4816-8020-1D5396725349}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -254,7 +252,6 @@ Global
 		{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}.Debug|x64.Build.0 = Debug|Any CPU
 		{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}.Debug|x86.Build.0 = Debug|Any CPU
 		{8D8C2D71-AEDD-4D5C-8D2E-26F379C892E4}.Release|Any CPU.ActiveCfg = Release|Any CPU

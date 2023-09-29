@@ -8,9 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BasicConcepts\TradingConcepts.csproj" />
-    <ProjectReference Include="..\Connectors\Quik\QuikLuaApiWrapper\Quik.csproj" />
-    <ProjectReference Include="..\Tools\Tools.csproj" />
+    <ProjectReference Include="..\..\..\Common\TradingConcepts\TradingConcepts.csproj" />
+    <ProjectReference Include="..\..\Connections\Quik\QuikLuaApiWrapper\Quik.csproj" />
   </ItemGroup>
 
 </Project>

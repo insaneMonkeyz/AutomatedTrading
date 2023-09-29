@@ -180,7 +180,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>C:\Users\Job\source\repos\AutomatedTrading\Connectors\Quik\NativeToManagedProxy\Lua\Lua.lib;C:\Users\Job\Source\Repos\AutomatedTrading\x64\Debug\ClrBootstrap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)Server\Connections\Quik\NativeToManagedProxy\Lua\Lua.lib;$(SolutionDir)x64\Debug\ClrBootstrap.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>

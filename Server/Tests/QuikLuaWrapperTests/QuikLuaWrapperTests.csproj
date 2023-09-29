@@ -45,12 +45,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BasicConcepts\TradingConcepts.csproj" />
-    <ProjectReference Include="..\Connectors\Quik\QuikLuaApiWrapper\Quik.csproj" />
+    <AdditionalDesignTimeBuildInput Remove="FakesAssemblies\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <AdditionalDesignTimeBuildInput Remove="FakesAssemblies\**" />
+    <ProjectReference Include="..\..\..\Common\TradingConcepts\TradingConcepts.csproj" />
+    <ProjectReference Include="..\..\Connections\Quik\QuikLuaApiWrapper\Quik.csproj" />
   </ItemGroup>
 
 </Project>

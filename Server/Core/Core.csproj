@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BasicConcepts\TradingConcepts.csproj" />
+    <ProjectReference Include="..\..\Common\TradingConcepts\TradingConcepts.csproj" />
   </ItemGroup>
 
 </Project>
