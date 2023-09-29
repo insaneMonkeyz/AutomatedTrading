@@ -145,12 +145,12 @@ namespace Quik.EntityProviders.QuikApiWrappers
         {
             get => _stack.TryFetchDecimalFromTable(STRIKE, out Decimal5 result) ? result : null;
         }
-        public static DateTimeOffset? Expiry
+        public static DateTime? Expiry
         {
             get
             {
                 return _stack.TryFetchStringFromTable(EXPIRY_DATE, out string exp) &&
-                        exp.TryConvertToMoexExpiry(out DateTimeOffset expiry)
+                        exp.TryConvertToMoexExpiry(out DateTime expiry)
                     ? expiry : null;
             }
         }

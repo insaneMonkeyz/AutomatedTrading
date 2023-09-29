@@ -204,7 +204,12 @@ namespace Quik
                     sb.Append(" (");
                     sb.Append(attribute.Parameter);
                     sb.Append("): ");
-                    sb.AppendLine(p.GetValue(null)?.ToString() ?? "null");
+                    sb.AppendLine(p.GetValue(null) switch
+                    {
+                        DateTime dt => dt.ToString("O"),
+                           object o => o.ToString(),
+                               null => "null",
+                    });
                 }
             }
 

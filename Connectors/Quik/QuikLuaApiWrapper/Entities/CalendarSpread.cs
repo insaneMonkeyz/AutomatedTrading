@@ -19,7 +19,7 @@ namespace Quik.Entities
             Expiry = NearTermLeg.Expiry;
             ExpiryTimeDelta = LongTermLeg.Expiry - NearTermLeg.Expiry;
         }
-        public CalendarSpread(ref SecurityParamsContainer container, DateTimeOffset expiry) 
+        public CalendarSpread(ref SecurityParamsContainer container, DateTime expiry) 
             : base(ref container)
         {
             Expiry = expiry;

@@ -24,8 +24,8 @@ namespace Quik.Entities
         public required Quote Quote { get; init; }
         public required long TransactionId { get; init; }
         public OrderExecutionConditions ExecutionCondition { get; init; }
-        public DateTimeOffset Expiry { get; init; }
-        public TimeSpan TimeToExpiry => DateTime.UtcNow - Expiry.UtcDateTime;
+        public DateTime Expiry { get; init; }
+        public TimeSpan TimeToExpiry => Expiry - DateTime.UtcNow;
         public IOrder? ParentOrder { get; set; }
         public OrderStates State { get; private set; }
         public long ExchangeAssignedId { get; set; }

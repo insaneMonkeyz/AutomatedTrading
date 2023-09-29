@@ -13,7 +13,7 @@ namespace QuikLuaWrapperTests.EntityProvidersTests
         string? Account { get; }
         OrderFlags Flags { get; }
         MoexOrderExecutionModes OrderExecutionMode { get; }
-        DateTimeOffset? Expiry { get; }
+        DateTime? Expiry { get; }
         Decimal5 Price { get; }
         long Size { get; }
 

@@ -29,8 +29,21 @@ namespace Quik
         public static readonly Decimal5 DefaultTradingSize = 1;
         public static readonly Guid MoexExchangeId = new("2B9F0D6D-62C9-46BC-8923-0C789DB826C2");
 
-        public static readonly TimeSpan CommonExpiryTime = TimeSpan.FromHours(19);
+        public static readonly TimeSpan CommonExpiryTime = new (18, 45, 0);
         public static readonly TimeSpan MoscowUtcOffset = TimeSpan.FromHours(3);
+        public static readonly TimeZoneInfo MoscowTimeZone;
+
+        static MoexSpecifics()
+        {
+            try
+            {
+                MoscowTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Russian Standard Time");
+            }
+            catch (Exception)
+            {
+                MoscowTimeZone = TimeZoneInfo.GetSystemTimeZones().First(tz => tz.BaseUtcOffset == MoscowUtcOffset);
+            }
+        }
 
         public static readonly string[] AllowedClassCodes = new[]
         {

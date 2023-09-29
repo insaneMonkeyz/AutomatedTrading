@@ -2,7 +2,7 @@
 {
     public interface IExpiring
     {
-        DateTimeOffset Expiry { get; }
+        DateTime Expiry { get; }
         TimeSpan TimeToExpiry { get; }
     }
 }

@@ -47,7 +47,7 @@ namespace QuikLuaWrapperTests.EntityProvidersTests
                 .Returns(MoexOrderExecutionModes.Normal);
 
             mock.Setup(tw => tw.Expiry)
-                .Returns(default(DateTimeOffset?));
+                .Returns(default(DateTime?));
 
             return mock.Object;
         }

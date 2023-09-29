@@ -94,12 +94,12 @@ namespace Quik.EntityProviders.QuikApiWrappers
         }
 
         [QuikCallbackField(EXPIRY)]
-        public static DateTimeOffset? Expiry
+        public static DateTime? Expiry
         {
             get
             {
                 return _stack.TryFetchStringFromTable(EXPIRY, out string exp) &&
-                        exp.TryConvertToMoexExpiry(out DateTimeOffset expiry)
+                        exp.TryConvertToMoexExpiry(out DateTime expiry)
                     ? expiry : null;
             }
         }

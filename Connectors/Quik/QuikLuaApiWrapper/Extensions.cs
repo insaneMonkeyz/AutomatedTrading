@@ -22,7 +22,7 @@ namespace Quik
         {
             return string.IsNullOrWhiteSpace(subj);
         }
-        public static bool TryConvertToMoexExpiry(this string date, out DateTimeOffset result)
+        public static bool TryConvertToMoexExpiry(this string date, out DateTime result)
         {
             result = default;
 
@@ -30,9 +30,11 @@ namespace Quik
             {
                 try
                 {
-                    result = new DateTimeOffset(
-                               dateTime: MoexDate.GetDateTime(value) + MoexSpecifics.CommonExpiryTime,
-                                 offset: MoexSpecifics.MoscowUtcOffset);
+                    result = MoexDate.GetDateTime(value) 
+                        + MoexSpecifics.CommonExpiryTime
+                        - MoexSpecifics.MoscowTimeZone.BaseUtcOffset;
+
+                    result = DateTime.SpecifyKind(result, DateTimeKind.Utc);
 
                     return true;
                 }

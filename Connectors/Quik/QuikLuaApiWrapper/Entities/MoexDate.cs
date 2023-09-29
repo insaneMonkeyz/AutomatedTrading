@@ -15,7 +15,7 @@ namespace Quik.Entities
             Month = GetMonth(value);
             Year = GetYear(value);
 
-            Date = new DateTime(Year, Month, Day);
+            Date = new DateTime(Year, Month, Day, 0, 0, 0, DateTimeKind.Local);
         }
 
         public static int GetYear(uint value)

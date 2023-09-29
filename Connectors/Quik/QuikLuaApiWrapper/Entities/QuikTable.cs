@@ -73,7 +73,7 @@ namespace Quik.Entities
             }
             if (type == typeof(DateTimeOffset))
             {
-                return !string.IsNullOrWhiteSpace(value) && value.TryConvertToMoexExpiry(out DateTimeOffset result)
+                return !string.IsNullOrWhiteSpace(value) && value.TryConvertToMoexExpiry(out DateTime result)
                     ? result
                     : default(DateTimeOffset);
             }
