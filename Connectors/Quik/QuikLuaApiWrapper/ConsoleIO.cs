@@ -30,11 +30,12 @@ namespace Quik
 
         public static void Main()
         {
-            Task.Delay(5000);
+            Task.Delay(5000).Wait();
 
             if (!AllocConsole())
             {
                 LogManagement.GetLogger("ConsoleIO").Fatal("Failed to allocate the console");
+                return;
             }
 
             _quik = DI.Resolve<IQuik>();
