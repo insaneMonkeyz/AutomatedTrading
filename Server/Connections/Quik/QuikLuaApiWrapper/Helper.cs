@@ -113,7 +113,7 @@ namespace Quik
             return new OptionDescription
             {
                 Ticker = ticker,
-                ExpiryDate = new DateTime(year, month, 1),
+                Expiry = new DateTime(year, month, 1),
                 IsShortTermExpiry = isShortTermExpiry,
                 OptionType = optionType,
                 Strike = Decimal5.Parse(strikeDataBuffer)
@@ -146,7 +146,7 @@ namespace Quik
                 return new FuturesDescription
                 {
                     Ticker = ticker,
-                    ExpiryDate = new DateTime(year, month, 1),
+                    Expiry = new DateTime(year, month, 1),
                 };
             }
             else
@@ -159,7 +159,7 @@ namespace Quik
                 return new FuturesDescription
                 {
                     Ticker = ticker,
-                    ExpiryDate = new DateTime(year, month, 1),
+                    Expiry = new DateTime(year, month, 1),
                 };
             }
         }
@@ -182,7 +182,7 @@ namespace Quik
             return new CalendarSpreadDescription
             {
                 Ticker = ticker,
-                ExpiryDate = new DateTime(year, month, 1)
+                Expiry = new DateTime(year, month, 1)
             };
         }
 

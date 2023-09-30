@@ -8,10 +8,12 @@ namespace MarketExecutionService
 {
     public interface IMarketExecutionService
     {
-        event FeedSubscriber<ITradingAccount> NewAccounts;
-        event FeedSubscriber<IOrderExecution> NewExecutions;
-        event FeedSubscriber<IOrder> NewOrders;
+        event FeedSubscriber<ISecurityBalance> NewSecurityBalance;
+        event FeedSubscriber<ITradingAccount> NewAccount;
+        event FeedSubscriber<IOrderExecution> NewExecution;
+        event FeedSubscriber<IOrder> NewOrder;
 
+        Result GetSecuritiesBalances();
         Result GetAccounts();
         Result GetExecutions();
         Result GetOrders();

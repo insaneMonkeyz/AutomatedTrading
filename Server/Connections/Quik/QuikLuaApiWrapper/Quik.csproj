@@ -62,13 +62,13 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <ProjectReference Include="..\..\..\..\Common\Tools\Tools.csproj" />
-	  <ProjectReference Include="..\..\..\..\Common\TradingConcepts\TradingConcepts.csproj" />
+	  <ProjectReference Include="$(SolutionDir)Common\Tools\Tools.csproj" />
+	  <ProjectReference Include="$(SolutionDir)Common\TradingConcepts\TradingConcepts.csproj" />
 	</ItemGroup>
 	
 	<ItemGroup>
 	  <Reference Include="ZeroLog">
-	    <HintPath>..\..\..\x64\Debug\ZeroLog.dll</HintPath>
+	    <HintPath>$(SolutionDir)x64\Debug\ZeroLog.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 	

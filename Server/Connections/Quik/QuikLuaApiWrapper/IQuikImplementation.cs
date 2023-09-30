@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -19,8 +20,8 @@ namespace Quik
 {
     internal partial class Quik : IQuik
     {
-        public event Action<DateTimeOffset> Connected = delegate { };
-        public event Action<DateTimeOffset> ConnectionLost = delegate { };
+        public event Action<DateTime> Connected = delegate { };
+        public event Action<DateTime> ConnectionLost = delegate { };
 
         public event Action<ISecurityBalance> NewSecurityBalance = delegate { };
         public event Action<IOrderExecution> NewOrderExecution = delegate { };
@@ -37,10 +38,11 @@ namespace Quik
 
         public event Action<IOrder> OrderChangeDenied = delegate { };
         public event Action<IOrder> OrderCancellationDenied = delegate { };
+        public event Action<ITrade> NewTrade;
 
-        Guid IQuik.Id { get; } = new("310A16CB-F3A7-4317-A7CB-B4E4F9CFC5A2");
+        public Guid Id { get; } = new("310A16CB-F3A7-4317-A7CB-B4E4F9CFC5A2");
 
-        bool IQuik.IsConnected
+        public bool IsConnected
         {
             get
             {
@@ -50,62 +52,81 @@ namespace Quik
                 }
             }
         }
-        ITradingAccount? IQuik.DerivativesAccount
+
+        public ITradingAccount? DerivativesAccount
         {
             get => AccountsProvider.Instance.GetAllEntities().FirstOrDefault(acc => acc.IsMoneyAccount);
         }
 
-        IEnumerable<IOrder> IQuik.GetOrders()
+        public IEnumerable<IOrder> GetOrders()
         {
             return OrdersProvider.Instance.GetAllEntities();
         }
-        IEnumerable<IOrderExecution> IQuik.GetOrderExecutions()
+
+        public IEnumerable<IOrderExecution> GetOrderExecutions()
         {
             throw new NotImplementedException();
         }
-        IEnumerable<SecurityDescription> IQuik.GetAvailableSecurities<TSecurity>() 
-        {
-            var type = typeof(TSecurity);
 
+        public IEnumerable<SecurityDescription> GetAvailableSecurities(Type securityType)
+        {
             static IEnumerable<SecurityDescription> createDescriptions(Type t, Func<string, SecurityDescription> tickerToDescription)
             {
                 return SecuritiesProvider.Instance.GetAvailableSecuritiesOfType(t).Select(tickerToDescription);
             }
 
-            if (type.Equals(typeof(IFutures)))
+            if (securityType.Equals(typeof(IFutures)))
             {
-                return createDescriptions(type, Helper.InferFuturesFromTicker);
+                return createDescriptions(securityType, Helper.InferFuturesFromTicker);
             }
-            if (type.Equals(typeof(IOption)))
+            if (securityType.Equals(typeof(IOption)))
             {
-                return createDescriptions(type, Helper.InferOptionFromTicker);
+                return createDescriptions(securityType, Helper.InferOptionFromTicker);
             }
-            if (type.Equals(typeof(ICalendarSpread)))
+            if (securityType.Equals(typeof(ICalendarSpread)))
             {
-                return createDescriptions(type, Helper.InferSpreadFromTicker);
+                return createDescriptions(securityType, Helper.InferSpreadFromTicker);
             }
 
-            throw new NotSupportedException($"Descriptions for type {type} cannot be created. Type not supported");
+            throw new NotSupportedException($"Security type {securityType.Name} is not supported by Quik");
         }
-        TSecurity? IQuik.GetSecurity<TSecurity>(string ticker) where TSecurity : default
+
+        public IEnumerable<SecurityDescription> GetAvailableSecurities<TSecurity>() where TSecurity : ISecurity
+        {
+            var type = typeof(TSecurity);
+
+            return GetAvailableSecurities(type);
+        }
+
+        public TSecurity? GetSecurity<TSecurity>(string ticker) where TSecurity : ISecurity
         {
             var resolver = EntityResolvers.GetSecurityResolver();
             var sec = resolver.Resolve<TSecurity>(ticker);
 
             return (TSecurity?)sec;
         }
-        IOrderBook? IQuik.GetOrderBook<TSecurity>(string ticker)
+
+        public IOrderBook? GetOrderBook(Type securityType, string? ticker)
         {
+            if (securityType is null)
+            {
+                throw new ArgumentNullException(nameof(securityType));
+            }
+            if (ticker is null)
+            {
+                throw new ArgumentNullException(nameof(ticker));
+            }
+
             string classcode;
 
             try
             {
-                classcode = MoexSpecifics.SecurityTypesToClassCodes[typeof(TSecurity)];
+                classcode = MoexSpecifics.SecurityTypesToClassCodes[securityType];
             }
             catch (Exception e)
             {
                 _log.Error("Unsupported security type", e);
-                throw new ArgumentException($"Unsupported security type {typeof(TSecurity)}");
+                throw new ArgumentException($"Unsupported security type {securityType.Name}");
             }
 
             var request = OrderbookRequestContainer.Create(classcode, ticker);
@@ -113,7 +134,7 @@ namespace Quik
             return EntityResolvers.GetOrderbooksResolver().Resolve(ref request);
         }
 
-        IOrder IQuik.CreateOrder(ISecurity? security, string? accountCode, ref Quote quote, 
+        public IOrder CreateOrder(ISecurity? security, string? accountCode, ref Quote quote, 
             OrderExecutionConditions? executionCondition = null, DateTime? expiry = null)
         {
             if (security is null)
@@ -137,11 +158,10 @@ namespace Quik
         public IOrder CreateDerivativeOrder(IDerivative security, ref Quote quote, 
             OrderExecutionConditions executionCondition = OrderExecutionConditions.Session)
         {
-            var iquik = this as IQuik;
-            return iquik.CreateOrder(security, iquik.DerivativesAccount.AccountCode, ref quote, executionCondition);
+            return CreateOrder(security, DerivativesAccount.AccountCode, ref quote, executionCondition);
         }
 
-        void IQuik.PlaceNewOrder(IOrder? order)
+        public void PlaceNewOrder(IOrder? order)
         {
 #if TRACE
             this.Trace();
@@ -157,7 +177,8 @@ namespace Quik
 
             TransactionsProvider.Instance.PlaceNew(moexOrder);
         }
-        IOrder? IQuik.ChangeOrder(IOrder? order, Decimal5 newPrice, long newSize)
+
+        public IOrder? ChangeOrder(IOrder? order, Decimal5 newPrice, long newSize)
         {
 #if TRACE
             this.Trace();
@@ -179,7 +200,8 @@ namespace Quik
 
             return TransactionsProvider.Instance.Change(moexOrder, newPrice, newSize);
         }
-        void IQuik.CancelOrder(IOrder? order)
+
+        public void CancelOrder(IOrder? order)
         {
 #if TRACE
             this.Trace(); 
@@ -197,5 +219,14 @@ namespace Quik
             TransactionsProvider.Instance.Cancel(moexOrder);
         }
 
+        public IEnumerable<ITrade> GetTrades()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<ISecurityBalance> GetSecuritiesBalances()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

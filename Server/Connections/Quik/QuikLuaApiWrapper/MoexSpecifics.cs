@@ -10,21 +10,21 @@ using TradingConcepts.SecuritySpecifics;
 
 namespace Quik
 {
-    internal static class MoexSpecifics
+    public static class MoexSpecifics
     {
-        public const string STOCK_CLASS_CODE = "TQBR";
-        public const string OPTIONS_CLASS_CODE = "SPBOPT";
-        public const string FUTURES_CLASS_CODE = "SPBFUT";
-        public const string CALENDAR_SPREADS_CLASS_CODE = "FUTSPREAD";
+        internal const string STOCK_CLASS_CODE = "TQBR";
+        internal const string OPTIONS_CLASS_CODE = "SPBOPT";
+        internal const string FUTURES_CLASS_CODE = "SPBFUT";
+        internal const string CALENDAR_SPREADS_CLASS_CODE = "FUTSPREAD";
 
-        public const string STOCK_SETTLEMENT_TAG = "EQTV";
-        public const string FOREX_SETTLEMENT_TAG = "USDR";
-        public const string FOREX_TOD_SETTLEMENT_TAG = "RTOD";
-        public const string FOREX_TOM_SETTLEMENT_TAG = "RTOM";
+        internal const string STOCK_SETTLEMENT_TAG = "EQTV";
+        internal const string FOREX_SETTLEMENT_TAG = "USDR";
+        internal const string FOREX_TOD_SETTLEMENT_TAG = "RTOD";
+        internal const string FOREX_TOM_SETTLEMENT_TAG = "RTOM";
 
-        public const string SUR_CURRENCY = "SUR";
-        public const string RUB_CURRENCY = "RUB";
-        public const string USD_CURRENCY = "USD";
+        internal const string SUR_CURRENCY = "SUR";
+        internal const string RUB_CURRENCY = "RUB";
+        internal const string USD_CURRENCY = "USD";
 
         public static readonly Decimal5 DefaultTradingSize = 1;
         public static readonly Guid MoexExchangeId = new("2B9F0D6D-62C9-46BC-8923-0C789DB826C2");

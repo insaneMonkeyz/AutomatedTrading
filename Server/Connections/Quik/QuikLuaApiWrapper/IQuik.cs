@@ -8,8 +8,8 @@ namespace Quik
 {
     public interface IQuik : IDisposable
     {
-        event Action<DateTimeOffset> Connected;
-        event Action<DateTimeOffset> ConnectionLost;
+        event Action<DateTime> Connected;
+        event Action<DateTime> ConnectionLost;
 
         event Action<ISecurityBalance> NewSecurityBalance;
         event Action<IOrderExecution> NewOrderExecution;
@@ -17,6 +17,7 @@ namespace Quik
         event Action<IOrderBook> NewOrderBook;
         event Action<ISecurity> NewSecurity;
         event Action<IOrder> NewOrder;
+        event Action<ITrade> NewTrade;
 
         event Action<ISecurityBalance> SecurityBalanceChanged;
         event Action<ITradingAccount> AccountChanged;
@@ -33,11 +34,14 @@ namespace Quik
 
         int Initialize(IntPtr luaContext);
 
+        IEnumerable<ITrade> GetTrades();
         IEnumerable<IOrder> GetOrders();
         IEnumerable<IOrderExecution> GetOrderExecutions();
+        IEnumerable<ISecurityBalance> GetSecuritiesBalances();
         IEnumerable<SecurityDescription> GetAvailableSecurities<TSecurity>() where TSecurity : ISecurity;
+        IEnumerable<SecurityDescription> GetAvailableSecurities(Type securityType);
         TSecurity? GetSecurity<TSecurity>(string ticker) where TSecurity : ISecurity;
-        IOrderBook? GetOrderBook<TSecurity>(string ticker) where TSecurity : ISecurity;
+        IOrderBook? GetOrderBook(Type? securityType, string? ticker);
 
         IOrder CreateOrder(ISecurity? security, string? accountCode, ref Quote quote, OrderExecutionConditions? ExecutionCondition = default, DateTime? expiry = default);
         IOrder CreateDerivativeOrder(IDerivative security, ref Quote quote, OrderExecutionConditions ExecutionCondition = default);

@@ -10,7 +10,24 @@ namespace MarketExecutionService
     {
         private static readonly Dictionary<object, object> _subscriptions = new();
 
-        public event FeedSubscriber<ITradingAccount> NewAccounts
+        public event FeedSubscriber<ISecurityBalance> NewSecurityBalance
+        {
+            add
+            {
+                var action = (ISecurityBalance b) => value(_quik.Id, b);
+                _quik.NewSecurityBalance += action;
+                _subscriptions[value] = action;
+            }
+            remove
+            {
+                if (_subscriptions.TryGetValue(value, out var action))
+                {
+                    _quik.NewSecurityBalance -= action as Action<ISecurityBalance>;
+                    _subscriptions.Remove(value);
+                }
+            }
+        }
+        public event FeedSubscriber<ITradingAccount> NewAccount
         {
             add
             {
@@ -27,7 +44,7 @@ namespace MarketExecutionService
                 }
             }
         }
-        public event FeedSubscriber<IOrderExecution> NewExecutions
+        public event FeedSubscriber<IOrderExecution> NewExecution
         {
             add
             {
@@ -44,7 +61,7 @@ namespace MarketExecutionService
                 }
             }
         }
-        public event FeedSubscriber<IOrder> NewOrders
+        public event FeedSubscriber<IOrder> NewOrder
         {
             add
             {
@@ -97,6 +114,17 @@ namespace MarketExecutionService
             try
             {
                 return Result.Success(_quik.GetOrders());
+            }
+            catch (Exception e)
+            {
+                return Result.Error(e.Message);
+            }
+        }
+        public Result GetSecuritiesBalances()
+        {
+            try
+            {
+                return Result.Success(_quik.GetSecuritiesBalances());
             }
             catch (Exception e)
             {

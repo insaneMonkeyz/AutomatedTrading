@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)Common\Tools\Tools.csproj" />
+    <ProjectReference Include="$(SolutionDir)Common\TradingConcepts\TradingConcepts.csproj" />
+    <ProjectReference Include="$(SolutionDir)Server\AppComponents\AppComponents.csproj" />
+    <ProjectReference Include="$(SolutionDir)Server\Connections\Quik\QuikLuaApiWrapper\Quik.csproj" />
+    <ProjectReference Include="$(SolutionDir)Server\Services\Broker\Broker.csproj" />
+  </ItemGroup>
+
+</Project>

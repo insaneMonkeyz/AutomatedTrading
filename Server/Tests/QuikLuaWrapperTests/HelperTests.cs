@@ -23,7 +23,7 @@ namespace QuikLuaWrapperTests
 
             var descr = Helper.InferFuturesFromTicker(ticker);
 
-            Assert.That(descr.ExpiryDate, Is.EqualTo(expiry));
+            Assert.That(descr.Expiry, Is.EqualTo(expiry));
         }
 
         [TestCase("BRF3BRG3","01.01.2023")]
@@ -38,7 +38,7 @@ namespace QuikLuaWrapperTests
 
             var descr = Helper.InferSpreadFromTicker(ticker);
 
-            Assert.That(descr.ExpiryDate, Is.EqualTo(expiry));
+            Assert.That(descr.Expiry, Is.EqualTo(expiry));
         }
 
         [TestCase("BR00096BF3A", true, "01.06.2023", 96d, OptionTypes.Call)]
@@ -54,7 +54,7 @@ namespace QuikLuaWrapperTests
 
             Assert.Multiple(() =>
             {
-                Assert.That(descr.ExpiryDate, Is.EqualTo(expiry));
+                Assert.That(descr.Expiry, Is.EqualTo(expiry));
                 Assert.That((double)descr.Strike, Is.EqualTo(strike));
                 Assert.That(descr.IsShortTermExpiry, Is.EqualTo(shortterm));
                 Assert.That(descr.OptionType, Is.EqualTo(type));

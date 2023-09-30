@@ -10,7 +10,7 @@ namespace Broker
         void RegisterService(IService service);
         void UnregisterService(IService service);
         void SubscriveFeed<T>(string feed, FeedSubscriber<T> receiver);
-        void UnsubscriveFeed<T>(string feed, FeedSubscriber<T> receiver);
+        void UnsubscribeFeed<T>(string feed, FeedSubscriber<T> receiver);
         void Publish<T>(string feed, T data);
     }
 }
