@@ -15,7 +15,7 @@ namespace MarketDataProvisionService
         public Guid HostId { get; } = DI.Resolve<IBroker>().HostId;
         public Guid Id { get; } = new("81AE6806-7BD7-41B9-AE0E-4D1F431D7EEA");
         public string Name { get; } = nameof(MarketDataProvisionService);
-        public object Status => throw new NotImplementedException();
+        public ServiceStatus Status { get; private set; }
 
         public void Initialize(object parameters)
         {

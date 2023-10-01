@@ -11,7 +11,7 @@ namespace AppComponents
         Guid HostId { get; }
         Guid Id { get; }
         string Name { get; }
-        object Status { get; }
+        ServiceStatus Status { get; }
 
         object GetConfiguration();
         void Configure(object parameters);

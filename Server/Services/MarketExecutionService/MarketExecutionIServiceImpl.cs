@@ -12,7 +12,7 @@ namespace MarketExecutionService
         public Guid HostId { get; } = DI.Resolve<IBroker>().HostId;
         public Guid Id { get; } = new("D7A8C1CA-9CCA-46D4-A4C0-E7AEE87B50E7");
         public string Name { get; } = nameof(MarketExecutionService);
-        public object Status => throw new NotImplementedException();
+        public ServiceStatus Status { get; private set; }
 
         public void Initialize(object parameters)
         {
