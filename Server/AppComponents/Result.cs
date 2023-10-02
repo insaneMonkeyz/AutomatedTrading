@@ -9,6 +9,7 @@ namespace AppComponents.Messaging.Results
     public struct Result
     {
         public bool IsSuccess;
+        public bool IsError;
         public string? Description;
         public object? Data;
 
@@ -22,8 +23,9 @@ namespace AppComponents.Messaging.Results
         }
         public static Result Error(string? description = null, object? data = null)
         {
-            return new Result 
-            { 
+            return new Result
+            {
+                IsError = true,
                 Description = description,
                 Data = data
             };

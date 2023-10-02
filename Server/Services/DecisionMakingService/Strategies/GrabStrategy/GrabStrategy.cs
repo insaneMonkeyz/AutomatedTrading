@@ -10,7 +10,7 @@ namespace DecisionMakingService.Strategies
     internal partial class GrabStrategy : ITradingStrategy, IConfigurable<GrabStrategyConfiguration>
     {
         public GrabStrategyConfiguration? Configuration { get; private set; }
-        public Guid Id => throw new NotImplementedException();
+        public Guid Id { get; private set; }
         public string Name => throw new NotImplementedException();
         public string Description => throw new NotImplementedException();
         public State State { get; private set; }
@@ -25,19 +25,31 @@ namespace DecisionMakingService.Strategies
                 throw new ArgumentNullException(nameof(config));
             }
 
+            if (Id != Guid.Empty && config.Id != Id)
+            {
+                throw new InvalidOperationException("Configuration belongs to a different strategy. " +
+                    $"Configuration target={config.Id}, configuring strategy={Id}");
+            }
+
+            if (Configuration?.Security is not null)
+            {
+                if (!Configuration.Security.Equals(config.Security))
+                {
+                    throw new InvalidOperationException("Cannot change security once it is set"); 
+                }
+            }
+            else
+            {
+                _bookOperator = new(this, config.Security);
+            }
+
             var prevstate = State;
-            var prevsecurity = Configuration.Security;
 
             _log.Info($"Grab strategy {Id} disabled for configuration");
 
             State = State.Configuring;
 
             Configuration = config;
-
-            if (prevsecurity != config.Security)
-            {
-                ResolveBookReader(); 
-            }
 
             State = prevstate;
 
@@ -55,10 +67,14 @@ namespace DecisionMakingService.Strategies
             }
 
             State = State.Enabled;
+
+            _bookOperator.IsEnabled = true;
         }
         public void Disable()
         {
             throw new NotImplementedException();
+
+            _bookOperator.IsEnabled = false;
         }
     }
 }
