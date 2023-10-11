@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Common\Tools\Tools.csproj" />
     <ProjectReference Include="..\..\Common\TradingConcepts\TradingConcepts.csproj" />
     <ProjectReference Include="..\Services\Broker\Broker.csproj" />

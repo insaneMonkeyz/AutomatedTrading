@@ -53,9 +53,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarketDataProvisionService"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DecisionMakingService", "Server\Services\DecisionMakingService\DecisionMakingService.csproj", "{122AE8FC-0709-4434-BD94-46A80E90FE07}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreIntegrationTests", "Server\Tests\CoreIntegrationTests\CoreIntegrationTests.csproj", "{168099F6-4199-40F8-8535-A61B16711F7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreIntegrationTests", "Server\Tests\CoreIntegrationTests\CoreIntegrationTests.csproj", "{168099F6-4199-40F8-8535-A61B16711F7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecisionMakingServiceTests", "Server\Tests\DecisionMakingServiceTests\DecisionMakingServiceTests.csproj", "{CE0435AD-2180-45EE-B2A8-20D2D5134DA7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DecisionMakingServiceTests", "Server\Tests\DecisionMakingServiceTests\DecisionMakingServiceTests.csproj", "{CE0435AD-2180-45EE-B2A8-20D2D5134DA7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
