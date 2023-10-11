@@ -5,8 +5,7 @@ namespace DecisionMakingService
 {
     internal partial class DecisionMakingService : IDecisionMakingService
     {
-        IEnumerable<ITradingStrategy> IDecisionMakingService.AvailableStrategies { get; }
-        IEnumerable<ITradingStrategy> IDecisionMakingService.RunningStrategies => _runningStrategies;
+        IEnumerable<ITradingStrategy> IDecisionMakingService.Strategies => _runningStrategies;
 
         public Result AddStrategy(ITradingStrategyConfiguration parameters)
         {
@@ -25,6 +24,11 @@ namespace DecisionMakingService
         }
 
         public Result RemoveStrategy(ITradingStrategy strategy)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Result Configure(ITradingStrategyConfiguration configuration)
         {
             throw new NotImplementedException();
         }

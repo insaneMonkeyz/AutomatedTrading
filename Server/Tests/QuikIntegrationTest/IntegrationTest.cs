@@ -8,7 +8,7 @@ using TradingConcepts.CommonImplementations;
 using TradingConcepts.SecuritySpecifics;
 using TradingConcepts.SecuritySpecifics.Options;
 
-using static QuikIntegrationTest.ConsoleHelper;
+using static Tools.ConsoleHelper;
 
 namespace QuikIntegrationTest
 {
@@ -64,7 +64,7 @@ namespace QuikIntegrationTest
 
         static void PropertyTest_Account()
         {
-            NotifyTestStarted();
+            TracePrintMethod();
 
             try
             {
@@ -77,7 +77,7 @@ namespace QuikIntegrationTest
         }
         static void PropertyTest_IsConnected()
         {
-            NotifyTestStarted();
+            TracePrintMethod();
 
             try
             {
@@ -90,7 +90,7 @@ namespace QuikIntegrationTest
         }
         static void MethodTest_GetAvailableSecurities()
         {
-            NotifyTestStarted();
+            TracePrintMethod();
 
             var futures = _quik.GetAvailableSecurities<IFutures>();
 
@@ -125,7 +125,7 @@ namespace QuikIntegrationTest
         }
         static void MethodTest_GetOrders()
         {
-            NotifyTestStarted();
+            TracePrintMethod();
             AskUser($"This test requires existing orders history present in the terminal.\nPress Enter to continue");
 
             var orders = _quik.GetOrders();
@@ -137,7 +137,7 @@ namespace QuikIntegrationTest
         }
         static void MethodTest_PlaceNewOrder(out IOrder? order)
         {
-            NotifyTestStarted();
+            TracePrintMethod();
 
             order = CreateNewOrderFromUserInput();
 
@@ -151,7 +151,7 @@ namespace QuikIntegrationTest
         }
         static void MethodTest_MoveOrder(IOrder order, out IOrder neworder)
         {
-            NotifyTestStarted();
+            TracePrintMethod();
 
             IOrder moveOrder(IOrder order)
             {
@@ -163,7 +163,7 @@ namespace QuikIntegrationTest
         }
         static void MethodTest_CancelOrder(IOrder order)
         {
-            NotifyTestStarted();
+            TracePrintMethod();
 
             IOrder cancelOrder(IOrder order)
             {

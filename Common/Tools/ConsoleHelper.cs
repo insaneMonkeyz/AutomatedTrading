@@ -1,13 +1,18 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace QuikIntegrationTest
+namespace Tools
 {
-    static class ConsoleHelper
+    public static class ConsoleHelper
     {
-        public static void NotifyTestStarted([CallerMemberName] string? callerMethod = null)
+        public static void TracePrintMethod([CallerMemberName] string? callerMethod = null)
         {
             Console.WriteLine("=======================================================");
-            Console.WriteLine($"          {callerMethod ?? "UNKNOWN METHOD"} Started");
+            Console.WriteLine($"          {callerMethod ?? "UNKNOWN METHOD"}");
             Console.WriteLine("=======================================================");
         }
         public static string? AskUser(string question)
@@ -29,7 +34,7 @@ namespace QuikIntegrationTest
             Console.WriteLine(initialMessage);
             var input = Console.ReadLine();
 
-            retryOnException:
+        retryOnException:
             try
             {
                 processInput(input);
@@ -40,7 +45,6 @@ namespace QuikIntegrationTest
                 Console.WriteLine(messageOnFailure);
                 goto retryOnException;
             }
-
         }
     }
 }

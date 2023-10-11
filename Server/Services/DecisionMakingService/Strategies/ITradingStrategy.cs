@@ -11,8 +11,5 @@ namespace DecisionMakingService.Strategies
         IEnumerable<ISecurityBalance> Portfolio { get; }
         IEnumerable<IOrderExecution> Executions { get; }
         IEnumerable<IOrder> Orders { get; }
-
-        void Enable();
-        void Disable();
     }
 }

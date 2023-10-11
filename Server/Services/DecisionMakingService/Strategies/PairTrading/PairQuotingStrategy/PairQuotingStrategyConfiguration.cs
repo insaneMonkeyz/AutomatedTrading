@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TradingConcepts;
+﻿using TradingConcepts;
 
 namespace DecisionMakingService.Strategies.PairTrading
 {
@@ -15,6 +10,7 @@ namespace DecisionMakingService.Strategies.PairTrading
         public int OffsetRange { get; set; } 
         public long OrderSize { get; set; }
         public long PositionLimit { get; set; }
+        public bool IsEnabled { get; set; }
         public required ITradingAccount Account { get; init; }
         public required ISecurity QuotedSecurity { get; init; }
         public required ISecurity BaseSecurity { get; init; }

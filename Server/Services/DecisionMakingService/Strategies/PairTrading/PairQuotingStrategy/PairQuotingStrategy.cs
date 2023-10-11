@@ -2,7 +2,7 @@
 
 namespace DecisionMakingService.Strategies.PairTrading
 {
-    internal partial class PairQuotingStrategy : IConfigurable<PairQuotingStrategyConfiguration>, ITradingStrategy
+    internal partial class PairQuotingStrategy : IConfigurable<PairQuotingStrategyConfiguration>, ITradingStrategyController, ITradingStrategy
     {
         public string Name => nameof(PairQuotingStrategy);
         public string Description => throw new NotImplementedException();
@@ -11,18 +11,19 @@ namespace DecisionMakingService.Strategies.PairTrading
         public IEnumerable<IOrderExecution> Executions => throw new NotImplementedException();
         public IEnumerable<IOrder> Orders => throw new NotImplementedException();
         public PairQuotingStrategyConfiguration? Configuration => throw new NotImplementedException();
+        public bool IsEnabled => throw new NotImplementedException();
 
         public void Configure(PairQuotingStrategyConfiguration? config)
         {
             throw new NotImplementedException();
         }
 
-        public void Disable()
+        public void Deactivate()
         {
             throw new NotImplementedException();
         }
 
-        public void Enable()
+        public void Activate()
         {
             throw new NotImplementedException();
         }

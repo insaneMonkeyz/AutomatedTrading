@@ -5,7 +5,8 @@ namespace DecisionMakingService.Strategies
     public class GrabStrategyConfiguration : ITradingStrategyConfiguration
     {
         public Guid Id { get; }
-        public Decimal5 TriggerPrice { get; }
+        public bool IsEnabled { get; set; }
+        public Decimal5 TriggerPrice { get; set; }
         public Operations Operation { get; init; }
         public int MaxOrderSize { get; set; } = int.MaxValue;
         public int OrderPriceOffset { get; set; }

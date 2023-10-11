@@ -2,8 +2,9 @@
 {
     public enum State
     {
-        Disabled,
+        Off,
+        Paused,
         Configuring,
-        Enabled
+        Running
     }
 }

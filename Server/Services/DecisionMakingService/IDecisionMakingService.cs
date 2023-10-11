@@ -5,10 +5,10 @@ namespace DecisionMakingService
 {
     public interface IDecisionMakingService
     {
-        IEnumerable<ITradingStrategy> RunningStrategies { get; }
-        IEnumerable<ITradingStrategy> AvailableStrategies { get; }
+        IEnumerable<ITradingStrategy> Strategies { get; }
 
         Result AddStrategy(ITradingStrategyConfiguration parameters);
         Result RemoveStrategy(ITradingStrategy strategy);
+        Result Configure(ITradingStrategyConfiguration configuration);
     }
 }

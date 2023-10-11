@@ -72,7 +72,7 @@ namespace DecisionMakingService.Strategies
 
             _processingQuote = quotes[0];
 
-            if (State == State.Enabled && _processingQuote.Size != default)
+            if (State == State.Running && _processingQuote.Size != default)
             {
                 _bookOperator.ProcessAsync();
             }

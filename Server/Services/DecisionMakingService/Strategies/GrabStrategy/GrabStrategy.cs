@@ -7,13 +7,14 @@ using TradingConcepts.CommonImplementations;
 
 namespace DecisionMakingService.Strategies
 {
-    internal partial class GrabStrategy : ITradingStrategy, IConfigurable<GrabStrategyConfiguration>
+    internal partial class GrabStrategy : ITradingStrategyController, ITradingStrategy, IConfigurable<GrabStrategyConfiguration>
     {
         public GrabStrategyConfiguration? Configuration { get; private set; }
         public Guid Id { get; private set; }
         public string Name => throw new NotImplementedException();
         public string Description => throw new NotImplementedException();
         public State State { get; private set; }
+        public bool IsEnabled => throw new NotImplementedException();
         public IEnumerable<ISecurityBalance> Portfolio => throw new NotImplementedException();
         public IEnumerable<IOrderExecution> Executions => throw new NotImplementedException();
         public IEnumerable<IOrder> Orders => throw new NotImplementedException();
@@ -55,22 +56,22 @@ namespace DecisionMakingService.Strategies
 
             _log.Info($"Grab strategy {Id} configured");
         }
-        public void Enable()
+        public void Activate()
         {
             if (Configuration is null)
             {
                 throw new InvalidOperationException("The strategy needs to be configured first");
             }
-            if (State != State.Disabled)
+            if (State != State.Off)
             {
                 return;
             }
 
-            State = State.Enabled;
+            State = State.Running;
 
             _bookOperator.IsEnabled = true;
         }
-        public void Disable()
+        public void Deactivate()
         {
             throw new NotImplementedException();
 
