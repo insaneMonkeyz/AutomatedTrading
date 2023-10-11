@@ -1,0 +1,3 @@
+﻿using CoreIntegrationTests;
+
+LaunchTest.EnsureCorrectInitialization();

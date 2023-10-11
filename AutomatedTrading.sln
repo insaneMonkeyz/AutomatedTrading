@@ -55,7 +55,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DecisionMakingService", "Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreIntegrationTests", "Server\Tests\CoreIntegrationTests\CoreIntegrationTests.csproj", "{168099F6-4199-40F8-8535-A61B16711F7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecisionMakingServiceTests", "Server\Tests\CoreUnitTests\DecisionMakingServiceTests.csproj", "{CE0435AD-2180-45EE-B2A8-20D2D5134DA7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecisionMakingServiceTests", "Server\Tests\DecisionMakingServiceTests\DecisionMakingServiceTests.csproj", "{CE0435AD-2180-45EE-B2A8-20D2D5134DA7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
