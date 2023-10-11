@@ -7,11 +7,14 @@
     {
         private static readonly Dictionary<Type, object> _map = new();
 
-        public static T? Resolve<T>() where T : class
+        public static T Resolve<T>() where T : class
         {
-            return _map.TryGetValue(typeof(T), out object? instance)
-                ? (T)instance
-                : default;
+            if (!_map.TryGetValue(typeof(T), out object? instance))
+            {
+                throw new Exception($"Instance of {typeof(T)} is not registered");
+            }
+
+            return (T)instance;
         }
 
         public static void RegisterInstance<T>(T instance)

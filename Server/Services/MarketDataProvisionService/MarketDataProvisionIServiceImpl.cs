@@ -17,6 +17,7 @@ namespace MarketDataProvisionService
         public string Name { get; } = nameof(MarketDataProvisionService);
         public ServiceStatus Status { get; private set; }
 
+        [ServiceInitializer]
         public void Initialize(object parameters)
         {
             if (_initialized)
@@ -33,7 +34,7 @@ namespace MarketDataProvisionService
             if (isExecutive)
             {
                 DI.Resolve<IBroker>().RegisterService(this);
-                DI.RegisterInstance(this);
+                DI.RegisterInstance(this as IMarketDataProvisionService);
             }
             else
             {

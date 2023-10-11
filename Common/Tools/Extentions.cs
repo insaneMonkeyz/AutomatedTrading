@@ -25,5 +25,13 @@ namespace Tools
                 yield return obj;
             }
         }
+        public static T[] ToArray<T>(this T? obj)
+        {
+            if (obj is not null)
+            {
+                return new T[1] { obj };
+            }
+            return Array.Empty<T>();
+        }
     }
 }

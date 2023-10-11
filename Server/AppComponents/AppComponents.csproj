@@ -8,4 +8,8 @@
     <Configurations>Debug;Release;UnitTesting</Configurations>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Tools\Tools.csproj" />
+  </ItemGroup>
+
 </Project>

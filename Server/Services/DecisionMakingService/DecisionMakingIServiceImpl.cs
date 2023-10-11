@@ -11,9 +11,10 @@ namespace DecisionMakingService
         public string Name { get; } = nameof(DecisionMakingService);
         public ServiceStatus Status { get; private set; }
 
+        [ServiceInitializer]
         public void Initialize(object parameters)
         {
-            throw new NotImplementedException();
+            DI.RegisterInstance(this as IDecisionMakingService);
         }
 
         public void Shutdown(object parameters)

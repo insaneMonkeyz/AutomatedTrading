@@ -15,7 +15,7 @@ namespace DecisionMakingService.Strategies.PairTrading
     {
         public PairQuotingStrategy()
         {
-            _execution = DI.Resolve<IMarketExecutionService>() ?? throw new Exception("MarketExecutionService is not initialized");
+            _execution = DI.Resolve<IMarketExecutionService>();
             _quotesReader = new OneSideQuotesReader(OnReadingQuote);
         }
         public override string ToString()

@@ -5,11 +5,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+	
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>DecisionMakingServiceTests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Tools\Tools.csproj" />
     <ProjectReference Include="..\..\AppComponents\AppComponents.csproj" />
-    <ProjectReference Include="..\..\Strategies\Strategies.csproj" />
     <ProjectReference Include="..\Broker\Broker.csproj" />
     <ProjectReference Include="..\MarketDataProvisionService\MarketDataProvisionService.csproj" />
     <ProjectReference Include="..\MarketExecutionService\MarketExecutionService.csproj" />

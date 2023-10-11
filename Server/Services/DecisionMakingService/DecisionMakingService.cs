@@ -1,4 +1,5 @@
-﻿using DecisionMakingService.Strategies;
+﻿using AppComponents.Messaging.Results;
+using DecisionMakingService.Strategies;
 
 namespace DecisionMakingService
 {
@@ -7,11 +8,23 @@ namespace DecisionMakingService
         IEnumerable<ITradingStrategy> IDecisionMakingService.AvailableStrategies { get; }
         IEnumerable<ITradingStrategy> IDecisionMakingService.RunningStrategies => _runningStrategies;
 
-        public void EmployStrategy(ITradingStrategyConfiguration parameters)
+        public Result AddStrategy(ITradingStrategyConfiguration parameters)
         {
+            try
+            {
+                var strategy = StrategiesFactory.CreateStrategy(parameters);
+
+                _runningStrategies.Add(strategy);
+
+                return Result.Success(strategy);
+            }
+            catch (Exception e)
+            {
+                return Result.Error("Could not add a strategy", e.Message);
+            }
         }
 
-        public void RemoveStrategy(ITradingStrategy strategy)
+        public Result RemoveStrategy(ITradingStrategy strategy)
         {
             throw new NotImplementedException();
         }

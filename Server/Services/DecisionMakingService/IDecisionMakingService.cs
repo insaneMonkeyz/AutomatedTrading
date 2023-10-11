@@ -1,4 +1,5 @@
-﻿using DecisionMakingService.Strategies;
+﻿using AppComponents.Messaging.Results;
+using DecisionMakingService.Strategies;
 
 namespace DecisionMakingService
 {
@@ -7,7 +8,7 @@ namespace DecisionMakingService
         IEnumerable<ITradingStrategy> RunningStrategies { get; }
         IEnumerable<ITradingStrategy> AvailableStrategies { get; }
 
-        void EmployStrategy(ITradingStrategyConfiguration parameters);
-        void RemoveStrategy(ITradingStrategy strategy);
+        Result AddStrategy(ITradingStrategyConfiguration parameters);
+        Result RemoveStrategy(ITradingStrategy strategy);
     }
 }

@@ -2,8 +2,6 @@
 using Broker;
 using Quik;
 using Tools;
-using TradingConcepts;
-using TradingConcepts.CommonImplementations;
 
 namespace MarketExecutionService
 {
@@ -14,6 +12,7 @@ namespace MarketExecutionService
         public string Name { get; } = nameof(MarketExecutionService);
         public ServiceStatus Status { get; private set; }
 
+        [ServiceInitializer]
         public void Initialize(object parameters)
         {
             if (_initialized)
@@ -30,7 +29,7 @@ namespace MarketExecutionService
             if (isExecutive)
             {
                 DI.Resolve<IBroker>().RegisterService(this);
-                DI.RegisterInstance(this);
+                DI.RegisterInstance(this as IMarketExecutionService);
             }
             else
             {
@@ -60,5 +59,6 @@ namespace MarketExecutionService
 
         private IQuik? _quik;
         private bool _initialized;
+        private static MarketExecutionService? _instance;
     }
 }
