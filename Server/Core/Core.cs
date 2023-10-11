@@ -1,9 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AppComponents;
+using Broker;
+using DecisionMakingService;
+using MarketDataProvisionService;
+using MarketExecutionService;
+using Newtonsoft.Json.Linq;
+using Tools.FileOperations;
+using Tools.Logging;
 
 namespace Core
 {
@@ -11,15 +13,20 @@ namespace Core
     {
         private const string CONFIG_PATH = "AutomatedTrading.cfg";
 
-        private Core()
-        {
-        }
+        private static readonly Log _log = LogManagement.GetLogger<Core>();
 
         public static void Initialize()
         {
-            // init message and command brokers
-            // init services
+            if(!TextFileReader.TryReadFromFile(CONFIG_PATH, out JObject? configuration, out Exception? error))
+            {
+                _log.Error($"Failed to load the application's configuration from {CONFIG_PATH}. " +
+                    "A default configuration will be created", error);
+            }
 
+            ServiceInitializerAttribute.Initialize<IBroker>(configuration);
+            ServiceInitializerAttribute.Initialize<IMarketExecutionService>(configuration);
+            ServiceInitializerAttribute.Initialize<IMarketDataProvisionService>(configuration);
+            ServiceInitializerAttribute.Initialize<IDecisionMakingService>(configuration);
         }
     } 
 }

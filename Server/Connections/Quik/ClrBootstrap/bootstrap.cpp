@@ -9,6 +9,13 @@ namespace NativeToManagedProxy
     {
         auto loader = gcnew Quik::Loader();
         //auto loader = gcnew QuikIntegrationTest::IntegrationTest();
-        return loader->Initialize((IntPtr)luaStack);
+
+        int quikLaunched = loader->Initialize((IntPtr)luaStack) >= 0;
+
+        if (quikLaunched) {
+            Core::Core::Initialize();
+        }
+
+        return TRUE;
     }
 }

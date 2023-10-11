@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Common\Tools\Tools.csproj" />
     <ProjectReference Include="..\..\Common\TradingConcepts\TradingConcepts.csproj" />
+    <ProjectReference Include="..\Services\Broker\Broker.csproj" />
+    <ProjectReference Include="..\Services\DecisionMakingService\DecisionMakingService.csproj" />
+    <ProjectReference Include="..\Services\MarketDataProvisionService\MarketDataProvisionService.csproj" />
+    <ProjectReference Include="..\Services\MarketExecutionService\MarketExecutionService.csproj" />
   </ItemGroup>
 
 </Project>

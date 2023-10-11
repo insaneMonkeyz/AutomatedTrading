@@ -18,8 +18,17 @@ namespace Quik
 
             Quik.Instance.Initialize(luaStack);
             DI.RegisterInstance<IQuik>(Quik.Instance);
-            Task.Run(ConsoleIO.Main);
-            //Task.Run(GrpcServer.Launch);
+
+            if (GlobalParameters.UseConsole)
+            {
+                Task.Run(ConsoleIO.Main); 
+            }
+
+            if (GlobalParameters.UseGrpcServer)
+            {
+                Task.Run(GrpcServer.Launch); 
+            }
+
             return 1;
         }
 

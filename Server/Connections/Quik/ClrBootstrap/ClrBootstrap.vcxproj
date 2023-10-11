@@ -239,18 +239,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UnitTesting|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UnitTesting|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-    </ClCompile>
+	<ClCompile Include="pch.cpp">
+		<PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+		<PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+		<PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UnitTesting|Win32'">Create</PrecompiledHeader>
+		<PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+		<PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UnitTesting|x64'">Create</PrecompiledHeader>
+		<PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+	</ClCompile>
     <ClCompile Include="bootstrap.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\QuikIntegrationTest\QuikIntegrationTest.csproj">
+    <ProjectReference Include="..\..\..\Core\Core.csproj">
+      <Project>{ad452c09-af8d-4e41-bdd9-60d44d00ee5c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Tests\QuikIntegrationTest\QuikIntegrationTest.csproj">
       <Project>{8d8c2d71-aedd-4d5c-8d2e-26f379c892e4}</Project>
     </ProjectReference>
     <ProjectReference Include="..\QuikLuaApiWrapper\Quik.csproj">
