@@ -1,8 +1,11 @@
+using AppComponents.Messaging.Results;
 using Broker;
 using DecisionMakingService;
 using DecisionMakingService.Strategies;
+using DecisionMakingService.Strategies.Fakes;
 using DecisionMakingService.Strategies.PairTrading;
 using MarketExecutionService;
+using Microsoft.QualityTools.Testing.Fakes;
 using Moq;
 using Tools;
 using TradingConcepts;
@@ -10,8 +13,13 @@ using TradingConcepts.SecuritySpecifics;
 
 namespace DecisionMakingServiceUnitTests
 {
+    public interface ITestStrategy : ITradingStrategy, ITradingStrategyController, IConfigurable<ITradingStrategyConfiguration> { }
+    public interface ISpecificTradingStrategyConfiguration : ITradingStrategyConfiguration { }
+    public interface ISpecificTestStrategy : ITradingStrategy, ITradingStrategyController, IConfigurable<ISpecificTradingStrategyConfiguration> { }
+
     public class ServiceTests
     {
+        private Guid _defaultStrategyId = new Guid("12347276-342A-4C45-937F-8861E1174972");
         private PairQuotingStrategyConfiguration _defaultStrategyConfiguration;
         private IDecisionMakingService _service;
         private ITradingAccount _account;
@@ -71,13 +79,47 @@ namespace DecisionMakingServiceUnitTests
             };
         }
 
+        private Result AddStrategy(FakesDelegates.Func<ITradingStrategyConfiguration, ITradingStrategy> create)
+        {
+            using var _ = ShimsContext.Create();
+
+            ShimStrategiesFactory.CreateStrategyITradingStrategyConfiguration = create;
+
+            _service = new DecisionMakingService.DecisionMakingService() as IDecisionMakingService;
+            return _service.AddStrategy(new Mock<ITradingStrategyConfiguration>().Object);
+        }
+        private Result AddDefaultStrategy()
+        {
+            ITestStrategy create(ITradingStrategyConfiguration cfg)
+            {
+                var config = cfg;
+                var fake = new Mock<ITestStrategy>();
+
+                fake.Setup(s => s.Id)
+                    .Returns(() => _defaultStrategyId);
+
+                fake.Setup(s => s.Configuration)
+                    .Returns(() => config);
+
+                fake.Setup(s => s.Configure(It.IsAny<ITradingStrategyConfiguration>()))
+                    .Callback<ITradingStrategyConfiguration>(c => config = c);
+
+                return fake.Object;
+            }
+
+            return AddStrategy(create);
+        }
+
         [Test]
         public void StrategyAddedToListTest()
         {
-            _service = new DecisionMakingService.DecisionMakingService() as IDecisionMakingService;
-            _service.AddStrategy(_defaultStrategyConfiguration);
+            var additionResult = AddDefaultStrategy();
 
-            Assert.IsTrue(_service.Strategies.First() is PairQuotingStrategy);
+            Assert.Multiple(() =>
+            {
+                Assert.That(additionResult.IsSuccess);
+                Assert.That(additionResult.Data, Is.EqualTo(_service.Strategies.First()));
+            });
         }
         [Test]
         public void CantAddUnknownStrategyTest()
@@ -88,28 +130,68 @@ namespace DecisionMakingServiceUnitTests
 
             var additionResult = _service.AddStrategy(unknownStrategyConfig);
 
-            Assert.IsTrue(additionResult.IsError);
+            Assert.That(additionResult.IsError);
         }
         [Test]
         public void StrategyRemovedFromListTest()
         {
-            StrategyAddedToListTest();
+            AddDefaultStrategy();
 
             var strategy = _service.Strategies.First();
 
-            _service.RemoveStrategy(strategy);
+            _service.RemoveStrategy(strategy.Id);
 
             Assert.That(_service.Strategies, Is.Empty);
         }
         [Test]
         public void CannotRemoveUnknownStrategy()
         {
-            StrategyAddedToListTest();
+            AddDefaultStrategy();
 
-            var strategy = new Mock<ITradingStrategy>().Object;
-            var removalResult = _service.RemoveStrategy(strategy);
+            var removalResult = _service.RemoveStrategy(Guid.NewGuid());
 
-            Assert.IsTrue(removalResult.IsError);
+            Assert.That(removalResult.IsError);
+        }
+        [Test]
+        public void StrategyConfiguringTest()
+        {
+            AddDefaultStrategy();
+
+            var strategy = _service.Strategies.First() as ITestStrategy;
+
+            var cfg = new Mock<ITradingStrategyConfiguration>();
+            cfg.Setup(x => x.Id).Returns(() => _defaultStrategyId);
+            cfg.Setup(x => x.IsEnabled).Returns(() => true);
+
+            var result = _service.ConfigureStrategy(cfg.Object);
+
+            Assert.That(result.IsSuccess);
+        }
+        [Test]
+        public void CannotConfigureUnknownStrategyTest()
+        {
+            AddDefaultStrategy();
+
+            var strategy = _service.Strategies.First() as ITestStrategy;
+
+            var cfg = new Mock<ITradingStrategyConfiguration>();
+            cfg.Setup(x => x.Id).Returns(() => Guid.NewGuid());
+
+            var result = _service.ConfigureStrategy(cfg.Object);
+
+            Assert.That(result.IsError);
+        }
+        [Test]
+        public void CannotConfigureWrongTypeStrategyTest()
+        {
+            AddDefaultStrategy();
+
+            var cfg = new Mock<ISpecificTradingStrategyConfiguration>();
+            cfg.Setup(x => x.Id).Returns(() => _defaultStrategyId);
+
+            var result = _service.ConfigureStrategy(cfg.Object);
+
+            Assert.That(result.IsError);
         }
     }
 }

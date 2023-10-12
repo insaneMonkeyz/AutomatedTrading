@@ -8,7 +8,7 @@ namespace DecisionMakingService
         IEnumerable<ITradingStrategy> Strategies { get; }
 
         Result AddStrategy(ITradingStrategyConfiguration parameters);
-        Result RemoveStrategy(ITradingStrategy strategy);
-        Result Configure(ITradingStrategyConfiguration configuration);
+        Result RemoveStrategy(Guid strategyId);
+        Result ConfigureStrategy<T>(T configuration) where T : ITradingStrategyConfiguration;
     }
 }

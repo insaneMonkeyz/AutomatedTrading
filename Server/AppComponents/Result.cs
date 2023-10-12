@@ -9,7 +9,7 @@ namespace AppComponents.Messaging.Results
     public struct Result
     {
         public bool IsSuccess;
-        public bool IsError;
+        public bool IsError => !IsSuccess;
         public string? Description;
         public object? Data;
 
@@ -25,7 +25,6 @@ namespace AppComponents.Messaging.Results
         {
             return new Result
             {
-                IsError = true,
                 Description = description,
                 Data = data
             };

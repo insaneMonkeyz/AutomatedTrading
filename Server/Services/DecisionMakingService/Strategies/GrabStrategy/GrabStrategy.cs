@@ -14,7 +14,7 @@ namespace DecisionMakingService.Strategies
         public string Name => throw new NotImplementedException();
         public string Description => throw new NotImplementedException();
         public State State { get; private set; }
-        public bool IsEnabled => throw new NotImplementedException();
+        public bool IsEnabled => Configuration?.IsEnabled ?? false;
         public IEnumerable<ISecurityBalance> Portfolio => throw new NotImplementedException();
         public IEnumerable<IOrderExecution> Executions => throw new NotImplementedException();
         public IEnumerable<IOrder> Orders => throw new NotImplementedException();
